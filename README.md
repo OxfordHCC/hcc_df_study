@@ -1,13 +1,25 @@
-This repo contains software needed to support the deepfake study.
+# RETCON Deepfake Study
+
+For the latest version of this document, go to https://github.com/treebirg/hcc_df_study;
+
+This repository contains software needed to support the deepfake study.
+## Repository structure
+```
+root/
+├─ mumble/          - modified mumble version
+├─ common/          - common libraries and resources
+├─ admin/           - admin dashboard to monitor game progress
+├─ game/            - bomb defusal game played by participants
+├─ study-cli/       - tool used to issue audio injection commands to mumble
+├─ rsmbl-pipeline/  - pipeline for generating deepfake voices from audio samples of participants
+
+```
+
 
 # Mumble
 ## Murmur (mumble server)
 
-You can either follow instructions in the mumble documentation or, with docker and docker-compose installed you can just run in the root directory (the one containing the docker-compose.yml file).
-
-```sh
-> docker-compose up --build
-```
+You can either follow instructions in the mumble documentation or, with docker and docker-compose installed, you can just run `docker-compose up --build` in the root directory (the one containing the docker-compose.yml file). 
 
 ## Mumble client
 ### Prebuilt binary
@@ -50,11 +62,13 @@ Since this audio is not "organic", we need to introduce artificial latency by sl
 
 The study cli is used as a remote control for the murmur server. It communicates over GRPC. To see the full GRPC spec of murmur, see the protobuf file in mumble/src/murmur/MurmurRPC.proto. Only a subset of the GRPC procedures are currently supported by the study-cli, as detailed below.
 
-## Commands
+## Usage and commands
 
-Send audio clip to target so that only the target can hear it.
+In the `/study-cli` directory, either run the tool as `go run . <subcommand> [args...]`, or compile using `go build` and then run the resulting binary (e.g. `./study-cli <subcommand> [args...]`.
 
 ### Send audio to user
+
+Send audio to user `t` as if coming from user `u`.
 
 ```
 > study-cli send --help
@@ -69,8 +83,6 @@ Usage of send:
   -t, --target uint32         to user id
   -u, --user uint32           from user id
 ```
-
-The source user id is used to signal the source of the audio packets to the target user (e.g. in the mumble client, the source user icon will blink).
 
 The delay parameter introduces artificial latency in the speech by waiting the specified amount between sneding packets to the target user. This value may need tweaking depending on the charactersitics of the input wave file. For a 48khz sample rate wav, a 20ms delay seems to be ok.
 
@@ -96,8 +108,3 @@ Interactive grpc session between study-cli user and the murmur server. Could be 
 
 ### Spoof
 Similar to `send`, but instead of sending audio to a single user, the audio is sent to the whole room.
-
-# Game
-Bomb defusal game played by participants.
-# Admin
-Admin dashboard to monitor game progress.
