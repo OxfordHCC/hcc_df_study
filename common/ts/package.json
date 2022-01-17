@@ -1,0 +1,19 @@
+{
+	"name": "dfs-common",
+	"version": "1.0.2",
+	"description": "common modules used by the hcc typescript codebase",
+	"main": "./build/index.js",
+	"scripts": {
+		"build": "npx tsc",
+		"test": "npx ts-node ./test/index.ts"
+	},
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"@types/tape": "^4.13.2",
+		"esbuild": "^0.13.14",
+		"tape": "^5.3.2",
+		"ts-node": "^10.4.0",
+		"typescript": "^4.5.2"
+	}
+}

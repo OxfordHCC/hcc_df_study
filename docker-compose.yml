@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  murmur:
+    build:
+      context: ./mumble
+    image: mumble_server
+    container_name: mumble_server_1
+    ports:
+      - "64738:64738/tcp"
+      - "64738:64738/udp"
+      - "50051:50051"
+    
