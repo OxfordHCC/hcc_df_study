@@ -98,6 +98,6 @@ Interactive grpc session between study-cli user and the murmur server. Could be 
 Similar to `send`, but instead of sending audio to a single user, the audio is sent to the whole room.
 
 # Game
-	Bomb defusal game played by participants.
+Bomb defusal game played by participants.
 # Admin
-	Admin dashboard to monitor game progress.
+Admin dashboard to monitor game progress.
