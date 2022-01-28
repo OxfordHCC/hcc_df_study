@@ -15,6 +15,10 @@ const initted = new Promise((resolve, _reject) => {
 	});
 });
 
+socket.io.on("error", (err) => {
+	console.error("Error while connecting: ", JSON.stringify(err), err.message);
+	trigger("error", err);
+});
 
 socket.on("state", (state: GameState) => {
 	console.log("state called", state);
@@ -31,32 +35,32 @@ socket.on("state", (state: GameState) => {
 	trigger("games", games);
 });
 
+
 export async function getGames(){
 	await initted;
 	return games;
 }
 
 type CreateGameParams = {
-	id: string;
 	blue: string;
 	red: string;
 }
-export async function createGame(
-	{id, blue, red}: CreateGameParams
-): Promise<([Error | undefined, any])>{
-	return new Promise((resolve, reject) => {
-		socket.emit(
-			"create_game",
-			{id, blue, red},
-			(err: string, resGame: GameState) => {
-				if(err){
-					const error = new Error(err);
-					return reject([error]);
+
+export async function createGame(params: CreateGameParams): Promise<[Error, any]>{
+	try{
+		const data = await new Promise((resolve, reject) => {
+			socket.emit("create_game", params, (err, data) => {
+				if(err !== null){
+					return reject(err);
 				}
-				return resolve([undefined, resGame]);
-			}
-		);
-	});
+				resolve(data);
+			});
+		});
+		
+		return [null, data];
+	}catch(err){
+		return [err, null];
+	}
 }
 
 function trigger(event: string, ...args: any){

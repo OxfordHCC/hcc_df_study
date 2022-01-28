@@ -10,8 +10,6 @@ export function GameList() {
 	const [games, setGames] = useState<GameState[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
 
-	console.log("GameList", games);
-
 	useEffect(() => {
 		async function populateGames(){
 			// get games
@@ -21,7 +19,6 @@ export function GameList() {
 		}
 		
 		const onGamesUpdate = function(newGames){
-			console.log("onGamesUpdate", newGames);
 			setGames(deepClone(newGames));
 		}
 

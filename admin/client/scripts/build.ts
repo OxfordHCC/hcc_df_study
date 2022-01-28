@@ -4,7 +4,7 @@ import { BUILD_DIR, SRC_DIR } from "./util";
 
 export const buildConfig = {
 	bundle: true,
-	entryPoints: [`${SRC_DIR}/ts/main.ts`],
+	entryPoints: [`${SRC_DIR}/ts/main.tsx`],
 	outdir: BUILD_DIR,
 	sourcemap: true
 }

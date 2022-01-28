@@ -30,6 +30,7 @@ export declare type GameEvents = {
     "round": () => void;
     "player_ready": () => void;
 };
+
 export declare type ClientTask = Omit<Task, "correctOption"> & {
     correctOptions?: number;
 };

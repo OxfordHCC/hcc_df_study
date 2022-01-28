@@ -1,7 +1,7 @@
 import React from "react";
 import {useState, useEffect } from 'react';
 import { Home } from './Home';
-import { CreateGameScreen } from './CreateGameScreen';
+import { CreatePairScreen } from './CreatePair';
 
 function parseParamString(paramString?: string): any {
 	if (paramString === undefined) {
@@ -13,6 +13,7 @@ function parseParamString(paramString?: string): any {
 }
 
 export function Router(): JSX.Element {
+	const [foo, setFoo] = useState(0);
 	const [route, setRoute] = useState<string>("");
 	const [params, setParams] = useState<any>({});
 
@@ -38,8 +39,8 @@ export function Router(): JSX.Element {
 	}, []);
 
 	switch(route){
-		case "#create_game":
-			return (<CreateGameScreen/>);
+		case "#create_pair":
+			return (<CreatePairScreen/>);
 		default:
 			return (<Home/>);
 	}

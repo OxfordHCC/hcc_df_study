@@ -1,10 +1,10 @@
 import { Namespace } from "socket.io";
-import { GameState } from "dfs-common";
 import { Logger } from '../lib/log';
+import crypto from 'crypto';
 
 import { Game, getGames, createGame } from '../lib/game';
 
-const { log, error } = Logger("socket.io/client");
+const { log, error } = Logger("socket.io/admin");
 
 export default function(admin: Namespace) {
 	admin.on("connection", (socket) => {
@@ -18,19 +18,23 @@ export default function(admin: Namespace) {
 			});
 		});
 
-		socket.on("create_game", ({ id, blue, red }, cb) => {
-			if(!id || !blue || !red){
+		socket.on("create_game", ({ blue, red }, cb) => {
+			if(!blue || !red){
 				cb("Invalid arguments in create_game event");
 				return;
 			}
+
+			const id = crypto.randomUUID();
 			
 			const game = createGame({
 				gameId: id,
 				players: [blue, red],
-				msRoundLength: 10
+				msRoundLength: 5000
 			});
+
+			log("create_game", blue, red, id);
 			
-			cb(undefined, game.state);
+			cb(null, game.state);
 			socket.emit("state", game.state);
 		});
 	});
