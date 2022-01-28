@@ -82,13 +82,21 @@ export function GamePage({ playerId } : GameProps): JSX.Element{
 		return <GameReview gameState={gameState} />
 	}
 
+	const score = (gameState.rounds)
+		.map(round => (
+			round.answer !== undefined
+			&& round.answer === round.task.correctOption? 1 : 0 ))
+		.reduce((acc: number, curr) => acc + curr, 0);
+	
 	// game is in progress, show round
 	return (
 		<Screen>
 			<h3>Round {lastRound.roundNumber}</h3>
+			<div>Bombs defused: {score}</div>
 			<div>Blue: {gameState.players[0].playerId}</div>
 			<div>Red: {gameState.players[1].playerId}</div>
 			<GameRound round={lastRound} onAnswer={onAnswerGame}/>
 		</Screen>
 	);
 }
+

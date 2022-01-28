@@ -3,9 +3,14 @@ import { copyStatic } from './static';
 import { buildConfig } from './build';
 import { BUILD_DIR } from './util';
 
+const port = parseInt(process.env['XRAY_GAME_CLIENT_PORT'] || "8080");
+
 serve({
-	port: 8080,
+	port,
 	servedir: BUILD_DIR
-}, buildConfig);
+}, buildConfig)
+.then(() => {
+	console.log("game client listening on port ", port);
+});
 copyStatic();
 

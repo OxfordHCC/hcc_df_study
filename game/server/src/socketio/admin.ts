@@ -4,7 +4,7 @@ import crypto from 'crypto';
 
 import { Game, getGames, createGame } from '../lib/game';
 
-const { log, error } = Logger("socket.io/admin");
+const { log } = Logger("socket.io/admin");
 
 export default function(admin: Namespace) {
 	admin.on("connection", (socket) => {
