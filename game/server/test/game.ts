@@ -1,94 +1,79 @@
 import test from 'tape';
 import {
 	Game,
-	startGame,
-	answerGame,
-	getRoundsLen,
-	setPlayerReady
 } from '../src/lib/game';
+import { ButtonRound, KeypadRound } from '../src/lib/round';
 import { deepClone } from 'dfs-common';
 
 
 function createFoobarGame(){
+	const rounds = [
+		new ButtonRound(0, 10),
+		new ButtonRound(1, 10),
+		new ButtonRound(2, 10),
+		new ButtonRound(3, 10),
+	];
+	
 	return new Game({
 		gameId: "foobar",
 		players: ["kate", "pete"],
-		msRoundLength: 100,
+		rounds
 	});
+}
+
+function createGameSequence(){
+	const msLength = 10;
+	const rounds = [
+		new KeypadRound([4,3,2,1]),
+		new KeypadRound([4,3,2,1])
+	];
 }
 
 test('startTime is set in game state once started', (t) => {
 	const game = createFoobarGame();
+	game.start();
+	t.equal(("startTime" in game), true);
+
+	t.end();
+});
+
+test("answering correctly should return +1", (t) => {
+	const game = createFoobarGame();
+	game.start();
 	
-	startGame(game);
-	t.equal(("startTime" in game.state), true);
-
-	t.end();
-});
-
-test("answering correctly should return true", (t) => {
-	const game = createFoobarGame();
-	startGame(game);
 	// answer games with correct answers
-	const a1 = answerGame(game, 0, game.state.rounds[0].task.correctOption);
-	// should return true (i.e. answer is correct)
-	t.equal(a1, true);
+	const a1 = game.answer({ value: 0, round: 0 });
+	
+	// should return 1 (i.e. answer is correct)
+	t.equal(a1, 1);
 
 	t.end();
 });
 
-test("answering incorrectly should return false", (t) => {
+test("answering incorrectly should return -1", (t) => {
 	const game = createFoobarGame();
-	startGame(game);
+	game.start();
+
 	// answer games with incorrect answer
-	const a1 = answerGame(game, 0, game.state.rounds[0].task.correctOption-1);
-	// should return false (i.e. answer is incorrect)
-	t.equal(a1, false);
-
-	t.end();
-});
-
-test("rounds should be added to game state and updated when answers are given", (t) => {
-	const game = createFoobarGame();
-
-	startGame(game);
-	// answer games
-	answerGame(game, 0, 0);
-	answerGame(game, 1, 0);
-
-	// at this point we should have 3 rounds in memory
-	t.equal(game.state.rounds.length, 3);
-
-	// 2 of these 3 should have a an answer
-	t.equal((game.state.rounds.filter(r => r.answer !== undefined)).length, 2);
-
-	t.end();
-});
-
-test("answering rounds in succession should work?", (t) => {
-	const game = createFoobarGame();
-	const roundsLen = getRoundsLen(game);
-	startGame(game);
-	t.timeoutAfter(1000); // should not take more than a second
-
-	for (let i = 0; i < roundsLen; i++) {
-		answerGame(game, i, 1);
-	}
-	t.equal(game.state.rounds.length, roundsLen);
+	const a1 = game.answer({ value: -1, round: 0 });
+	
+	// should return -1 (i.e. answer is incorrect)
+	t.equal(a1, -1);
 
 	t.end();
 });
 
 test("answering rounds after last round should not change state", (t) => {
 	const game = createFoobarGame();
-	startGame(game);
+	game.start();
 
 	for (let i = 0; i < 10; i++) {
-		answerGame(game, i, 1);
+		game.answer({ round: i, value: 1 });
 	}
-	const before = deepClone(game.state);
-	answerGame(game, 11, 1);
-	const after = deepClone(game.state);
+	
+	const before = deepClone(game);
+	game.answer({round: 11, value: 1});
+	const after = deepClone(game);
 	
 	t.deepEqual(before, after);
 	t.end();
@@ -96,29 +81,52 @@ test("answering rounds after last round should not change state", (t) => {
 
 test("answering round in the past should not change state", (t) => {
 	const game = createFoobarGame();
-	startGame(game);
+	game.start();
 	
-	answerGame(game, 0, 1);
-	const before = deepClone(game.state);
-	answerGame(game, 0, 2);
-	const after = deepClone(game.state);
+	game.answer({ round: 0, value: 1 });
+	const before = deepClone(game);
+	
+	game.answer({ round: 0, value: 2 });
+	const after = deepClone(game);
+	
 	t.deepEquals(before, after);
-
 	t.end();
 });
 
-test("amswering round before game started should throw error", (t) => {
+test("answering round before game started should throw error", (t) => {
 	const game = createFoobarGame();
 
-	const err = answerGame(game, 0, 1);
+	const err = game.answer({ round: 0, value: 1});
 	t.equals(err instanceof Error, true);
 
 	t.end();
 });
 
+test("answering in a valid manner should return numbers", (t) => {
+	const game = createFoobarGame();
+	game.start();
+	
+	const r0 = game.answer({round: 0, value: 0});
+	t.assert(typeof r0 === "number", "typeof value returned from answer 0 should be number." + r0);
+
+	const r1 = game.answer({round: 1, value: 1});
+	t.assert(typeof r1 === "number", "typeof value returned from answer 1 should be number." + r1);
+
+	const r2 = game.answer({ round: 2, value: 2 });
+	t.assert(typeof r2 === "number", "typeof value returned from answer 2 should be number." + r2);
+
+	const r3 = game.answer({ round: 3, value: 3 });
+	t.assert(typeof r3 === "number", "typeof value returned from answer 3 should be number." + r3);
+
+	t.end();
+
+});
+
 test("game triggers events", (t) => {
 	const game = createFoobarGame();
-	const roundsLen = getRoundsLen(game);
+ 	const totalGameLen = game.rounds.reduce(
+		(acc, curr)	=> acc + curr.msLength
+	  , 0);
 	
 	let startCalled = 0;
 	let answerCalled = 0;
@@ -146,39 +154,42 @@ test("game triggers events", (t) => {
 		stateCalled += 1;
 	});
 	
-	startGame(game);
+	game.start()
 	t.equal(startCalled, 1);
-	answerGame(game, 0, 1);
+	
+	game.answer({ round: 0, value: 1 });
 	// bad answer calls should not trigger events
-	answerGame(game, 0, 1); // violates immutability of round[0]'s answer
-	answerGame(game, 1, 1); 
-	t.equal(answerCalled, 2);
-	t.equal(stopCalled, 0);
-	t.equal(roundCalled, 3);
-	t.equal(stateCalled, 6);
+	
+	game.answer({ round: 0, value: 1 }); // violates immutability of round[0]'s answer
+		
+	game.answer({ round: 1, value: 1 }); 
 
-
+	t.equal(answerCalled, 2, "answer event");
+	t.equal(stopCalled, 0, "stop event");
+	t.equal(roundCalled, 3, "round event");
+	t.equal(stateCalled, 6, "state event");
+	
 	setTimeout(() => {
-		t.equal(stopCalled, 1);
+		t.equal(stopCalled, 1, "stop not triggered");
 		t.end();
-	}, game.state.msRoundLength * roundsLen + 10);
+	}, totalGameLen + 10);
 });
 
 test("game only starts when both players are ready", (t) => {
 	const game = createFoobarGame();
-	t.equals(game.state.startTime, undefined);
+	t.equals(game.startTime, undefined);
 
-	setPlayerReady(game, "pete", true);
-	t.equals(game.state.startTime, undefined);
+	game.playerReady("pete", true);
+	t.equals(game.startTime, undefined);
 
-	setPlayerReady(game, "pete", false);
-	t.equals(game.state.startTime, undefined);
+	game.playerReady("pete", false);
+	t.equals(game.startTime, undefined);
 
-	setPlayerReady(game, "kate", true);
-	t.equals(game.state.startTime, undefined);
+	game.playerReady("kate", true);
+	t.equals(game.startTime, undefined);
 
-	setPlayerReady(game, "pete", true);
-	t.notEquals(game.state.startTime, undefined);
+	game.playerReady("pete", true);
+	t.notEquals(game.startTime, undefined);
 
 	t.end();
 });

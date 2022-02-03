@@ -7,18 +7,19 @@ import { GameReview } from './GameReview';
 import { GameRound } from './GameRound';
 import { Screen } from './Screen';
 
-type GameProps = {
+
+type GameScreenProps = {
 	playerId: string
 }
 
-export function GamePage({ playerId } : GameProps): JSX.Element{
+export function GameScreen({ playerId } : GameScreenProps): JSX.Element{
 	const [loading, setLoading] = useState<boolean>(true);
 	const [gameState, setGameState] = useState<ClientGameState>();
-
+	
 	const game = useMemo(() => new GameClient({ playerId }), [playerId]);
 
-	function onAnswerGame(option: number, round: number){
-		game.answer({option, round});
+	function onAnswerGame(option: number, round: number) {
+		game.answer({ option, round });
 	}
 
 	useEffect(() => {
@@ -27,7 +28,6 @@ export function GamePage({ playerId } : GameProps): JSX.Element{
 		}
 
 		const onState = function(state: ClientGameState){
-			console.log('state is ', state);
 			setGameState(state);
 		}
 		
@@ -74,6 +74,7 @@ export function GamePage({ playerId } : GameProps): JSX.Element{
 			onReadyChange={onPlayerReadyChange} />
 	}
 
+	// lastRound = current round if game in progress
 	const lastRound = gameState.rounds[gameState.rounds.length - 1];
 	const timeSinceLastRound = Date.now() - lastRound.startTime;
 

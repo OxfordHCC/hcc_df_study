@@ -4,10 +4,14 @@ import { BUILD_DIR, SRC_DIR } from "./util";
 
 export const buildConfig = {
 	bundle: true,
-	entryPoints: [`${SRC_DIR}/js/main.js`],
+	entryPoints: [`${SRC_DIR}/js/main.tsx`],
 	outdir: BUILD_DIR,
 	sourcemap: true
 }
 
-build(buildConfig);
-copyStatic();
+build(buildConfig).then(() => {
+	copyStatic();
+}).catch(err => {
+	console.error(err);
+});
+

@@ -1,28 +1,35 @@
-export type Task = {
-	taskType: "wire" | "button",
-	options: number[],
-	correctOption: number,
+
+export type Answer = {
+	round: number,
+	[index: string]: any
 }
 
-export type Round = {
-	roundNumber: number,
-	task: Task,
-	answer?: number,
-	startTime: number,
-	answerTime?: number
+type Solution = number | number[];
+export type RoundParams = {
+	msLength: number,
+	name: string,
+	solution: Solution
 }
 
-export interface Player {
+export abstract class Round {
+	startTime?: number
+	endTime?: number
+	name: string
+	msLength: number
+	solution: Solution
+
+	constructor({ msLength, name, solution }: RoundParams) {
+		this.msLength = msLength;
+		this.name = name;
+		this.solution = solution;
+	}
+	
+	abstract onAnswer(answer: Answer): number
+}
+
+export class Player {
 	playerId: string;
 	ready: boolean;
-}
-
-export interface GameState {
-	gameId: string;
-	players: Player[];
-	startTime?: number;
-	rounds: Round[];
-	msRoundLength: number;
 }
 
 export type GameEvents = {
@@ -33,16 +40,4 @@ export type GameEvents = {
 	"error": () => void,
 	"round": () => void,
 	"player_ready": () => void
-}
-
-export type ClientTask = Omit<Task, "correctOption"> & {
-	correctOptions?: number;
-}
-
-export type ClientRound = Round & {
-	task: ClientTask
-}
-
-export type ClientGameState = GameState & {
-	rounds: ClientRound[]
 }

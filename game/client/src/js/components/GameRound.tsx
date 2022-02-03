@@ -1,7 +1,7 @@
 import React from 'react';
 import { ClientRound } from 'dfs-common';
 import { ButtonTask } from './ButtonTask';
-
+import { Clock } from './Clock';
 
 type GameRoundParam = {
 	round: ClientRound,
@@ -17,7 +17,10 @@ export function GameRound({ round, onAnswer }: GameRoundParam): JSX.Element{
 
 	if(taskType === "button"){
 		return (
-			<ButtonTask task={round.task} onTaskSubmit={onTaskSubmit}/>
+			<div>
+				<Clock start={round.startTime} length={round.length} />
+				<ButtonTask task={round.task} onTaskSubmit={onTaskSubmit} />
+			</div>
 		);
 	}
 

@@ -1,6 +1,6 @@
 import React from "react";
 import {useState, useEffect } from 'react';
-import { GamePage } from './Game';
+import { GameScreen } from './GameScreen';
 import { Home } from './Home';
 
 
@@ -42,7 +42,7 @@ export function Router(): JSX.Element {
 
 	switch(route){
 		case "#game":
-			return (<GamePage playerId={params.playerId} />);
+			return (<GameScreen playerId={params.playerId} />);
 		default:
 			return (<Home/>);
 	}

@@ -1,25 +1,26 @@
-export declare type Task = {
-    taskType: "wire" | "button";
-    options: number[];
-    correctOption: number;
+export declare type Answer = {
+    round: number;
+    [index: string]: any;
 };
-export declare type Round = {
-    roundNumber: number;
-    task: Task;
-    answer?: number;
-    startTime: number;
-    answerTime?: number;
+declare type Solution = number | number[];
+export declare type RoundParams = {
+    msLength: number;
+    name: string;
+    solution: Solution;
 };
-export interface Player {
+export declare abstract class Round {
+    startTime?: number;
+    endTime?: number;
+    name: string;
+    msLength: number;
+    answered: boolean;
+    solution: Solution;
+    constructor({ msLength, name, solution }: RoundParams);
+    abstract onAnswer(answer: Answer): number;
+}
+export declare class Player {
     playerId: string;
     ready: boolean;
-}
-export interface GameState {
-    gameId: string;
-    players: Player[];
-    startTime?: number;
-    rounds: Round[];
-    msRoundLength: number;
 }
 export declare type GameEvents = {
     "start": () => void;
@@ -30,13 +31,4 @@ export declare type GameEvents = {
     "round": () => void;
     "player_ready": () => void;
 };
-
-export declare type ClientTask = Omit<Task, "correctOption"> & {
-    correctOptions?: number;
-};
-export declare type ClientRound = Round & {
-    task: ClientTask;
-};
-export declare type ClientGameState = GameState & {
-    rounds: ClientRound[];
-};
+export {};
