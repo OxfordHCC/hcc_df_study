@@ -1,8 +1,8 @@
 import React from 'react';
-import { ClientRound } from 'dfs-common';
+import { RoundData } from 'dfs-common';
 
 type RoundReviewRowParams = {
-	round: ClientRound
+	round: RoundData
 	roundNumber: number
 }
 export function RoundReviewRow({round, roundNumber} : RoundReviewRowParams): JSX.Element{
@@ -10,7 +10,7 @@ export function RoundReviewRow({round, roundNumber} : RoundReviewRowParams): JSX
 		<tr>
 			<td>{roundNumber}</td>
 			<td>{(round.answer !== undefined) ? round.answer : "No answer"}</td>
-			<td>{round.task.correctOption}</td>
+			<td>{round.solution}</td>
 		</tr>
 	);
 }

@@ -28,6 +28,7 @@ export type SingleRoundAnswer = Answer & {
 	value: number
 }
 
+export type ButtonRoundAnswer = SingleRoundAnswer;
 export interface ButtonRoundData extends SingleRoundData {
 	name: "button"
 }

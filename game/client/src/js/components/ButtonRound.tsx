@@ -1,21 +1,26 @@
 import React from 'react';
-import { ButtonRoundData } from 'dfs-common';
+import { ButtonRoundData, ButtonRoundAnswer } from 'dfs-common';
 
 type ButtonRoundParams = {
-	round: ButtonRoundData,
-	onTaskSubmit: (answer: number) => void
+	round: number
+	roundData: ButtonRoundData
+	onAnswer: (answer: ButtonRoundAnswer) => void
+	isBlue: boolean
 }
-export function ButtonRound({ round, onTaskSubmit }: ButtonRoundParams): JSX.Element{
-	const { solution } = round;
+export function ButtonRound({ round, roundData, onAnswer, isBlue }: ButtonRoundParams): JSX.Element{
+	const { solution } = roundData;
 
-	// if player blue, show solution
-	if (solution !== undefined){
-		// show correct answer
-		return <p>Press {correctOption}</p>
+	// if player blue, show solution	
+	if (isBlue){
+		return <p>Press {solution}</p>
 	}
-
-	const buttons = task.options.map(o =>
-		<button key={o} onClick={() => onTaskSubmit(o)}>{o}</button>);
+	
+	const buttons = roundData.options.map(option => 
+		<button
+			key={option}
+			onClick={() => onAnswer({ round, value: option })}>
+			{option}
+		</button>);
 	
 	return (
 		<div>

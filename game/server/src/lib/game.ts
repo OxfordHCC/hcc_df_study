@@ -34,12 +34,14 @@ export class Game extends Evented<keyof GameEvents> implements GameData{
 	players: Player[]
 	gameId: string
 	rounds: Round[]
+	currentRound: number
 	startTime?: number
 	endTime?: number
 	
 	constructor({ gameId, players, rounds }: GameParams){
 		super();
-		
+
+		this.currentRound = 0;
 		this.rounds = rounds;
 		this.gameId = gameId;
 		this.players = players

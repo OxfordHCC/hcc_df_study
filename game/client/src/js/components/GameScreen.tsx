@@ -5,7 +5,7 @@ import { GameLobby } from './GameLobby';
 import { GameReview } from './GameReview';
 import { GameRound } from './GameRound';
 import { Screen } from './Screen';
-import { GameData } from 'dfs-common';
+import { Answer, GameData } from 'dfs-common';
 
 
 type GameScreenProps = {
@@ -15,11 +15,11 @@ type GameScreenProps = {
 export function GameScreen({ playerId } : GameScreenProps): JSX.Element{
 	const [loading, setLoading] = useState<boolean>(true);
 	const [gameState, setGameState] = useState<GameData>();
-	
+
 	const game = useMemo(() => new GameClient({ playerId }), [ playerId ]);
 
-	function onAnswerGame(option: number, round: number) {
-		game.answer({ option, round });
+	function onAnswerGame(answer: Answer) {
+		game.answer(answer);
 	}
 
 	useEffect(() => {
@@ -68,33 +68,42 @@ export function GameScreen({ playerId } : GameScreenProps): JSX.Element{
 		return <p>Game not found</p>;
 	}
 
-	if (gameState.startTime === undefined) {
+	const { rounds, startTime, endTime, players,
+			currentRound } = gameState;
+
+	if (startTime === undefined) {
 		return <GameLobby
 				   playerId={playerId}
 				   gameState={gameState}
 				   onReadyChange={onPlayerReadyChange} />;
 	}
 
-	if (gameState.endTime !== undefined){
+	if (endTime !== undefined){
 		return <GameReview gameState={gameState} />;
 	}
-
-	const lastRound = gameState.rounds[gameState.rounds.length - 1];
-
-	const score = (gameState.rounds).map(round => {
+	
+	const currRoundData = rounds[currentRound];
+		
+	const score = rounds.map(round => {
 		return round.answer !== undefined
 			&& round.answer === round.solution
 			 ? 1 : 0
 	}).reduce((acc: number, curr) => acc + curr, 0);
 
+	const total = rounds
+		.map(r => (r.answer !== undefined)? 1 : 0)
+		.reduce((acc: number, curr) => acc + curr, 0);
+
 	// game is in progress, show round
 	return (
 		<Screen>
 			<h3>Round {}</h3>
-			<div>Bombs defused: {score}</div>
-			<div>Blue: {gameState.players[0].playerId}</div>
-			<div>Red: {gameState.players[1].playerId}</div>
-			<GameRound round={lastRound} onAnswer={onAnswerGame} />
+			<div>Score: {score}/{total}</div>
+			<div>Blue: {players[0].playerId}</div>
+			<div>Red: {players[1].playerId}</div>
+			<GameRound round={currentRound}
+					   roundData={currRoundData}
+					   onAnswer={onAnswerGame} />
 		</Screen>
 	);
 }

@@ -11,6 +11,7 @@ export interface GameData {
     players: Player[];
     gameId: string;
     rounds: RoundData[];
+    currentRound: number;
     startTime?: number;
     endTime?: number;
 }

@@ -18,6 +18,7 @@ export interface SingleRoundData extends RoundData {
 export declare type SingleRoundAnswer = Answer & {
     value: number;
 };
+export declare type ButtonRoundAnswer = SingleRoundAnswer;
 export interface ButtonRoundData extends SingleRoundData {
     name: "button";
 }

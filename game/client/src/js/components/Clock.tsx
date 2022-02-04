@@ -2,7 +2,7 @@ import React from 'react';
 import { useState, useEffect, useMemo } from 'react';
 
 type ClockParams = {
-	start?: number,
+	start: number,
 	length: number
 }
 
