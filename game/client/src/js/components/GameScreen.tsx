@@ -68,22 +68,24 @@ export function GameScreen({ playerId } : GameScreenProps): JSX.Element{
 		return <p>Game not found</p>;
 	}
 
-	const { rounds, startTime, endTime, players,
-			currentRound } = gameState;
+	const {
+		rounds, startTime, endTime, players, currentRound
+	} = gameState;
+
+	const isBlue = playerId === players[0].playerId;
+	const currRoundData = rounds[currentRound];
 
 	if (startTime === undefined) {
 		return <GameLobby
-				   playerId={playerId}
-				   gameState={gameState}
-				   onReadyChange={onPlayerReadyChange} />;
+			playerId={playerId}
+			gameState={gameState}
+			onReadyChange={onPlayerReadyChange}/>;
 	}
 
 	if (endTime !== undefined){
 		return <GameReview gameData={gameState} />;
 	}
 	
-	const currRoundData = rounds[currentRound];
-		
 	const score = rounds.map(round => {
 		return round.answer !== undefined
 			&& round.answer === round.solution
@@ -97,13 +99,14 @@ export function GameScreen({ playerId } : GameScreenProps): JSX.Element{
 	// game is in progress, show round
 	return (
 		<Screen>
-			<h3>Round {}</h3>
+			<h3>Round {currentRound}</h3>
 			<div>Score: {score}/{total}</div>
 			<div>Blue: {players[0].playerId}</div>
 			<div>Red: {players[1].playerId}</div>
 			<GameRound round={currentRound}
-					   roundData={currRoundData}
-					   onAnswer={onAnswerGame} />
+				roundData={currRoundData}
+				onAnswer={onAnswerGame}
+				isBlue={isBlue} />
 		</Screen>
 	);
 }

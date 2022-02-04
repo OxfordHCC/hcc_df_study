@@ -10,7 +10,6 @@ export function Clock({ start, length }: ClockParams){
 	const [display, setDisplay] = useState<string>("");
 	const end = useMemo(() => start + length, [start, length]);
 	const width = useMemo(() => (Math.floor((length / 1000) / 10)), []);
-	console.log("width is ", width);
 
 	useEffect(() => {
 		const interval = setInterval(() => {
@@ -23,7 +22,7 @@ export function Clock({ start, length }: ClockParams){
 		}, 500);
 		
 		return () => clearInterval(interval);
-	}, []);
+	}, [start, length]);
 
 	return <>
 		{display}

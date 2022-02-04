@@ -20,10 +20,20 @@ export class GameClient extends Evented<keyof ClientGameEvents>{
 				playerId: this.playerId
 			}
 		});
-		this.socket.io.on("error", (error) => this.trigger("error", error));
-		this.socket.on("connect", () => this.trigger("connect"));
-		this.socket.on("disconnect", () => this.trigger("disconnect"));
-		this.socket.on("state", state => this.trigger("state", state));
+		
+		this.socket.io.on("error", (error) => {
+			this.trigger("error", error);
+		});
+		this.socket.on("connect", () => {
+			this.trigger("connect");
+		});
+		this.socket.on("disconnect", () => {
+			this.trigger("disconnect");
+		});
+		this.socket.on("state", (state) => {
+			console.log(state);
+			this.trigger("state", state);
+		});
 	}
 
 	setReady(readyFlag: boolean){

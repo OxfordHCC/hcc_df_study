@@ -1,8 +1,6 @@
 export type Either<L, R> = L | R;
 
-type Constructor<T> = (...args: any[]) => T;
-
-export function filterOf<T>(arr: any[], constructor: Constructor<T>): T[]{
+export function filterOf<T>(arr: any[], constructor: Function): T[]{
 	return arr.filter(x => x instanceof constructor);
 }
 

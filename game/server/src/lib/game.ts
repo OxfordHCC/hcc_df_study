@@ -27,7 +27,7 @@ function getTimer(gameId: string){
 	return gameTimers[gameId];
 }
 
-type GameParams = GameData & {
+type GameParams = Omit<GameData, "currentRound"> & {
 	rounds: Round[]
 }
 export class Game extends Evented<keyof GameEvents> implements GameData{
@@ -89,13 +89,15 @@ export class Game extends Evented<keyof GameEvents> implements GameData{
 		return answerStatus
 	}
 
-	gotoRound(round: number): Either<Error, number> {
+	gotoRound(round: number): Either<void, Error> {
+		this.currentRound = round;
+
 		const roundObj: Round = this.rounds[round];
 		if (roundObj === undefined) {
 			this.stop();
-			return -1;
+			return new Error("round does not exit")
 		}
-
+		
 		roundObj.startTime = Date.now();
 		
 		this.trigger("round", { round });
@@ -103,8 +105,6 @@ export class Game extends Evented<keyof GameEvents> implements GameData{
 		scheduleTimer(this.gameId, () => {
 			this.gotoRound(round + 1);
 		}, roundObj.msLength);
-
-		return 0; // no error
 	}
 
 	start(): boolean{
@@ -115,6 +115,7 @@ export class Game extends Evented<keyof GameEvents> implements GameData{
 	}
 
 	stop(){
+		this.endTime = Date.now();
 		this.trigger("stop");
 	}
 
@@ -150,10 +151,14 @@ export function getGames(): Game[] {
 	return memGames;
 }
 	
-export function createGame(data: GameData): Either<Error,Game>{
-	const [rounds, errs] = splitOf(data.rounds.map(createRound),
-								   Round.bind,
-								   Error);
+export function createGame(
+	data: GameParams
+): Either<Error,Game>{
+	const [rounds, errs] = splitOf(
+		data.rounds.map(createRound),
+		Round,
+		Error
+	);
 
 	if(errs.length !== 0){
 		return new Error(errs.join(','));
@@ -169,11 +174,14 @@ export function createGame(data: GameData): Either<Error,Game>{
 	return game
 }
 
-export function getPlayerGame(playerId: string): Either<Error, Game> {
-	const game = memGames.find(g => {
-		const player = g.players.find(p => p.playerId === playerId);
-		return player !== undefined;
-	});
+export function getPlayerGame(
+	playerId: string
+): Either<Error, Game> {
+	const game = memGames.find(({ players})	=>
+		players.find(p =>
+			(p.playerId === playerId) !== undefined
+		)
+	);
 
 	if(game === undefined){
 		return new Error("No game found for player.");
