@@ -1,35 +1,21 @@
+import { RoundData } from './round';
 
 export type Answer = {
 	round: number,
 	[index: string]: any
 }
 
-type Solution = number | number[];
-export type RoundParams = {
-	msLength: number,
-	name: string,
-	solution: Solution
-}
-
-export abstract class Round {
-	startTime?: number
-	endTime?: number
-	name: string
-	msLength: number
-	solution: Solution
-
-	constructor({ msLength, name, solution }: RoundParams) {
-		this.msLength = msLength;
-		this.name = name;
-		this.solution = solution;
-	}
-	
-	abstract onAnswer(answer: Answer): number
-}
-
-export class Player {
+export interface Player {
 	playerId: string;
 	ready: boolean;
+}
+
+export interface GameData {
+	players: Player[]
+	gameId: string
+	rounds: RoundData[]
+	startTime?: number
+	endTime?: number
 }
 
 export type GameEvents = {

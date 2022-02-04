@@ -1,8 +1,9 @@
 import { Server, Namespace } from "socket.io";
+import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from 'dfs-common';
 import client from "./client";
 import admin from "./admin";
 
-export const io = new Server({
+export const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>({
 	cors: {
 		origin: "*"
 	}

@@ -1,9 +1,10 @@
 import test from 'tape';
+import { deepClone } from 'dfs-common';
 import {
 	Game,
 } from '../src/lib/game';
+import { createPlayer } from '../src/lib/player';
 import { ButtonRound, KeypadRound } from '../src/lib/round';
-import { deepClone } from 'dfs-common';
 
 
 function createFoobarGame(){
@@ -16,7 +17,10 @@ function createFoobarGame(){
 	
 	return new Game({
 		gameId: "foobar",
-		players: ["kate", "pete"],
+		players: [
+			createPlayer("kate"),
+			createPlayer("pete")
+		],
 		rounds
 	});
 }
@@ -193,4 +197,3 @@ test("game only starts when both players are ready", (t) => {
 
 	t.end();
 });
-

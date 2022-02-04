@@ -1,7 +1,9 @@
-import { Round, RoundParams, Answer } from 'dfs-common';
+import { Answer, RoundData } from 'dfs-common';
+import { Round } from './round';
 
-type SequenceRoundParams = RoundParams & {
-	msLength: number
+
+type SequenceRoundParams = RoundData & {
+	solution: number[]
 }
 type SequenceRoundAnswer = Answer & {
 	value: number,
@@ -18,7 +20,6 @@ export class SequenceRound extends Round{
 	
 	onAnswer({ value, step }: SequenceRoundAnswer){
 		return 1;
-
 	}
 }
 

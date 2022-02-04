@@ -1,10 +1,9 @@
 import { Socket, Server, Namespace } from "socket.io";
-import { ClientGameState, deepClone } from 'dfs-common';
+import { deepClone, Answer, GameData } from 'dfs-common';
 import { io } from './index';
 import { Logger } from '../lib/log';
 import { Either } from "../lib/fp";
-import { Game, getPlayerGame, getGame, setPlayerReady,
-	answerGame } from "../lib/game";
+import { Game, getGame, getPlayerGame } from "../lib/game";
 
 const { log, error } = Logger("socket.io/client");
 
@@ -19,39 +18,25 @@ export default function(client: Namespace){
 	});
 }
 
-function getClientGameState(game: Game, playerId: string) {
-	const gameState = deepClone<ClientGameState>(game.state);
-	const isRed = gameState.players[1].playerId === playerId;
-
-	const lastRound = gameState.rounds[gameState.rounds.length - 1];
-	if (!lastRound) {
-		// no rounds yet... game did not start
-		return gameState;
-	}
-
-	const timedOut = (Date.now() - lastRound.startTime) > game.state.msRoundLength;
-	const answered = lastRound.answer !== undefined;
-	const finished = timedOut || answered;
+function getClientGameState(game: Game, _playerId: string) {
+	const gameState = deepClone<GameData>(game.state());
 	
-	// if isRed, hide correct option of last round from player
-	if (isRed && !finished) {
-		lastRound.task.correctOption = undefined;
-	}
-
 	return gameState;
 }
 
 function onAnswer(socket: Socket, io: Server) {
 	const { gameId } = socket.data;
 	const game = getGame(gameId);
+	
+	return function(answer: Answer) {
+		log("onAnswer",`game=${gameId}`,`answer=${JSON.stringify(answer)}`);
 
-	return function({ option, round }: { option: number, round: number }) {
-		log("onAnswer",`game=${gameId}`,`option=${option}`,`round=${round}`);
 		if(game instanceof Error){
 			socket.emit("error", game.message);
 			return;
 		}
-		answerGame(game, round, option);
+		
+		game.answer(answer);
 	}
 }
 
@@ -68,7 +53,7 @@ function onPlayerReady(socket: Socket, io: Server){
 			return;
 		}
 
-		const err = setPlayerReady(game, playerId, readyFlag);
+		const err = game.playerReady(playerId, readyFlag);
 		if (err !== undefined) {
 			error(err.message);
 			return socket.emit("error", err.message);
@@ -105,7 +90,7 @@ function onConnect(socket: Socket): Either<Error, undefined> {
 		return game
 	}
 	
-	const { gameId } = game.state;
+	const { gameId } = game;
 
 	// cache some data related to this socket
 	socket.data = {
@@ -146,7 +131,7 @@ function onDisconnect(socket: Socket, _io: Server) {
 		}
 
 		// unready player when disconnecting
-		setPlayerReady(game, playerId, false);
+		game.playerReady(playerId, false);
 		
 		// let other player know they've disconnected
 		socket.to(gameId).emit("left_game", playerId);

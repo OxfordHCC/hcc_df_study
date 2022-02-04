@@ -1,19 +1,15 @@
-import { Either } from './fp';
+import { Either, splitOf } from './fp';
 import {
 	Evented,
 	GameEvents,
-	Round,
 	Player,
-	Answer
+	Answer,
+	GameData
 } from 'dfs-common';
 
-const memGames:Game[] = [];
+import { Round, createRound } from './round';
 
-type GameParams = {
-	gameId: string
-	players: string[]
-	rounds: Round[]
-}
+const memGames:Game[] = [];
 
 const gameTimers: {
 	[index:string]: NodeJS.Timeout
@@ -31,20 +27,22 @@ function getTimer(gameId: string){
 	return gameTimers[gameId];
 }
 
-export class Game extends Evented<keyof GameEvents>{
-//	roundTimer: NodeJS.Timeout | undefined;
+type GameParams = GameData & {
+	rounds: Round[]
+}
+export class Game extends Evented<keyof GameEvents> implements GameData{
 	players: Player[]
 	gameId: string
 	rounds: Round[]
 	startTime?: number
 	endTime?: number
-
+	
 	constructor({ gameId, players, rounds }: GameParams){
 		super();
-		this.rounds = rounds,
+		
+		this.rounds = rounds;
 		this.gameId = gameId;
 		this.players = players
-		.map(p => ({ playerId: p, ready: false }))
 		
 		this.on("player_ready", () =>
 			this.startIfPlayersReady());
@@ -53,6 +51,10 @@ export class Game extends Evented<keyof GameEvents>{
 		this.on("stop",	() => this.trigger("state"));
 		this.on("start", ()	=> this.trigger("state"));
 		this.on("round", ()	=> this.trigger("state"));
+	}
+
+	state(){
+		return JSON.parse(JSON.stringify(this)) as GameData;
 	}
 
 	answer(answer: Answer): Either<Error, number>{
@@ -103,7 +105,6 @@ export class Game extends Evented<keyof GameEvents>{
 		return 0; // no error
 	}
 
-
 	start(): boolean{
 		this.startTime = Date.now();
 		this.gotoRound(0);
@@ -146,9 +147,21 @@ export class Game extends Evented<keyof GameEvents>{
 export function getGames(): Game[] {
 	return memGames;
 }
+	
+export function createGame(data: GameData): Either<Error,Game>{
+	const [rounds, errs] = splitOf(data.rounds.map(createRound),
+								   Round.bind,
+								   Error);
 
-export function createGame(params: GameParams): Game{
-	const game = new Game(params);
+	if(errs.length !== 0){
+		return new Error(errs.join(','));
+	}
+
+	const game = new Game({
+		...data,
+		rounds
+	});
+	
 	memGames.push(game);
 
 	return game

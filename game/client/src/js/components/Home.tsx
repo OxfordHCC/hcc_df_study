@@ -3,7 +3,7 @@ import { useState, useCallback, ChangeEvent } from 'react';
 import { gotoRoute } from '../lib/router';
 import { Screen } from './Screen';
 
-export function Home():JSX.Element{
+export function Home(): JSX.Element{
 	const [playerId, setPlayerId] = useState("");
 
 	// we use callbacks here to memoize the function definition. We essentially tell

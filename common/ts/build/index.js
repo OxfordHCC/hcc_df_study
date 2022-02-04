@@ -15,3 +15,5 @@ var evented_1 = require("./evented");
 Object.defineProperty(exports, "Evented", { enumerable: true, get: function () { return evented_1.Evented; } });
 __exportStar(require("./game"), exports);
 __exportStar(require("./util"), exports);
+__exportStar(require("./socketio"), exports);
+__exportStar(require("./round"), exports);

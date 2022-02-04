@@ -1,6 +1,5 @@
 import { io } from "socket.io-client";
-import { Evented, ClientAnswer, GameEvents } from "dfs-common";
-
+import { Evented, GameEvents, Answer } from "dfs-common";
 
 type ClientGameEvents = GameEvents & {
 	"connect": () => void
@@ -39,7 +38,7 @@ export class GameClient extends Evented<keyof ClientGameEvents>{
 		this.socket.connect();
 	}
 
-	answer({option, round}: ClientAnswer){
-		this.socket.emit("game:answer", { option, round });
+	answer({ value, round }: Answer){
+		this.socket.emit("game:answer", { value, round });
 	}
 }

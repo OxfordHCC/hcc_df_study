@@ -1,11 +1,11 @@
 import React from 'react';
 import { useState, useEffect, useMemo } from 'react';
-import { ClientGameState } from 'dfs-common';
 import { GameClient } from '../lib/game';
 import { GameLobby } from './GameLobby';
 import { GameReview } from './GameReview';
 import { GameRound } from './GameRound';
 import { Screen } from './Screen';
+import { GameData } from 'dfs-common';
 
 
 type GameScreenProps = {
@@ -14,9 +14,9 @@ type GameScreenProps = {
 
 export function GameScreen({ playerId } : GameScreenProps): JSX.Element{
 	const [loading, setLoading] = useState<boolean>(true);
-	const [gameState, setGameState] = useState<ClientGameState>();
+	const [gameState, setGameState] = useState<GameData>();
 	
-	const game = useMemo(() => new GameClient({ playerId }), [playerId]);
+	const game = useMemo(() => new GameClient({ playerId }), [ playerId ]);
 
 	function onAnswerGame(option: number, round: number) {
 		game.answer({ option, round });
@@ -27,7 +27,7 @@ export function GameScreen({ playerId } : GameScreenProps): JSX.Element{
 			setLoading(false);
 		}
 
-		const onState = function(state: ClientGameState){
+		const onState = function(state: GameData){
 			setGameState(state);
 		}
 		
@@ -65,38 +65,36 @@ export function GameScreen({ playerId } : GameScreenProps): JSX.Element{
 	}
 
 	if(gameState === undefined){
-		return <p>Game not found</p>
+		return <p>Game not found</p>;
 	}
 
-	// game did not start yet... show lobby
 	if (gameState.startTime === undefined) {
-		return <GameLobby playerId={playerId} gameState={gameState}
-			onReadyChange={onPlayerReadyChange} />
+		return <GameLobby
+				   playerId={playerId}
+				   gameState={gameState}
+				   onReadyChange={onPlayerReadyChange} />;
 	}
 
-	// lastRound = current round if game in progress
+	if (gameState.endTime !== undefined){
+		return <GameReview gameState={gameState} />;
+	}
+
 	const lastRound = gameState.rounds[gameState.rounds.length - 1];
-	const timeSinceLastRound = Date.now() - lastRound.startTime;
 
-	// game is finished, show results
-	if (lastRound.answer !== undefined || timeSinceLastRound > gameState.msRoundLength) {
-		return <GameReview gameState={gameState} />
-	}
+	const score = (gameState.rounds).map(round => {
+		return round.answer !== undefined
+			&& round.answer === round.solution
+			 ? 1 : 0
+	}).reduce((acc: number, curr) => acc + curr, 0);
 
-	const score = (gameState.rounds)
-		.map(round => (
-			round.answer !== undefined
-			&& round.answer === round.task.correctOption? 1 : 0 ))
-		.reduce((acc: number, curr) => acc + curr, 0);
-	
 	// game is in progress, show round
 	return (
 		<Screen>
-			<h3>Round {lastRound.roundNumber}</h3>
+			<h3>Round {}</h3>
 			<div>Bombs defused: {score}</div>
 			<div>Blue: {gameState.players[0].playerId}</div>
 			<div>Red: {gameState.players[1].playerId}</div>
-			<GameRound round={lastRound} onAnswer={onAnswerGame}/>
+			<GameRound round={lastRound} onAnswer={onAnswerGame} />
 		</Screen>
 	);
 }

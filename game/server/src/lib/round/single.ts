@@ -1,22 +1,21 @@
-import { Round, Answer, RoundParams } from 'dfs-common';
+import {
+	SingleRoundAnswer,
+	SingleRoundData
+} from 'dfs-common';
 
+import { Round } from './round';
 
-// A single round has a single step
-type SingleRoundParams = RoundParams & {
-	solution: number
-	options: number[],
-}
-
-type SingleRoundAnswer = Answer & {
-	value: number
-}
-export class SingleRound extends Round{
-	answer: number | null = null;
+export class SingleRound
+extends Round
+implements SingleRoundData {
 	options: number[];
+	solution: number;
 	
-	constructor({ name, msLength, solution, options }: SingleRoundParams) {
+	constructor({ name, msLength, solution, options }: SingleRoundData
+	) {
 		super({ msLength, name, solution });
 		this.options = options;
+		this.solution = solution;
 	}
 
 	onAnswer({ value }: SingleRoundAnswer){
