@@ -79,7 +79,7 @@ export function GameScreen({ playerId } : GameScreenProps): JSX.Element{
 	}
 
 	if (endTime !== undefined){
-		return <GameReview gameState={gameState} />;
+		return <GameReview gameData={gameState} />;
 	}
 	
 	const currRoundData = rounds[currentRound];

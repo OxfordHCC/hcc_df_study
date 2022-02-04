@@ -1,14 +1,23 @@
 import React from 'react';
-import { ClientGameState } from 'dfs-common';
+import { GameData } from 'dfs-common';
 import { RoundReviewRow } from './RoundReviewRow';
 import { Screen } from './Screen';
 import styled from 'styled-components';
 
-type GameReviewParams = {gameState: ClientGameState};
-export function GameReview({gameState} : GameReviewParams): JSX.Element{
-	const { rounds } = gameState;
-	const correctLen = rounds.filter(r => r.answer === r.task.correctOption).length;
-	
+type GameReviewParams = {
+	gameData: GameData
+};
+export function GameReview(
+	{ gameData }: GameReviewParams
+): JSX.Element{
+	const { rounds } = gameData;
+	const correctLen = rounds
+		.filter(r => {
+			return r.answer !== undefined
+				&& r.answer === r.solution;
+		})
+		.length;
+
 	return (
 		<Screen>
 			<div>Game finished</div>

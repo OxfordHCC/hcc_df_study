@@ -1,10 +1,10 @@
 import React from 'react';
-import { ClientGameState } from 'dfs-common';
+import { GameData } from 'dfs-common';
 import { LobbyPlayerLI } from './LobbyPlayerLI';
 import { Screen } from './Screen';
 
 type GameLobbyParams = {
-	gameState: ClientGameState;
+	gameState: GameData;
 	playerId: string;
 	onReadyChange: (flag: boolean) => void;
 }
