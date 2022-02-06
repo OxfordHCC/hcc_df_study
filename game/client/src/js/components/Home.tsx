@@ -9,9 +9,7 @@ export function Home(): JSX.Element{
 	const updatePlayerId = useCallback(
 		(e: ChangeEvent<HTMLInputElement>) => {
 			setPlayerId(e.target.value);
-		}
-		, []
-	);
+		}, []);
 
 	const onClick = useCallback(() => {
 		gotoRoute("#game", { playerId });

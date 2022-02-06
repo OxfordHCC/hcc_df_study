@@ -4,13 +4,13 @@ import { LobbyPlayerLI } from './LobbyPlayerLI';
 import { Screen } from './Screen';
 
 type GameLobbyParams = {
-	gameState: GameData;
+	gameData: GameData;
 	playerId: string;
 	onReadyChange: (flag: boolean) => void;
 }
 
-export function GameLobby({ playerId, gameState, onReadyChange }: GameLobbyParams): JSX.Element{
-	const player = gameState.players.find(p => p.playerId === playerId);
+export function GameLobby({ playerId, gameData, onReadyChange }: GameLobbyParams): JSX.Element{
+	const player = gameData.players.find(p => p.playerId === playerId);
 
 	function toggleReady(){
 		if(player === undefined){
@@ -23,7 +23,7 @@ export function GameLobby({ playerId, gameState, onReadyChange }: GameLobbyParam
 		return <p>Invalid game state: player missing from game.</p>
 	}
 
-	const listItems = gameState.players.map(p => {
+	const listItems = gameData.players.map(p => {
 		return <LobbyPlayerLI key={p.playerId} player={p} />
 	});
 	

@@ -2,14 +2,25 @@ import React from 'react';
 import { useState, useEffect, useMemo } from 'react';
 
 type ClockParams = {
-	start: number,
+	start?: number,
 	length: number
 }
 
-export function Clock({ start, length }: ClockParams){
-	const [display, setDisplay] = useState<string>("");
+function formatClockString(width: number, msLeft: number){
+	const timeLeft = Math
+		.ceil(msLeft / 1000)
+		.toString()
+		.padStart(width, "0");
+
+	return `${timeLeft}s`;
+}
+
+export function Clock({ start = 0, length }: ClockParams) {
+	const width = useMemo(() =>
+		(Math.floor((length / 1000) / 10)), []);
+	const [display, setDisplay] = useState<string>(
+		formatClockString(width, length));
 	const end = useMemo(() => start + length, [start, length]);
-	const width = useMemo(() => (Math.floor((length / 1000) / 10)), []);
 
 	useEffect(() => {
 		const interval = setInterval(() => {
@@ -17,15 +28,16 @@ export function Clock({ start, length }: ClockParams){
 			if(msLeft === 0){
 				clearInterval(interval);
 			}
-			const timeLeft = Math.ceil(msLeft/1000).toString().padStart(width, "0");
-			setDisplay(`${timeLeft}s`);
+			
+			setDisplay(formatClockString(width, msLeft));
 		}, 500);
 		
 		return () => clearInterval(interval);
-	}, [start, length]);
+	}, [end, width]);
 
-	return <>
-		{display}
-	</>;
+	return (
+		<span>
+			{display}
+		</span>
+	);
 }
-
