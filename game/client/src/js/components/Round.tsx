@@ -12,8 +12,6 @@ type RoundParam = {
 	isBlue: boolean
 }
 
-
-
 export function Round({ isBlue, roundData, round, onAnswer }: RoundParam): JSX.Element{
 	const { name } = roundData;
 
@@ -24,24 +22,37 @@ export function Round({ isBlue, roundData, round, onAnswer }: RoundParam): JSX.E
 					start={roundData.startTime}
 					length={roundData.msLength} />
 			</ClockContainer>
-			<Switch<RoundName> on={name}>
-				<Case when="button">
-					<ButtonRound
-						isBlue={isBlue}
-						round={round}
-						roundData={roundData as ButtonRoundData}
-						onAnswer={onAnswer}
-					/>
-				</Case>
-				<DefaultCase>
-					<p>Unknown Round...</p>
-				</DefaultCase>
-			</Switch>
+			<RoundContentContainer>
+				<Switch<RoundName> on={name}>
+					<Case when="button">
+						<ButtonRound
+							isBlue={isBlue}
+							round={round}
+							roundData={roundData as ButtonRoundData}
+							onAnswer={onAnswer}
+						/>
+					</Case>
+					<DefaultCase>
+						<p>Unknown Round...</p>
+					</DefaultCase>
+				</Switch>
+			</RoundContentContainer>
 		</RoundContainer>
 	);
 }
 
-const RoundContainer = styled.div``;
+const RoundContentContainer = styled.div`
+	display: flex;
+	flex-direction:column;
+	flex: 1;
+`;
+
+const RoundContainer = styled.div`
+	flex:1;
+	display: flex;
+	flex-direction: column;
+`;
+
 const ClockContainer = styled.div`
 	text-align: center
 `;

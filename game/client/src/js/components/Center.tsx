@@ -2,6 +2,7 @@ import styled from 'styled-components';
 
 export const Center = styled.div`
 	display: flex;
-	justify-conent: center;
+	flex: 1;
+	justify-content: center;
 	align-items: center;
 `;

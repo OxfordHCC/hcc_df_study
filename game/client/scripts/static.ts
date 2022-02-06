@@ -31,7 +31,8 @@ async function copyStaticFile(srcFile: string): Promise<CopyStaticFileResult> {
 
 export function copyStatic(){
 	const staticFiles = [
-		`./index.html`
+		`./index.html`,
+		'./main.css'
 	];
 		
 	return Promise.all(staticFiles.map(copyStaticFile))

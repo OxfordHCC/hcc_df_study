@@ -5,17 +5,16 @@ type CaseParams<T> = {
 	when: T
 	children: React.ReactNode
 }
-interface Case<T>
-extends JSX.Element{}
-export function Case<T>({ children }: CaseParams<T>): JSX.Element{
+export function Case<T>(
+	{ children }: CaseParams<T>
+): JSX.Element{
 	return <>{children}</>;
 }
 
 type DefaultCaseParams = {
 	children: React.ReactNode
 }
-interface DefaultCase
-extends JSX.Element{}
+
 export function DefaultCase(
 	{ children }: DefaultCaseParams
 ): JSX.Element{
@@ -24,23 +23,25 @@ export function DefaultCase(
 
 type SwitchParams<T> = {
 	on: T
-	children: Array<Case<T> | DefaultCase> 
+	children: Array<
+	  | React.ReactElement<CaseParams<T>>
+	  | React.ReactElement<DefaultCaseParams>
+	>
 }
 export function Switch<T>(
 	{ on, children }: SwitchParams<T>
 ): JSX.Element{
-	
 	const defaultCase = useMemo(() => children.find(
-		c => c.type.name === "DefaultCase"
-	), [children]) as DefaultCase;
+		c => c.type === DefaultCase
+	), [children]) as React.ReactElement<DefaultCaseParams>;
 
 	const cases = useMemo(() => children.filter(
-		c => c.type.name === "Case"
-	), [children]) as Case<T>[];
+		c => c.type === Case
+	), [children]) as React.ReactElement<CaseParams<T>>[];
 
 	return (
 		cases.find(c => c.props.when === on)
 		|| defaultCase
-		|| <>Switch did not match anything and no default value.</>
+		|| "" as never
 	);
 }
