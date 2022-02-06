@@ -4,7 +4,6 @@ import { Answer, GameData } from 'dfs-common';
 import { Screen } from './Screen';
 import { Round } from './Round';
 
-
 type RoundScreenParams = {
 	gameData: GameData
 	playerId: string
@@ -86,12 +85,13 @@ const TableFace = styled.div`
 `;
 
 const TopTableFace = styled(TableFace)`
-background: radial-gradient(ellipse at left bottom,#ffbd8e 0%,#c88d69 100%);
-transform: rotateX(30deg) translateY(180px); 
+background: url("CRATE1.PNG");
+background-size: cover;
+transform: rotateX(30deg) translateY(180px);
 `;
 
 const Room = styled.div`
-	perspective: 100px;
+	perspective: 500px;
 	height: 100%;
 	width: 100%;
 	display:flex;
@@ -106,19 +106,23 @@ const Wall = styled.div`
 	position: absolute;
 `;
 const BackWall = styled(Wall)`
-background: grey;
+background: url("BIGDOOR6.png");
+background-repeat: no-repeat;
+background-size: cover;
 `;
 const LeftWall = styled(Wall)`
-background: red;
-transform: rotateY(-60deg) translateZ(400px) scaleY(100);
+background: url("STARTAN1.png");
+
+transform: rotateY(-120deg) translateX(130px) translateZ(400px) scaleY(120%) skewY(26.5deg);
 `;
 const RightWall = styled(Wall)`
-background: green;
-transform: rotateY(-60deg) translateZ(-400px) scaleY(100);
+transform: rotateY(-90deg) translateZ(-400px) skewY(22deg);
+background: url("STARTAN1.png");
 `;
+
 const BottomWall = styled(Wall)`
-background: lightblue;
-transform: rotateX(28deg);
+background: url("https://talk.dengine.net/uploads/editor/nt/0o4nkoi8l1u4.png");
+transform: rotateX(68deg);
 `
 
 

@@ -32,12 +32,19 @@ async function copyStaticFile(srcFile: string): Promise<CopyStaticFileResult> {
 export function copyStatic(){
 	const staticFiles = [
 		`./index.html`,
-		'./main.css'
+		'./main.css',
+		"./STARTAN1.png",
+		"./GRAY1.png",
+		"./ASHWALL.png",
+		"./BIGDOOR6.png",
+		"./CRATE1.png"
 	];
 		
 	return Promise.all(staticFiles.map(copyStaticFile))
 	.then((copiedFiles) => copiedFiles.filter(isError)
 		.forEach(res => {
 			console.error(getError(res));
-	}));
+		})
+	).catch(err => console.error(err));
+
 }
