@@ -37,7 +37,9 @@ export function copyStatic(){
 		"./GRAY1.png",
 		"./ASHWALL.png",
 		"./BIGDOOR6.png",
-		"./CRATE1.png"
+		"./CRATE1.png",
+		"./WOOD1.png",
+		"./MARBLE3.png"
 	];
 		
 	return Promise.all(staticFiles.map(copyStaticFile))

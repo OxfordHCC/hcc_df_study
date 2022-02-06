@@ -39,15 +39,18 @@ export function RoundScreen({ gameData, playerId, onAnswer }: RoundScreenParams)
 				</Table>
 			</Background>
 			<GameDataContainer>
-				<div>
-					<div>Blue: {players[0].playerId}</div>
-					<div>Red: {players[1].playerId}</div>
-				</div>
-
-				<div>
-					<h3>Round {currentRound}</h3>
-					<div>Score: {score}/{total}</div>
-				</div>
+				<StatusBar>
+					<BluePlayer>{players[0].playerId}</BluePlayer>
+					<RedPlayer>{players[1].playerId}</RedPlayer>
+				</StatusBar>
+				<StatusBar>
+					<BarSquare>
+						<h3>Round {currentRound}</h3>
+					</BarSquare>
+					<BarSquare>
+						<div>Score: {score}/{total}</div>
+					</BarSquare>
+				</StatusBar>
 			</GameDataContainer>
 			<Round round={currentRound}
 				roundData={currRoundData}
@@ -56,6 +59,26 @@ export function RoundScreen({ gameData, playerId, onAnswer }: RoundScreenParams)
 		</Screen>
 	);
 }
+
+const BarSquare = styled.div`
+	background: url("GRAY1.PNG");
+	background-size: contain;
+	background-repeat: no-repeat;
+	display: flex;
+	justify-content: center;
+	align-items: Center;
+	height: 100px;
+	width: 100px;
+`;
+
+const BluePlayer = styled(BarSquare)``;
+
+const RedPlayer = styled(BarSquare)``;
+
+const StatusBar = styled.div`
+	display: flex;
+	flex-direction: row;
+`;
 
 const GameDataContainer = styled.div`
 	display: flex;
@@ -85,9 +108,9 @@ const TableFace = styled.div`
 `;
 
 const TopTableFace = styled(TableFace)`
-background: url("CRATE1.PNG");
-background-size: cover;
-transform: rotateX(30deg) translateY(180px);
+  background: url("CRATE1.PNG");
+  background-size: cover;
+  transform: rotateX(30deg) translateY(180px);
 `;
 
 const Room = styled.div`
