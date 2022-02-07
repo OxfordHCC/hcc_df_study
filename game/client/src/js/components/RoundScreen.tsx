@@ -1,8 +1,10 @@
 import React from 'react';
+import { useState } from 'react';
 import styled from 'styled-components';
 import { Answer, GameData } from 'dfs-common';
 import { Screen } from './Screen';
 import { Round } from './Round';
+
 
 type RoundScreenParams = {
 	gameData: GameData
@@ -10,10 +12,12 @@ type RoundScreenParams = {
 	onAnswer: (a: Answer) => void
 }
 export function RoundScreen({ gameData, playerId, onAnswer }: RoundScreenParams){
+	const [clock, setClock] = useState<string>();
+	
 	const { rounds, players, currentRound } = gameData;
 	
 	const isBlue = playerId === players[0].playerId;
-	const currRoundData = rounds[0];
+	const currRoundData = rounds[currentRound];
 
 	const score = rounds.map(round => {
 		return round.answer !== undefined
@@ -24,6 +28,10 @@ export function RoundScreen({ gameData, playerId, onAnswer }: RoundScreenParams)
 	const total = rounds
 		.map(r => (r.answer !== undefined)? 1 : 0)
 		.reduce((acc: number, curr) => acc + curr, 0);
+
+	function updateClock(clockStr: string){
+		setClock(clockStr);
+	}
 
 	return (
 		<Screen>
@@ -40,22 +48,31 @@ export function RoundScreen({ gameData, playerId, onAnswer }: RoundScreenParams)
 			</Background>
 			<GameDataContainer>
 				<StatusBar>
-					<BluePlayer>{players[0].playerId}</BluePlayer>
-					<RedPlayer>{players[1].playerId}</RedPlayer>
+					<BarSquare>
+						<div>Round</div>
+						<div>{currentRound}</div>
+					</BarSquare>
+					<BarSquare>
+						<div>Score</div>
+						<div>{score}/{total}</div>
+					</BarSquare>
+				
 				</StatusBar>
 				<StatusBar>
 					<BarSquare>
-						<h3>Round {currentRound}</h3>
+						Time
 					</BarSquare>
 					<BarSquare>
-						<div>Score: {score}/{total}</div>
+						{clock}
 					</BarSquare>
 				</StatusBar>
 			</GameDataContainer>
 			<Round round={currentRound}
 				roundData={currRoundData}
 				onAnswer={onAnswer}
-				isBlue={isBlue} />
+			isBlue={isBlue}
+			onClockUpdate={updateClock}
+			/>
 		</Screen>
 	);
 }
@@ -65,15 +82,15 @@ const BarSquare = styled.div`
 	background-size: contain;
 	background-repeat: no-repeat;
 	display: flex;
+	flex-direction: column;
 	justify-content: center;
 	align-items: Center;
-	height: 100px;
-	width: 100px;
+	height: 120px;
+	width: 120px;
+	font-size: 2em;
+	font-weight: bold;
+	color: darkred;
 `;
-
-const BluePlayer = styled(BarSquare)``;
-
-const RedPlayer = styled(BarSquare)``;
 
 const StatusBar = styled.div`
 	display: flex;

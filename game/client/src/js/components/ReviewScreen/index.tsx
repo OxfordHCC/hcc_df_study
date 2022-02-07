@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { GameData } from 'dfs-common';
 import { RoundReviewRow } from './RoundReviewRow';
 import { Screen } from '../Screen';
+import { Center } from '../Center';
 
 
 type GameReviewParams = {
@@ -21,28 +22,29 @@ export function GameReview(
 
 	return (
 		<Screen>
-			<div>
-				<div>
-					<div>Game finished</div>
-					<div>{correctLen}/{rounds.length} correct</div>
-					<ReviewTable>
-						<thead>
-							<tr>
-								<th>Round</th>
-								<th>Answer</th>
-								<th>Correct</th>
-							</tr>
-						</thead>
-						<tbody>
-							{
-								rounds.map(
-									(round, i) => <RoundReviewRow roundNumber={i} round={round} key={i} />
-								)
-							}
-						</tbody>
-					</ReviewTable>
-				</div>
-			</div>
+			<Center>
+					<div>
+						<div>Game finished</div>
+						<div>{correctLen}/{rounds.length} correct</div>
+						<ReviewTable>
+							<thead>
+								<tr>
+									<th>Round</th>
+									<th>Answer</th>
+									<th>Correct</th>
+								</tr>
+							</thead>
+							<tbody>
+								{
+									rounds.map(
+										(round, i) => <RoundReviewRow roundNumber={i} round={round} key={i} />
+									)
+								}
+							</tbody>
+						</ReviewTable>
+					</div>
+
+			</Center>
 		</Screen>
 	);
 }

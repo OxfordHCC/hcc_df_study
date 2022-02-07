@@ -3,7 +3,8 @@ import { useState, useEffect, useMemo } from 'react';
 
 type ClockParams = {
 	start?: number,
-	length: number
+	length: number,
+	onUpdate?: (a: string) => void
 }
 
 function formatClockString(width: number, msLeft: number){
@@ -15,7 +16,7 @@ function formatClockString(width: number, msLeft: number){
 	return `${timeLeft}s`;
 }
 
-export function Clock({ start = 0, length }: ClockParams) {
+export function Clock({ onUpdate, start = 0, length }: ClockParams) {
 	const width = useMemo(() =>
 		(Math.floor((length / 1000) / 10)), []);
 	const [display, setDisplay] = useState<string>(
@@ -28,8 +29,12 @@ export function Clock({ start = 0, length }: ClockParams) {
 			if(msLeft === 0){
 				clearInterval(interval);
 			}
-			
-			setDisplay(formatClockString(width, msLeft));
+
+			const clockValue = formatClockString(width, msLeft);
+			setDisplay(clockValue);
+			if(onUpdate !== undefined){
+				onUpdate(clockValue);
+			}
 		}, 500);
 		
 		return () => clearInterval(interval);

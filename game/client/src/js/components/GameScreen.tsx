@@ -67,7 +67,7 @@ export function GameScreen({ playerId } : GameScreenProps): JSX.Element{
 		return <p>Game not found</p>;
 	}
 
-	/* const { startTime, endTime } = gameData;
+	const { startTime, endTime } = gameData;
 
 	if (startTime === undefined) {
 		return <GameLobby
@@ -79,7 +79,7 @@ export function GameScreen({ playerId } : GameScreenProps): JSX.Element{
 	if (endTime !== undefined) {
 		return <GameReview gameData={gameData} />;
 	}
- */
+ 
 	return <RoundScreen
 			   gameData={gameData}
 			   playerId={playerId}

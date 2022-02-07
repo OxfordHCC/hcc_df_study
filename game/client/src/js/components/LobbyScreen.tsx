@@ -2,6 +2,7 @@ import React from 'react';
 import { GameData } from 'dfs-common';
 import { LobbyPlayerLI } from './LobbyPlayerLI';
 import { Screen } from './Screen';
+import { Center } from './Center';
 
 type GameLobbyParams = {
 	gameData: GameData;
@@ -29,8 +30,10 @@ export function GameLobby({ playerId, gameData, onReadyChange }: GameLobbyParams
 	
 	return (
 		<Screen>
-			{listItems}
-			<button onClick={toggleReady}>{(player.ready === true) ? "Unready" : "Ready"}</button>
+			<Center style={{flexDirection: "column"}}>
+				{listItems}
+				<button onClick={toggleReady}>{(player.ready === true) ? "Unready" : "Ready"}</button>
+			</Center>
 		</Screen>
 	);
 }

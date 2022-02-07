@@ -1,3 +1,4 @@
-body {
+html, body, #react-root {
 	margin: 0;
+	font-family: "Arial"
 }

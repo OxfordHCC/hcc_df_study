@@ -9,16 +9,18 @@ type RoundParam = {
 	round: number
 	roundData: RoundData
 	onAnswer: (answer: Answer) => void
-	isBlue: boolean
+	isBlue: boolean,
+	onClockUpdate?: (a: string) => void
 }
 
-export function Round({ isBlue, roundData, round, onAnswer }: RoundParam): JSX.Element{
+export function Round({ isBlue, roundData, round, onAnswer, onClockUpdate }: RoundParam): JSX.Element{
 	const { name } = roundData;
 
 	return (
 		<RoundContainer>
 			<ClockContainer>
 				<Clock
+				onUpdate={onClockUpdate}
 					start={roundData.startTime}
 					length={roundData.msLength} />
 			</ClockContainer>
@@ -54,5 +56,6 @@ const RoundContainer = styled.div`
 `;
 
 const ClockContainer = styled.div`
+	height: 0;
 	text-align: center
 `;
