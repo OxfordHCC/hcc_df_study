@@ -70,6 +70,9 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 COPY --from=0 /root/mumble/build/mumble-server /usr/bin/mumble-server
 COPY --from=0 /root/mumble/scripts/murmur.ini /etc/murmur/murmur.ini
 
+RUN mkdir -p /var/hcc/rec && \
+	chown --verbose murmur:murmur /var/hcc/rec
+
 RUN mkdir /var/lib/murmur && \
 	chown --verbose murmur:murmur /var/lib/murmur && \
 	sed -i 's/^database=$/database=\/var\/lib\/murmur\/murmur.sqlite/' /etc/murmur/murmur.ini

@@ -13,11 +13,6 @@ import (
 	"hcc.ox.ac.uk/dfstudy/mumble-cli/grpc"
 )
 
-/*
-   This program takes the form of a REPL with various implemented commands.
-   See the command implementation functions for what arguments are accepted etc.
-
-*/
 
 func parseUint32(arg string) (error, uint32){
 	val64, err := strconv.ParseUint(arg, 10, 32)

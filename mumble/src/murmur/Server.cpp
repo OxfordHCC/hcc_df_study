@@ -22,6 +22,7 @@
 #include "User.h"
 #include "Version.h"
 
+
 #ifdef USE_ZEROCONF
 #	include "Zeroconf.h"
 #endif
@@ -36,6 +37,11 @@
 #include <QtNetwork/QSslConfiguration>
 
 #include <boost/bind/bind.hpp>
+
+#include <iostream>
+#include <fstream>
+#include <ios>
+#include <unordered_map>
 
 #ifdef Q_OS_WIN
 #	include <qos2.h>
@@ -74,7 +80,41 @@ QSslSocket *SslServer::nextPendingSSLConnection() {
 	return qlSockets.takeFirst();
 }
 
+void Server::recordLoop(){
+	std::unordered_map<int, std::ofstream*> fileMap;
+	
+	while (bRecording) {
+		if(recordingQueue.size() <= 0){
+			continue;
+		}
+		
+		const AudioMsg msg = recordingQueue.front();
+		
+		try{
+			// get file stream from map
+			fileMap.at(msg.user_iId);
+		}catch(std::out_of_range& e){
+			// create file
+			char fileName[50];
+			sprintf(fileName, "/var/hcc/rec/%d.mams", msg.user_iId);
+			fileMap[msg.user_iId] = new std::ofstream(fileName, std::ios::out | std::ios::binary | std::ios::app);
+		}
+
+		fileMap[msg.user_iId]->write(msg.data, msg.len);
+		
+		// remove from queue;
+		recordingQueue.pop();
+	}
+
+	// for each (string, stream) pair in fileMap
+	for(const auto& iopair : fileMap){
+		iopair.second->close();
+		delete iopair.second;
+	}
+}
+
 Server::Server(int snum, QObject *p) : QThread(p) {
+	
 	bValid     = true;
 	iServerNum = snum;
 #ifdef USE_ZEROCONF
@@ -95,9 +135,14 @@ Server::Server(int snum, QObject *p) : QThread(p) {
 
 	qnamNetwork = nullptr;
 
+	// recording thread
+	bRecording = false;
+	startRecording();
+	
 	readParams();
 	initialize();
 
+	
 	foreach (const QHostAddress &qha, qlBind) {
 		SslServer *ss = new SslServer(this);
 
@@ -287,12 +332,26 @@ void Server::stopThread() {
 	qtTimeout->stop();
 }
 
+
+void Server::startRecording(){
+	log("Starting recording thread");
+	bRecording = true;
+	std::thread recThread(&Server::recordLoop, this);
+	recThread.detach();
+}
+
+void Server::stopRecording(){
+	log("Stopping recording thread");
+	bRecording = false;
+}
+
 Server::~Server() {
 #ifdef USE_ZEROCONF
 	removeZeroconf();
 #endif
 
 	stopThread();
+	stopRecording();
 
 	foreach (QSocketNotifier *qsn, qlUdpNotifier)
 		delete qsn;
@@ -958,29 +1017,41 @@ bool Server::checkDecrypt(ServerUser *u, const char *encrypt, char *plain, unsig
 	return false;
 }
 
-
- void to_hex(const char *string, char *out, int len, int maxlen){
-   if(len > maxlen){
-	 len = maxlen;
-   }
-   unsigned char *p = (unsigned char *) string;
+void to_hex(const char *string, char *out, int len, int maxlen){
+	if(len > maxlen){
+		len = maxlen;
+	}
+	unsigned char *p = (unsigned char *) string;
     
-   for (int i=0; i < len; i++) {
-	 int j = i*5;
+	for (int i=0; i < len; i++) {
+		int j = i*5;
         
-	 char hex_char[6];
-	 sprintf(hex_char, "0x%02x ", p[i]);
-	 //cout<<"("<<&out<<" + "<<j<<")"<<"="<<hex_char<<"\n";
-	 memcpy(&out[j], hex_char, 5);
-   }
-   memset(out+len*5, '\0', 1);
- }
+		char hex_char[6];
+		sprintf(hex_char, "0x%02x ", p[i]);
+		memcpy(&out[j], hex_char, 5);
+	}
+	memset(out+len*5, '\0', 1);
+}
+
+
+void Server::recordAudio(const char* data, int len, int iId){
+	// send audio message to recording queue to be processed by the recording thread loop
+	struct AudioMsg msg;
+	msg.len = len;
+	msg.user_iId = iId;
+	msg.data = data;
+
+	recordingQueue.push(msg);
+}
 
 void Server::sendMessage(ServerUser *u, const char *data, int len, QByteArray &cache, bool force) {
+	// log message
 	qWarning("=== sendMessage called. len: %d", len);
 	char *debugArr = QByteArray(data, len).toHex(' ').data();
 	qWarning("data: %s", debugArr);
-  
+
+	// write data to file
+	recordAudio(data, len, u->iId);
   
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
 	if ((u->aiUdpFlag.loadRelaxed() == 1 || force) && (u->sUdpSocket != INVALID_SOCKET)) {

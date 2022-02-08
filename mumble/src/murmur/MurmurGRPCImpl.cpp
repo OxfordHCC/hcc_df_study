@@ -1382,8 +1382,8 @@ namespace Wrapper {
 		int samplerate = request.samplerate();
 
 		qDebug("starting thread with doInjectAudio");
-		std::thread t(&doInjectAudio, data, server, user, target, len, sleepTime, bigEndian, framesize,
-					  bitrate, samplerate);
+		std::thread t(&doInjectAudio, data, server, user, target, len,
+					  sleepTime, bigEndian, framesize, bitrate, samplerate);
 		t.detach();
 		end();
 	}

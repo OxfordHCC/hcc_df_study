@@ -25,6 +25,8 @@
 #	include <boost/function.hpp>
 #endif
 
+#include <queue>
+
 #include <QtCore/QEvent>
 #include <QtCore/QMutex>
 #include <QtCore/QQueue>
@@ -58,6 +60,12 @@ struct TextMessage {
 	QList< unsigned int > qlChannels;
 	QList< unsigned int > qlTrees;
 	QString qsText;
+};
+
+struct AudioMsg {
+	int len;
+	const char* data;
+	int user_iId;
 };
 
 class SslServer : public QTcpServer {
@@ -105,7 +113,14 @@ protected:
 	void customEvent(QEvent *evt);
 	// Former ServerParams
 public:
-	QList< QHostAddress > qlBind;
+    bool bRecording;
+    std::queue<AudioMsg> recordingQueue;
+    void startRecording();
+    void stopRecording();
+    void recordAudio(const char* data, int len, int userId);
+    void recordLoop();
+    
+    QList< QHostAddress > qlBind;
 	unsigned short usPort;
 	int iTimeout;
 	int iMaxBandwidth;
