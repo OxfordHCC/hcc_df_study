@@ -108,7 +108,8 @@ func main(){
 	}
 
 	if !ok {
-		panic("show help")
+		fmt.Fprintln(os.Stderr, help(commands))
+		return
 	}
 
 	err, res := cmdFn(client, os.Args[2:]);
