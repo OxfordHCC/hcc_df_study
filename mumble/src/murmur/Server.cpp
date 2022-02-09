@@ -83,34 +83,43 @@ QSslSocket *SslServer::nextPendingSSLConnection() {
 void Server::recordLoop(){
 	std::unordered_map<int, std::ofstream*> fileMap;
 	
+	qWarning("something");
 	while (bRecording) {
 		if(recordingQueue.size() <= 0){
 			continue;
 		}
-		
+
+		qWarning("recording queue is non-empty");
 		const AudioMsg msg = recordingQueue.front();
+
+		qWarning("recording message; user: %d", msg.user);
 		
 		try{
 			// get file stream from map
-			fileMap.at(msg.user_iId);
+			fileMap.at(msg.user);
+			qWarning("filemap has user file stream");
 		}catch(std::out_of_range& e){
+			qWarning("filemap does not have user file stream");
 			// create file
 			char fileName[50];
-			sprintf(fileName, "/var/hcc/rec/%d.mams", msg.user_iId);
-			fileMap[msg.user_iId] = new std::ofstream(fileName, std::ios::out | std::ios::binary | std::ios::app);
+			sprintf(fileName, "/var/hcc/rec/%d.mams", msg.user);
+			fileMap[msg.user] = new std::ofstream(fileName, std::ios::out | std::ios::binary | std::ios::app);
+			qWarning("opened ofstream");
 		}
 
-		fileMap[msg.user_iId]->write(msg.data, msg.len);
-		
+		fileMap[msg.user]->write(msg.data, msg.len);
+
 		// remove from queue;
 		recordingQueue.pop();
 	}
-
+	
 	// for each (string, stream) pair in fileMap
 	for(const auto& iopair : fileMap){
 		iopair.second->close();
 		delete iopair.second;
 	}
+
+	qWarning("exiting recording thread..");
 }
 
 Server::Server(int snum, QObject *p) : QThread(p) {
@@ -137,6 +146,7 @@ Server::Server(int snum, QObject *p) : QThread(p) {
 
 	// recording thread
 	bRecording = false;
+	testFlag = false;
 	startRecording();
 	
 	readParams();
@@ -1033,15 +1043,20 @@ void to_hex(const char *string, char *out, int len, int maxlen){
 	memset(out+len*5, '\0', 1);
 }
 
-
-void Server::recordAudio(const char* data, int len, int iId){
+void Server::recordAudio(const char* data, int len, unsigned int user){
 	// send audio message to recording queue to be processed by the recording thread loop
 	struct AudioMsg msg;
 	msg.len = len;
-	msg.user_iId = iId;
+	msg.user = user;
 	msg.data = data;
 
+	qWarning("address of recordingQueue = %p", (void*)&recordingQueue);
+	int sizeBefore = recordingQueue.size();	
 	recordingQueue.push(msg);
+	testFlag = true;
+	int sizeAfter = recordingQueue.size();
+	qWarning("Size before = %d; size after = %d", sizeBefore, sizeAfter);
+	
 }
 
 void Server::sendMessage(ServerUser *u, const char *data, int len, QByteArray &cache, bool force) {
@@ -1051,7 +1066,7 @@ void Server::sendMessage(ServerUser *u, const char *data, int len, QByteArray &c
 	qWarning("data: %s", debugArr);
 
 	// write data to file
-	recordAudio(data, len, u->iId);
+	recordAudio(data, len, u->uiSession);
   
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
 	if ((u->aiUdpFlag.loadRelaxed() == 1 || force) && (u->sUdpSocket != INVALID_SOCKET)) {
@@ -1157,8 +1172,6 @@ void Server::processMsg(ServerUser *u, const char *data, int len) {
 	// Server::message
 	if (u->sState != ServerUser::Authenticated || u->bMute || u->bSuppress || u->bSelfMute)
 		return;
-
-	qWarning("processMsg");
 	
 	QByteArray qba, qba_npos;
 	unsigned int counter;
@@ -1181,7 +1194,6 @@ void Server::processMsg(ServerUser *u, const char *data, int len) {
 			return;
 		}
 	}
-	qWarning("not suppressed");
 
 	// Read the sequence number.
 	pdi >> counter;
@@ -1226,7 +1238,6 @@ void Server::processMsg(ServerUser *u, const char *data, int len) {
 		sendMessage(u, buffer, len, qba);
 		return;
 	} else if (target == 0) { // Normal speech
-		qWarning("processmsg Normal speech");
 		Channel *c = u->cChannel;
 
 		buffer[0] = static_cast< char >(type | SpeechFlags::Normal);
@@ -1241,7 +1252,6 @@ void Server::processMsg(ServerUser *u, const char *data, int len) {
 
 		// Send audio to all users in the same channel
 		foreach (User *p, c->qlUsers) {
-			qWarning("for user %d in c->qlUsers", p -> uiSession);
 			ServerUser *pDst = static_cast< ServerUser * >(p);
 
 			// As we send the audio to this particular user here, we want to make sure to not send it again due to a
