@@ -1388,6 +1388,18 @@ namespace Wrapper {
 		end();
 	}
 
+	void V1_ShadowMute::impl(bool){
+		auto server = MustServer(request);
+		ServerUser* target = MustTarget(server, request);
+		server->shadowmuteUser(target, true);
+	}
+
+	void V1_ShadowUnmute::impl(bool){
+		auto server = MustServer(request);
+		ServerUser* target = MustTarget(server, request);
+		server->shadowmuteUser(target, false);
+	}
+
 	void V1_ServerCreate::impl(bool) {
 		auto id = ServerDB::addServer();
 

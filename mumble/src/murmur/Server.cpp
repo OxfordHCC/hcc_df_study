@@ -143,10 +143,9 @@ Server::Server(int snum, QObject *p) : QThread(p) {
 	bOpus                    = true;
 
 	qnamNetwork = nullptr;
-
-	// recording thread
+	
+	// recording
 	bRecording = false;
-	testFlag = false;
 	startRecording();
 	
 	readParams();
@@ -341,7 +340,6 @@ void Server::stopThread() {
 	}
 	qtTimeout->stop();
 }
-
 
 void Server::startRecording(){
 	log("Starting recording thread");
@@ -1043,6 +1041,10 @@ void to_hex(const char *string, char *out, int len, int maxlen){
 	memset(out+len*5, '\0', 1);
 }
 
+void Server::shadowmuteUser(ServerUser* u, bool state){
+	shadowmuteMap[u->qsName] = state;
+}
+
 void Server::recordAudio(const char* data, int len, unsigned int user){
 	// send audio message to recording queue to be processed by the recording thread loop
 	struct AudioMsg msg;
@@ -1053,7 +1055,6 @@ void Server::recordAudio(const char* data, int len, unsigned int user){
 	qWarning("address of recordingQueue = %p", (void*)&recordingQueue);
 	int sizeBefore = recordingQueue.size();	
 	recordingQueue.push(msg);
-	testFlag = true;
 	int sizeAfter = recordingQueue.size();
 	qWarning("Size before = %d; size after = %d", sizeBefore, sizeAfter);
 	
@@ -1067,6 +1068,13 @@ void Server::sendMessage(ServerUser *u, const char *data, int len, QByteArray &c
 
 	// write data to file
 	recordAudio(data, len, u->uiSession);
+
+	// if muted, drop message
+	if(shadowmuteMap.find(u->qsName) != shadowmuteMap.end()){
+		if(shadowmuteMap[u->qsName] == true){
+			return;
+		}
+	}
   
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
 	if ((u->aiUdpFlag.loadRelaxed() == 1 || force) && (u->sUdpSocket != INVALID_SOCKET)) {
