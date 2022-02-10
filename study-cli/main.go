@@ -81,6 +81,7 @@ func main(){
 	commands := make(commandTree);
 	//	commands["shell"] = shellCmd;
 	commands["send"] = sendCmd; // send audio to someone
+	commands["shadowmute"] = shadowmuteCmd; // shadowmute someone
 	commands["users"] = usersCmd; // get users 
 	commands["servers"] = serversCmd; // get servers
 	//commands["spoof"] = spoofCmd; // spoof audio/text message

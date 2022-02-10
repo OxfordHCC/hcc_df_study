@@ -19,7 +19,10 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type V1Client interface {
 	// Deepfake study
+	// send audio
 	InjectAudio(ctx context.Context, in *AudioInjection, opts ...grpc.CallOption) (*Void, error)
+	// mute player
+	Shadowmute(ctx context.Context, in *ShadowmuteMessage, opts ...grpc.CallOption) (*Void, error)
 	// GetUptime returns murmur's uptime.
 	GetUptime(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Uptime, error)
 	// GetVersion returns murmur's version.
@@ -169,6 +172,15 @@ func NewV1Client(cc grpc.ClientConnInterface) V1Client {
 func (c *v1Client) InjectAudio(ctx context.Context, in *AudioInjection, opts ...grpc.CallOption) (*Void, error) {
 	out := new(Void)
 	err := c.cc.Invoke(ctx, "/MurmurRPC.V1/InjectAudio", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *v1Client) Shadowmute(ctx context.Context, in *ShadowmuteMessage, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/MurmurRPC.V1/Shadowmute", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -707,7 +719,10 @@ func (c *v1Client) RedirectWhisperGroupRemove(ctx context.Context, in *RedirectW
 // for forward compatibility
 type V1Server interface {
 	// Deepfake study
+	// send audio
 	InjectAudio(context.Context, *AudioInjection) (*Void, error)
+	// mute player
+	Shadowmute(context.Context, *ShadowmuteMessage) (*Void, error)
 	// GetUptime returns murmur's uptime.
 	GetUptime(context.Context, *Void) (*Uptime, error)
 	// GetVersion returns murmur's version.
@@ -853,6 +868,9 @@ type UnimplementedV1Server struct {
 
 func (UnimplementedV1Server) InjectAudio(context.Context, *AudioInjection) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InjectAudio not implemented")
+}
+func (UnimplementedV1Server) Shadowmute(context.Context, *ShadowmuteMessage) (*Void, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Shadowmute not implemented")
 }
 func (UnimplementedV1Server) GetUptime(context.Context, *Void) (*Uptime, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUptime not implemented")
@@ -1019,6 +1037,24 @@ func _V1_InjectAudio_Handler(srv interface{}, ctx context.Context, dec func(inte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(V1Server).InjectAudio(ctx, req.(*AudioInjection))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _V1_Shadowmute_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ShadowmuteMessage)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(V1Server).Shadowmute(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/MurmurRPC.V1/Shadowmute",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(V1Server).Shadowmute(ctx, req.(*ShadowmuteMessage))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1886,6 +1922,10 @@ var V1_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "InjectAudio",
 			Handler:    _V1_InjectAudio_Handler,
+		},
+		{
+			MethodName: "Shadowmute",
+			Handler:    _V1_Shadowmute_Handler,
 		},
 		{
 			MethodName: "GetUptime",
