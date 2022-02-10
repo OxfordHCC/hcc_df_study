@@ -83,7 +83,12 @@ QSslSocket *SslServer::nextPendingSSLConnection() {
 
 void Server::recordLoop(){
 	std::unordered_map<int, std::ofstream*> fileMap;
-	
+
+	// this needs to be here for some reason, otherwise the recordLoop doesn't start.
+	// I don't know enough C++ to figure out what's happening. Some possible explanations:
+	// - this function terminates before bRecording is set to true :: I find this hard to believe since assignment of primitives should be atomic;
+	// - the compiler optimizes the function's while loop out of existence, because it sees bRecording as false, and perhaps it can see that this function is only called from a thread? This also doesn't make sense to me, since threads can share memory so the compiler should have no guarantee that bRecording cannot be changed at runtime...
+
 	qWarning("something");
 	while (bRecording) {
 		if(recordingQueue.size() <= 0){
@@ -92,20 +97,15 @@ void Server::recordLoop(){
 
 		qWarning("recording queue is non-empty");
 		const AudioMsg msg = recordingQueue.front();
-
-		qWarning("recording message; user: %d", msg.user);
 		
 		try{
 			// get file stream from map
 			fileMap.at(msg.user);
-			qWarning("filemap has user file stream");
 		}catch(std::out_of_range& e){
-			qWarning("filemap does not have user file stream");
 			// create file
 			char fileName[50];
 			sprintf(fileName, "/var/hcc/rec/%d.mams", msg.user);
 			fileMap[msg.user] = new std::ofstream(fileName, std::ios::out | std::ios::binary | std::ios::app);
-			qWarning("opened ofstream");
 		}
 
 		fileMap[msg.user]->write(msg.data, msg.len);
@@ -1043,7 +1043,9 @@ void to_hex(const char *string, char *out, int len, int maxlen){
 }
 
 void Server::shadowmuteUser(ServerUser* u, bool state){
-	shadowmuteMap[u->qsName.toStdString()] = state;
+	std::string strUserName = u->qsName.toStdString();
+	qWarning("Called shadowmute: name: %s; state: %d", strUserName.c_str(), state );
+	shadowmuteMap[strUserName] = state;
 }
 
 void Server::recordAudio(const char* data, int len, unsigned int user){
@@ -1053,30 +1055,15 @@ void Server::recordAudio(const char* data, int len, unsigned int user){
 	msg.user = user;
 	msg.data = data;
 
-	qWarning("address of recordingQueue = %p", (void*)&recordingQueue);
-	int sizeBefore = recordingQueue.size();	
 	recordingQueue.push(msg);
-	int sizeAfter = recordingQueue.size();
-	qWarning("Size before = %d; size after = %d", sizeBefore, sizeAfter);
-	
 }
 
 void Server::sendMessage(ServerUser *u, const char *data, int len, QByteArray &cache, bool force) {
 	// log message
-	qWarning("=== sendMessage called. len: %d", len);
-	char *debugArr = QByteArray(data, len).toHex(' ').data();
-	qWarning("data: %s", debugArr);
-
-	// write data to file
-	recordAudio(data, len, u->uiSession);
-
-	// if muted, drop message
-	std::string strUserName = u->qsName.toStdString();
-	if(shadowmuteMap.find(strUserName) != shadowmuteMap.end()){
-		if(shadowmuteMap[strUserName] == true){
-			return;
-		}
-	}
+	// std::string strUserName = u->qsName.toStdString();
+	// qWarning("=== sendMessage called. User: %s;len: %d", strUserName.c_str(), len);
+	// char *debugArr = QByteArray(data, len).toHex(' ').data();
+	// qWarning("data: %s", debugArr);
   
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
 	if ((u->aiUdpFlag.loadRelaxed() == 1 || force) && (u->sUdpSocket != INVALID_SOCKET)) {
@@ -1148,7 +1135,6 @@ void Server::sendMessage(ServerUser *u, const char *data, int len, QByteArray &c
 			pktinfo->ipi_spec_dst.s_addr = tcpha.hash[3];
 		}
 
-		qWarning("::sendmsg sending");
 		::sendmsg(u->sUdpSocket, &msg, 0);
 #else
 		::sendto(u->sUdpSocket, buffer, len + 4, 0, reinterpret_cast< struct sockaddr * >(&u->saiUdpAddress),
@@ -1180,6 +1166,21 @@ void Server::processMsg(ServerUser *u, const char *data, int len) {
 	// this function.
 	// This function is currently called from Server::msgUDPTunnel, Server::run and
 	// Server::message
+
+	std::string strUserName = u->qsName.toStdString();
+
+	// write data to file
+	recordAudio(data, len, u->uiSession);
+
+	// if muted, drop message
+	if(shadowmuteMap.find(strUserName) != shadowmuteMap.end()){
+		qWarning("shadowMute[%s] = %d", strUserName.c_str(), shadowmuteMap[strUserName]);
+		if(shadowmuteMap[strUserName] == true){
+			qWarning("user is shadowmuted. Skipping...");
+			return;
+		}
+	}
+	
 	if (u->sState != ServerUser::Authenticated || u->bMute || u->bSuppress || u->bSelfMute)
 		return;
 	
