@@ -4,7 +4,7 @@ import { LobbyPlayerLI } from './LobbyPlayerLI';
 import { Screen } from './Screen';
 import { Center } from './Center';
 
-type GameLobbyParams = {
+export type GameLobbyParams = {
 	gameData: GameData;
 	playerId: string;
 	onReadyChange: (flag: boolean) => void;

@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { Spacer } from './Spacer';
 import { Center } from './Center';
 
-type ButtonRoundParams = {
+export type ButtonRoundParams = {
 	round: number
 	roundData: ButtonRoundData
 	onAnswer: (answer: ButtonRoundAnswer) => void

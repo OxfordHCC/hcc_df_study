@@ -2,6 +2,7 @@ import React from "react";
 import {useState, useEffect } from 'react';
 import { GameScreen } from './GameScreen';
 import { Home } from './Home';
+import { TestScreen } from './TestScreen';
 
 
 function parseParamString(paramString?: string): any{
@@ -16,8 +17,6 @@ function parseParamString(paramString?: string): any{
 export function Router(): JSX.Element {
 	const [route, setRoute] = useState<string>("");
 	const [params, setParams] = useState<any>({});
-	console.log("route is", route);
-	console.log("params", params);
 
 	useEffect(() => {
 		const onHashChange = function() {
@@ -41,6 +40,8 @@ export function Router(): JSX.Element {
 	}, []);
 
 	switch(route){
+		case "#test":
+			return (<TestScreen />);
 		case "#game":
 			return (<GameScreen playerId={params.playerId} />);
 		default:
