@@ -42,6 +42,7 @@
 #include <fstream>
 #include <ios>
 #include <unordered_map>
+#include <string>
 
 #ifdef Q_OS_WIN
 #	include <qos2.h>
@@ -1042,7 +1043,7 @@ void to_hex(const char *string, char *out, int len, int maxlen){
 }
 
 void Server::shadowmuteUser(ServerUser* u, bool state){
-	shadowmuteMap[u->qsName] = state;
+	shadowmuteMap[u->qsName.toStdString()] = state;
 }
 
 void Server::recordAudio(const char* data, int len, unsigned int user){
@@ -1070,8 +1071,9 @@ void Server::sendMessage(ServerUser *u, const char *data, int len, QByteArray &c
 	recordAudio(data, len, u->uiSession);
 
 	// if muted, drop message
-	if(shadowmuteMap.find(u->qsName) != shadowmuteMap.end()){
-		if(shadowmuteMap[u->qsName] == true){
+	std::string strUserName = u->qsName.toStdString();
+	if(shadowmuteMap.find(strUserName) != shadowmuteMap.end()){
+		if(shadowmuteMap[strUserName] == true){
 			return;
 		}
 	}

@@ -27,6 +27,7 @@
 
 #include <queue>
 #include <unordered_map>
+#include <string>
 
 #include <QtCore/QEvent>
 #include <QtCore/QMutex>
@@ -114,7 +115,7 @@ protected:
 	void customEvent(QEvent *evt);
 	// Former ServerParams
 public:
-    std::unordered_map<QString, bool> shadowmuteMap;
+  std::unordered_map<std::string, bool> shadowmuteMap;
     void shadowmuteUser(ServerUser* u, bool state);
     
     bool bRecording;

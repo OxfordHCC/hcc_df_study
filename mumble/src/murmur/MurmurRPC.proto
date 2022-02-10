@@ -614,7 +614,12 @@ message RedirectWhisperGroup {
 	optional ACL.Group target = 4;
 }
 
-// Deepfake study message
+// Deepfake study
+message ShadowmuteMessage{
+	optional Server server = 1;
+	optional User target = 2;
+	optional bool muteStatus = 3;
+}
 
 message AudioInjection{
 	optional Server server = 1;
@@ -631,7 +636,10 @@ message AudioInjection{
 
 service V1 {
 	// Deepfake study
+	// send audio
 	rpc InjectAudio(AudioInjection) returns(Void);
+	// mute player
+	rpc Shadowmute(ShadowmuteMessage) returns(Void);
 	
 	//
 	// Meta

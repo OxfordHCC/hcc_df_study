@@ -1388,16 +1388,11 @@ namespace Wrapper {
 		end();
 	}
 
-	void V1_ShadowMute::impl(bool){
+	void V1_Shadowmute::impl(bool){
 		auto server = MustServer(request);
 		ServerUser* target = MustTarget(server, request);
-		server->shadowmuteUser(target, true);
-	}
-
-	void V1_ShadowUnmute::impl(bool){
-		auto server = MustServer(request);
-		ServerUser* target = MustTarget(server, request);
-		server->shadowmuteUser(target, false);
+		bool status = request.mutestatus();
+		server->shadowmuteUser(target, status);
 	}
 
 	void V1_ServerCreate::impl(bool) {
