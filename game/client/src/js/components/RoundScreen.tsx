@@ -78,7 +78,7 @@ export function RoundScreen({ gameData, playerId, onAnswer }: RoundScreenParams)
 }
 
 const BarSquare = styled.div`
-	background: url("GRAY1.PNG");
+	background: url("./textures/GRAY1.PNG");
 	background-size: contain;
 	background-repeat: no-repeat;
 	display: flex;
@@ -125,7 +125,7 @@ const TableFace = styled.div`
 `;
 
 const TopTableFace = styled(TableFace)`
-  background: url("CRATE1.PNG");
+  background: url("./textures/CRATE1.PNG");
   background-size: cover;
   transform: rotateX(30deg) translateY(180px);
 `;
@@ -146,22 +146,22 @@ const Wall = styled.div`
 	position: absolute;
 `;
 const BackWall = styled(Wall)`
-background: url("BIGDOOR6.png");
+background: url("./textures/BIGDOOR6.png");
 background-repeat: no-repeat;
 background-size: cover;
 `;
 const LeftWall = styled(Wall)`
-background: url("STARTAN1.png");
+background: url("./textures/STARTAN1.png");
 
 transform: rotateY(-120deg) translateX(130px) translateZ(400px) scaleY(120%) skewY(26.5deg);
 `;
 const RightWall = styled(Wall)`
 transform: rotateY(-90deg) translateZ(-400px) skewY(22deg);
-background: url("STARTAN1.png");
+background: url("./textures/STARTAN1.png");
 `;
 
 const BottomWall = styled(Wall)`
-background: url("https://talk.dengine.net/uploads/editor/nt/0o4nkoi8l1u4.png");
+background: url("./textures/floor.png");
 transform: rotateX(68deg);
 `
 
