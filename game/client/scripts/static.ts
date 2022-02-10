@@ -1,5 +1,5 @@
 import path from 'path';
-import { copyFile, mkdir } from 'fs/promises';
+import { copyFile, mkdir, stat } from 'fs/promises';
 import { BUILD_DIR, SRC_DIR } from './util';
 
 type CopyStaticFileResult = {
@@ -14,10 +14,11 @@ function getError(res: CopyStaticFileResult): Error | undefined{
 	return res.error;
 }
 
-async function copyStaticFile(srcFile: string): Promise<CopyStaticFileResult> {
+async function copyStaticFile(srcFile: string, buildDir: string): Promise<CopyStaticFileResult> {
 	try{
 		const srcPath = path.resolve(path.join(SRC_DIR, srcFile));
-		const dstPath = path.resolve(path.join(BUILD_DIR, srcFile));
+		
+		const dstPath = path.resolve(path.join(buildDir, srcFile));
 		const dstDir = path.parse(dstPath).dir;
 
 		await copyFile(srcPath, dstPath);
@@ -29,9 +30,9 @@ async function copyStaticFile(srcFile: string): Promise<CopyStaticFileResult> {
 	}
 }
 
-export function copyStatic(){
+export async function copyStatic(buildDir: string = BUILD_DIR){
 	const staticFiles = [
-		`./index.html`,
+		'./index.html',
 		'./main.css',
 		"./STARTAN1.png",
 		"./GRAY1.png",
@@ -41,8 +42,8 @@ export function copyStatic(){
 		"./WOOD1.png",
 		"./MARBLE3.png"
 	];
-		
-	return Promise.all(staticFiles.map(copyStaticFile))
+	
+	return Promise.all(staticFiles.map(file => copyStaticFile(file, buildDir)))
 	.then((copiedFiles) => copiedFiles.filter(isError)
 		.forEach(res => {
 			console.error(getError(res));
