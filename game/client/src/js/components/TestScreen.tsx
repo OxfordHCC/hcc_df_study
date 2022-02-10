@@ -39,7 +39,7 @@ const components: Declaration = [
 		fn: ButtonRound,
 		props: {
 			onAnswer: () => {},
-			isBlue: true,
+			isBlue: false,
 			round: 1,
 			roundData: {
 				...sampleGameData.rounds[0],

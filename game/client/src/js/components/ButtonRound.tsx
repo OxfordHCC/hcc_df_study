@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ButtonRoundData, ButtonRoundAnswer } from 'dfs-common';
 import styled from 'styled-components';
 import { Spacer } from './Spacer';
 import { Center } from './Center';
+import { BombButton } from './BombButton';
+
 
 export type ButtonRoundParams = {
 	round: number
@@ -10,16 +12,11 @@ export type ButtonRoundParams = {
 	onAnswer: (answer: ButtonRoundAnswer) => void
 	isBlue: boolean
 }
+
 export function ButtonRound({ round, roundData, onAnswer, isBlue }: ButtonRoundParams): JSX.Element{
 	const { solution } = roundData;
 
-	
-	const buttons = roundData.options.map(option => 
-		<Button
-			key={option}
-			onClick={() => onAnswer({ round, value: option })}>
-			{option}
-		</Button>);
+	const onButtonPress = (value: number) => onAnswer({round, value});
 	
 	return (
 		<Center>
@@ -34,7 +31,10 @@ export function ButtonRound({ round, roundData, onAnswer, isBlue }: ButtonRoundP
 						Press {solution}
 					</BlueContainer>
 					: <RedContainer>
-						{buttons}
+						{
+							roundData.options.map(option =>
+								<BombButton key={option} onPress={onButtonPress} option={option}/>)
+						}
 					</RedContainer>
 				}
 
@@ -49,7 +49,7 @@ const BlueContainer = styled.div`
 `;
 const Container = styled.div`
 	width: 40vw;
-	background: pink;
+	background: url("./textures/BROWNHUG.png");
 	padding: 50px;
 `;
 
@@ -66,8 +66,3 @@ const RedContainer = styled.div`
 	justify-content: space-between;
 `;
 
-const Button = styled.button`
-	border: none;
-	padding: 4vw;
-	font-size: 4vw;
-`;
