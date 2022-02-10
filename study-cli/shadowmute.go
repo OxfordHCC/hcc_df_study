@@ -10,9 +10,11 @@ func shadowmuteCmd(client MurmurRPC.V1Client, args []string)(error, string){
 
 	serverId := flagSet.Uint32P("server", "s", 0, "server id");
 	targetId := flagSet.Uint32P("target", "t", 0, "target user id");
-	muteStatus := flagSet.BoolP("mute", "m", true, "mute or unmute");
+	unmute := flagSet.BoolP("unmute", "u", false, "mute or unmute");
 
 	flagSet.Parse(args);
+
+	muteStatus := !(*unmute);
 
 	err, server := getServerById(client, *serverId);
 	if err != nil {
@@ -23,7 +25,7 @@ func shadowmuteCmd(client MurmurRPC.V1Client, args []string)(error, string){
 	shadowmuteMessage := MurmurRPC.ShadowmuteMessage{
 		Server: server,
 		Target: target,
-		MuteStatus: muteStatus,
+		MuteStatus: &muteStatus,
 	}
 
 	ctx, cancel := getCtx();
