@@ -20,4 +20,4 @@ createGame({
 
 
 io.listen(3000);
-log("listening","3000");
+log("websockets-listening","3000");

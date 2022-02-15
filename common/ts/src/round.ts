@@ -32,3 +32,6 @@ export type ButtonRoundAnswer = SingleRoundAnswer;
 export interface ButtonRoundData extends SingleRoundData {
 	name: "button"
 }
+
+// These are the only ones that are not abstract
+export type ConcreteRoundData = ButtonRoundData;

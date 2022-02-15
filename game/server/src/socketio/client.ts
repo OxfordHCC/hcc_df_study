@@ -1,5 +1,5 @@
 import { Socket, Server, Namespace } from "socket.io";
-import { deepClone, Answer, GameData } from 'dfs-common';
+import { deepClone, Answer, GameData, GameClientNs } from 'dfs-common';
 import { io } from './index';
 import { Logger } from '../lib/log';
 import { Either } from "../lib/fp";
@@ -7,7 +7,9 @@ import { Game, getGame, getPlayerGame } from "../lib/game";
 
 const { log, error } = Logger("socket.io/client");
 
-export default function(client: Namespace){
+type GameClientNamespace = Namespace<GameClientNs.ClientToServerEvents, GameClientNs.ServerToClientEvents, GameClientNs.InterServerEvents, GameClientNs.SocketData>;
+
+export default function(client: GameClientNamespace){
 	client.on("connection", (socket: Socket) => {
 		log("connection", socket.id);
 		const connErr = onConnect(socket);
