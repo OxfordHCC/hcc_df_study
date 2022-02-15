@@ -1,10 +1,11 @@
 import { Namespace } from "socket.io";
 import crypto from 'crypto';
-import { AdminClientNs } from 'dfs-common';
+import { AdminClientNs, Player } from 'dfs-common';
 
-import { createRound } from "../lib/round/";
+import { createRound, isRound } from "../lib/round/";
 import { Logger } from '../lib/log';
-import { Game, getGames, createGame } from '../lib/game';
+import { Game, getGames } from '../lib/game';
+import { createPlayer } from '../lib/player';
 
 const { log } = Logger("socket.io/admin");
 
@@ -24,22 +25,30 @@ export default function(admin: AdminNamespace) {
 		});
 
 		socket.on("create_game", ({ blue, red, roundsData }, cb) => {
-			if (!blue || !red || !rounds) {
-				cb("Invalid arguments in create_game event");
+			if (!blue || !red || !roundsData) {
+				cb(new Error("Invalid arguments in create_game event"), null);
 				return;
 			}
 
-			const rounds = roundsData.map(createRound);
-			const players = players.map(createPlayer);
-			const id = crypto.randomUUID();
+			const roundResults = roundsData.map(createRound);
+			const roundErrors = roundResults.filter(r => r instanceof Error);
+			const rounds = roundResults.filter(isRound);
 
-			const game = createGame({
-				gameId: id,
-				players: [blue, red],
+			if (roundErrors.length !== 0) {
+				socket.emit("error", roundErrors.join(";\n"));
+				return;
+			}
+						
+			const players = [blue, red].map(createPlayer);
+			
+			const gameId = crypto.randomUUID();
+			const game = new Game({
+				gameId,
+				players,
 				rounds
 			});
 
-			log("create_game", blue, red, id);
+			log("create_game", blue, red, gameId);
 
 			cb(null, game.state());
 			socket.emit("state", game.state());

@@ -1,11 +1,9 @@
 import { Answer, GameData } from './game';
 import { ConcreteRoundData } from './round';
-declare type AckCb<T> = (e: Error, data: T) => void;
+declare type AckCb<T> = (error: Error | null, data: T | null) => void;
 export declare namespace GameClientNs {
     interface ServerToClientEvents {
         error: (msg: string) => void;
-        state: (state: GameData) => void;
-        init: (states: GameData[]) => void;
     }
     interface ClientToServerEvents {
         "game:player_ready": (readyFlag: boolean) => void;
@@ -20,6 +18,9 @@ export declare namespace GameClientNs {
 }
 export declare namespace AdminClientNs {
     export interface ServerToClientEvents {
+        error: (msg: string) => void;
+        state: (state: GameData) => void;
+        init: (states: GameData[]) => void;
     }
     type CreateGameParams = {
         blue: string;

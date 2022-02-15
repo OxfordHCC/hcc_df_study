@@ -1,4 +1,4 @@
-import { Either, splitOf } from './fp';
+import { Either } from './fp';
 import {
 	Evented,
 	GameEvents,
@@ -7,7 +7,7 @@ import {
 	GameData
 } from 'dfs-common';
 
-import { Round, createRound } from './round';
+import { Round } from './round';
 
 const memGames:Game[] = [];
 
@@ -147,31 +147,19 @@ export class Game extends Evented<keyof GameEvents> implements GameData{
 	}
 }
 
-export function getGames(): Game[] {
-	return memGames;
-}
-	
-export function createGame(
-	data: GameParams
-): Either<Error,Game>{
-	const [rounds, errs] = splitOf(
-		data.rounds.map(createRound),
-		Round,
-		Error
-	);
+export function saveGame(game: Game){
+	const memindx = memGames.findIndex(mg => mg.gameId === game.gameId);
 
-	if(errs.length !== 0){
-		return new Error(errs.join(','));
+	if(memindx >= 0){
+		memGames[memindx] = game;
+		return;
 	}
-
-	const game = new Game({
-		...data,
-		rounds
-	});
 	
 	memGames.push(game);
+}
 
-	return game
+export function getGames(): Game[] {
+	return memGames;
 }
 
 export function getPlayerGame(

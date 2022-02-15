@@ -7,6 +7,10 @@ import { Round } from './round';
 import { Either } from '../fp';
 import { ButtonRound } from './button';
 
+export function isRound(round: any): round is Round {
+	return round instanceof Round;
+}
+
 export function createRound(data: ConcreteRoundData): Either<Round, Error>{
 	switch(data.name){
 		case "button":
