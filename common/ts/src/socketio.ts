@@ -34,11 +34,10 @@ export namespace AdminClientNs {
 	type CreateGameParams = {
 		blue: string,
 		red: string,
-		roundsData: ConcreteRoundData[]
 	}
 
 	export interface ClientToServerEvents {
-		"create_game": ({ blue, red, roundsData }: CreateGameParams, cb: AckCb<GameData>) => void
+		"create_session": ({ blue, red }: CreateGameParams, cb: AckCb<GameData>) => void
 	}
 
 	export interface InterServerEvents {

@@ -1,5 +1,4 @@
 import { Answer, GameData } from './game';
-import { ConcreteRoundData } from './round';
 declare type AckCb<T> = (error: Error | null, data: T | null) => void;
 export declare namespace GameClientNs {
     interface ServerToClientEvents {
@@ -25,10 +24,9 @@ export declare namespace AdminClientNs {
     type CreateGameParams = {
         blue: string;
         red: string;
-        roundsData: ConcreteRoundData[];
     };
     export interface ClientToServerEvents {
-        "create_game": ({ blue, red, roundsData }: CreateGameParams, cb: AckCb<GameData>) => void;
+        "create_session": ({ blue, red }: CreateGameParams, cb: AckCb<GameData>) => void;
     }
     export interface InterServerEvents {
     }
