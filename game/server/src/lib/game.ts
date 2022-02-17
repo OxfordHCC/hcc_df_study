@@ -1,4 +1,5 @@
 import { Either } from './fp';
+import crypto from 'crypto';
 import {
 	Evented,
 	GameEvents,
@@ -14,7 +15,6 @@ const memGames:Game[] = [];
 const gameTimers: {
 	[index:string]: NodeJS.Timeout
 } = {};
-
 
 function scheduleTimer(gameId: string, cb: () => void, ms: number){
 	if(gameTimers[gameId] !== undefined){
@@ -186,3 +186,19 @@ export function getGame(gameId: string): Either<Error, Game> {
 	return game;
 }
 
+function getGameSchedule(){
+	// query database for round recipes
+}
+
+export function createGame(blue: string, red: string){
+	const gameId = crypto.randomUUID();
+
+	const players = [blue, red].map<Player>(createPlayer);
+	const rounds = getGameSchedule().map<Round>(createRound);
+	
+	return new Game({
+		gameId,
+		players,
+		rounds
+	});
+}
