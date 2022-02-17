@@ -1,4 +1,5 @@
 import http from 'http';
+import { Either } from './fp';
 import { Logger } from './log';
 
 const { log } = Logger("dockerlib");
@@ -21,10 +22,10 @@ function parseResponseBody(bodyStr: any){
 	}
 }
 
-function dockerReq(
+export function dockerReq(
 	method: string, endpoint: string, queryParams: object = [],
 	body: object = {}
-){
+): Promise<Either<Error, any>>{
 	const queryStr = Object.entries(queryParams).map(
 		keyVal => keyVal.join('='));
 	const path = `${endpoint}?${queryStr}`;
@@ -37,7 +38,7 @@ function dockerReq(
 		"Content-Length": contentLength
 	}
 
-	return new Promise((resolve, reject) => {
+	return new Promise((resolve, _reject) => {
 		const req = http.request({
 			socketPath: "/var/run/docker.sock",
 			headers,
@@ -62,58 +63,24 @@ function dockerReq(
 						statusCode,
 						resData.message || "Unknown error"
 					);	
-					reject(err);
+					resolve(err);
 				}
 				resolve(resData);
 			});
 		});
 
 		req.on("error", (e) => {
-			reject(e);
+			resolve(e);
 		});
 		
 		req.end(bodyStr);
 	});
 }
 
-type CreateMurmurContainerParams = {
-	grpcPort: number;
-	murmurPort: number;
-	name: string;
-}
-export function createMurmurContainer(
-	{ grpcPort, murmurPort, name }: CreateMurmurContainerParams
-) {
-	return dockerReq(
-		"POST",
-		"/containers/create",
-		{ name },
-		{
-			Image: "mumble_server",
-			ExposedPorts: {
-				"64738/tcp": {},
-				"64738/udp": {},
-				"50051": {}
-			},
-			HostConfig: {
-				PortBindings: {
-					"64738/udp": [{
-						HostPort: murmurPort.toString()
-					}],
-					"64738/tcp": [{
-						HostPort: murmurPort.toString()
-					}],
-					"50051": [{
-						HostPort: grpcPort.toString()
-					}]
-				}
-			}
-		}
-	);
-}
-
-export function start(containerName: string){
-	return dockerReq("POST", `/containers/${containerName}/start`);
+export function start(
+	containerId: string
+): Promise<Either<Error, void>>{
+	return dockerReq("POST", `/containers/${containerId}/start`);
 }
 
 export function ps(){
