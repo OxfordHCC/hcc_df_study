@@ -31,13 +31,15 @@ export namespace AdminClientNs {
 		init: (states: GameData[]) => void;
 	}
 
-	type CreateGameParams = {
+	type CreateSessionParams = {
 		blue: string,
 		red: string,
+		murmurPort: number,
+		grpcPort: number
 	}
 
 	export interface ClientToServerEvents {
-		"create_session": ({ blue, red }: CreateGameParams, cb: AckCb<GameData>) => void
+		"create_session": ({ blue, red }: CreateSessionParams, cb: AckCb<GameData>) => void
 	}
 
 	export interface InterServerEvents {
