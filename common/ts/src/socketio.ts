@@ -1,8 +1,7 @@
 import { Answer, GameData } from './game';
-import { ConcreteRoundData } from './round';
+import { Session } from './session';
 
 type AckCb<T> = (error: Error | null, data: T | null) => void;
-
 
 export namespace GameClientNs {
 	export interface ServerToClientEvents {
@@ -39,7 +38,9 @@ export namespace AdminClientNs {
 	}
 
 	export interface ClientToServerEvents {
-		"create_session": ({ blue, red }: CreateSessionParams, cb: AckCb<GameData>) => void
+		"create_session": ({ blue, red }: CreateSessionParams,
+						   cb: AckCb<Session>) => void
+		"get_sessions": (cb: AckCb<Session[]>) => void
 	}
 
 	export interface InterServerEvents {

@@ -17,3 +17,4 @@ __exportStar(require("./game"), exports);
 __exportStar(require("./util"), exports);
 __exportStar(require("./socketio"), exports);
 __exportStar(require("./round"), exports);
+__exportStar(require("./session"), exports);

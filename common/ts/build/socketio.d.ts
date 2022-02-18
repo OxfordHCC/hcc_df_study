@@ -1,4 +1,5 @@
 import { Answer, GameData } from './game';
+import { Session } from './session';
 declare type AckCb<T> = (error: Error | null, data: T | null) => void;
 export declare namespace GameClientNs {
     interface ServerToClientEvents {
@@ -28,7 +29,8 @@ export declare namespace AdminClientNs {
         grpcPort: number;
     };
     export interface ClientToServerEvents {
-        "create_session": ({ blue, red }: CreateSessionParams, cb: AckCb<GameData>) => void;
+        "create_session": ({ blue, red }: CreateSessionParams, cb: AckCb<Session>) => void;
+        "get_sessions": (cb: AckCb<Session[]>) => void;
     }
     export interface InterServerEvents {
     }
