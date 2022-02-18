@@ -1,5 +1,5 @@
 import http from 'http';
-import { Either } from './fp';
+import { Either } from 'dfs-common';
 import { Logger } from './log';
 
 const { log } = Logger("dockerlib");

@@ -1,7 +1,6 @@
 import { Namespace } from "socket.io";
-import { AdminClientNs, Player } from 'dfs-common';
-
-import { createSession } from '../lib/session';
+import { AdminClientNs } from 'dfs-common';
+import { createSession, getSessions } from '../lib/session';
 import { Logger } from '../lib/log';
 import { Game, getGames } from '../lib/game';
 
@@ -21,16 +20,30 @@ export default function(admin: AdminNamespace) {
 			});
 		});
 
-
-		socket.on("create_session", ({ blue, red  }, cb) => {
+		socket.on("create_session", async ({ blue, red, murmurPort, grpcPort }, cb) => {
 			log("create_session",blue,red);
 			if (!blue || !red) {
 				cb(new Error("Invalid arguments in create_game event"), null);
 				return;
 			}
-						
-			const session = createSession(blue, red);
+
+			const session = await createSession(blue, red, grpcPort, murmurPort);
+			if(session instanceof Error){
+				cb(session, null);
+				return;
+			}
+			
 			cb(null, session);
+		});
+
+		socket.on("get_sessions", async (cb) => {
+			const sessions = await getSessions();
+			if(sessions instanceof Error){
+				cb(sessions, null);
+				return;
+			}
+			
+			cb(null, sessions);
 		});
 	});
 }

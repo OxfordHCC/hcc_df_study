@@ -1,8 +1,7 @@
 import { Socket, Server, Namespace } from "socket.io";
-import { deepClone, Answer, GameData, GameClientNs } from 'dfs-common';
+import { Either, deepClone, Answer, GameData, GameClientNs } from 'dfs-common';
 import { io } from './index';
 import { Logger } from '../lib/log';
-import { Either } from "../lib/fp";
 import { Game, getGame, getPlayerGame } from "../lib/game";
 
 const { log, error } = Logger("socket.io/client");

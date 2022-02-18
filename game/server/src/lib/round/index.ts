@@ -1,17 +1,16 @@
-import { ConcreteRoundData, Solution } from 'dfs-common';
+import { ConcreteRoundData, Either, Solution } from 'dfs-common';
+import { Round } from './round';
+import { ButtonRound } from './button';
 
 export * from './keypad';
 export * from './button';
 export * from './round';
-import { Round } from './round';
-import { Either } from '../fp';
-import { ButtonRound } from './button';
 
 export function isRound(round: any): round is Round {
 	return round instanceof Round;
 }
 
-export function createRound(data: ConcreteRoundData): Either<Round, Error>{
+export function createRound(data: ConcreteRoundData): Either<Error, Round>{
 	switch(data.name){
 		case "button":
 			if(!isSingleSolution(data.solution)){

@@ -1,14 +1,15 @@
-import { Either } from './fp';
+import { Either } from 'dfs-common';
 import crypto from 'crypto';
 import {
 	Evented,
 	GameEvents,
 	Player,
 	Answer,
-	GameData
+	GameData,
+	ConcreteRoundData
 } from 'dfs-common';
-
-import { Round } from './round';
+import { createPlayer } from './player';
+import { Round, createRound, isRound } from './round';
 
 const memGames:Game[] = [];
 
@@ -186,19 +187,69 @@ export function getGame(gameId: string): Either<Error, Game> {
 	return game;
 }
 
-function getGameSchedule(){
+function getGameSchedule(): ConcreteRoundData[]{
 	// query database for round recipes
+	// for now just return constant
+	return [
+		{
+			name: "button",
+			solution: 1,
+			msLength: 7000,
+			options: [0,1,2,3]
+		}
+	];
 }
 
-export function createGame(blue: string, red: string){
-	const gameId = crypto.randomUUID();
+function isError(x: any): x is Error{
+	return x instanceof Error;
+}
+function isGame(x: any): x is Game{
+	return x instanceof Game;
+}
+export function createGame(blue: string, red: string): Either<Error, Game>{
+	const playerGames:Array<[string, Game]> = [blue, red]
+	.map(p => [p, getPlayerGame(p)] as [string, Game])
+	.filter(([_p, game]) => isGame(game));
 
+	if(playerGames.length > 0){
+		const messages = playerGames.map(([p, game]) =>
+			`Player ${p} already in game ${game.gameId}`
+		);
+		return new Error(messages.join(''));
+	}
+
+	const existsBlue = getPlayerGame(blue);
+	if(existsBlue instanceof Game){
+		return new Error(
+			`Player ${blue} is already in game: ${existsBlue.gameId}`
+		);
+	}
+	const existsRed = getPlayerGame(red);
+	if(existsRed instanceof Game){
+		return new Error(
+			`Player ${red} is already in game: ${existsRed.gameId}`
+		);
+	}
+
+	const gameId = crypto.randomUUID();
 	const players = [blue, red].map<Player>(createPlayer);
-	const rounds = getGameSchedule().map<Round>(createRound);
+	const schedule = getGameSchedule();
+	const created = schedule.map(roundData => createRound(roundData));
+	const errors = created.filter(isError);
+
+	if(errors.length > 0){
+		return errors[0];
+	}
+
+	const rounds = created.filter(isRound);
 	
-	return new Game({
+	const game = new Game({
 		gameId,
 		players,
 		rounds
 	});
+
+	saveGame(game);
+	
+	return game;
 }

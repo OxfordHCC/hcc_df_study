@@ -1,5 +1,5 @@
-import { dockerReq, start } from './dockerlib';
-import { Either } from './fp';
+import { dockerReq } from './dockerlib';
+import { Either } from 'dfs-common';
 
 type CreateMurmurContainerParams = {
 	grpcPort: number;

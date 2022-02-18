@@ -1,21 +1,8 @@
+import { Either, Session } from 'dfs-common';
 import { createMurmurContainer } from './murmurlib';
 import { DockerError, start } from './dockerlib';
-import { Logger } from './log';
 import { createGame, saveGame } from './game';
 import { withDb } from './db';
-import { Either } from './fp';
-
-const { log, error } = Logger("sessions");
-
-type Session = {
-	sessionId: number;
-	gameId: string;
-	murmurId: string;
-	blueParticipant: string;
-	redParticipant: string;
-	murmurPort: number;
-	grpcPort: number;
-};
 
 const insertSessionSQL = `
 INSERT INTO study_session
@@ -23,19 +10,22 @@ INSERT INTO study_session
 VALUES ($game_id, $murmur_id, $blue, $red);
 `;
 type InsertSessionParam = Omit<Session, "sessionId">;
+type InsertSessionResult = { sessionId: number } 
 function insertSession(session: InsertSessionParam) {
-	return withDb((db) =>
+	return withDb<InsertSessionResult>((db) =>
 		new Promise((resolve, reject) => {
 			db.run(insertSessionSQL, {
 				$game_id: session.gameId,
 				$murmur_id: session.murmurId,
 				$blue: session.blueParticipant,
 				$red: session.redParticipant
-			}, (err) => {
+			}, function(err) {
 				if (err) {
 					return reject(err);
 				}
-				resolve(0);
+
+				const sessionId = this.lastID;
+				resolve({ sessionId });
 			});
 		})
 	);
@@ -44,8 +34,8 @@ function insertSession(session: InsertSessionParam) {
 const selectSessionsSQL = `
 SELECT * FROM study_session;
 `;
-export async function getSessions(): Promise<Session[]>{
-	return withDb(db =>
+export async function getSessions(){
+	return withDb<Session[]>(db =>
 		new Promise((resolve, reject) => {
 			db.all(selectSessionsSQL, (err, rows) => {
 				if(err){
@@ -60,13 +50,16 @@ export async function getSessions(): Promise<Session[]>{
 export async function createSession(
 	blueParticipant: string, redParticipant: string,
 	grpcPort: number, murmurPort: number
-): Promise<Either<Error, void>>{
+): Promise<Either<Error, Session>>{
 	const game = createGame(blueParticipant, redParticipant);
+	if(game instanceof Error){
+		return game;
+	}
+	
 	const murmur = await createMurmurContainer({
 		murmurPort,
 		grpcPort
 	});
-
 	if(murmur instanceof Error){
 		return murmur;
 	}
@@ -82,13 +75,25 @@ export async function createSession(
 		grpcPort
 	};
 
-	insertSession(session);
+	const insertRes = await insertSession(session);
+	if(insertRes instanceof Error){
+		return insertRes;
+	}
+
+	const { sessionId } = insertRes;
+
+	return {
+		...session,
+		sessionId
+	}
 }
 
-async function initSession(session: Session): Promise<Either<Error, any>>{
+async function initSession(session: Session): Promise<Either<Error, Session>>{
 	// create game
 	const game = createGame(session.blueParticipant, session.redParticipant);
-	saveGame(game);
+	if(game instanceof Error){
+		return game;
+	}
 
 	// start murmur container
 	const res = start(session.murmurId);
@@ -110,10 +115,17 @@ async function initSession(session: Session): Promise<Either<Error, any>>{
 	return session;
 }
 
+function isError(x: any): x is Error{
+	return x instanceof Error;
+}
 export async function init(): Promise<Error[]>{
 	const sessions = await getSessions();
+	if(sessions instanceof Error){
+		return [sessions];
+	}
+	
 	const initted = await Promise.all(sessions.map(initSession));
-	const errors = initted.filter(i => i instanceof Error);
+	const errors = initted.filter(isError);
 
 	return errors;
 }
