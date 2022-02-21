@@ -1,8 +1,10 @@
-import { Either, Session } from 'dfs-common';
+import { Either, Session, AdminClientNs } from 'dfs-common';
 import { createMurmurContainer } from './murmurlib';
 import { DockerError, start } from './dockerlib';
-import { createGame, saveGame } from './game';
+import { createGame } from './game';
 import { withDb } from './db';
+
+
 
 const insertSessionSQL = `
 INSERT INTO study_session
@@ -48,10 +50,10 @@ export async function getSessions(){
 }
 
 export async function createSession(
-	blueParticipant: string, redParticipant: string,
-	grpcPort: number, murmurPort: number
+	{ blueParticipant, redParticipant, murmurPort, grpcPort }: AdminClientNs.CreateSessionParams
 ): Promise<Either<Error, Session>>{
 	const game = createGame(blueParticipant, redParticipant);
+
 	if(game instanceof Error){
 		return game;
 	}
@@ -60,6 +62,7 @@ export async function createSession(
 		murmurPort,
 		grpcPort
 	});
+	
 	if(murmur instanceof Error){
 		return murmur;
 	}

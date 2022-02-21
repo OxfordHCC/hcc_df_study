@@ -22,10 +22,10 @@ function parseResponseBody(bodyStr: any){
 	}
 }
 
-export function dockerReq(
+export function dockerReq<T>(
 	method: string, endpoint: string, queryParams: object = [],
 	body: object = {}
-): Promise<Either<Error, any>>{
+): Promise<Either<Error, T>>{
 	const queryStr = Object.entries(queryParams).map(
 		keyVal => keyVal.join('='));
 	const path = `${endpoint}?${queryStr}`;
@@ -83,6 +83,44 @@ export function start(
 	return dockerReq("POST", `/containers/${containerId}/start`);
 }
 
-export function ps(){
-	return dockerReq("GET",'/containers/json');
+function stopContainer(name: string){
+	return dockerReq("POST", `/containers/${name}/stop`);
+}
+
+export async function stop(...containers: string[]){
+	const promises = containers.map(stopContainer);
+	return Promise.all(promises).catch(err => {
+		return new Error(err);
+	});
+}
+
+function rmContainer(name: string){
+	return dockerReq("DELETE", `/containers/${name}`);
+}
+
+export async function rm(...containers: string[]) {
+	const promises = containers.map(rmContainer);
+	return Promise.all(promises).catch(err => {
+		return new Error(err);
+	});
+}
+
+type PsFilters = {
+	ancestor?: string
+}
+type PsProps = {
+	all?: boolean,
+	filters?: PsFilters
+}
+type Container = {
+	Id: string
+}
+export function ps({ all, filters }: PsProps = {}){
+	const filtersStr = JSON.stringify(filters);
+
+	return dockerReq<Container[]>(
+		"GET",
+		'/containers/json',
+		{ all, filters: filtersStr }
+	);
 }

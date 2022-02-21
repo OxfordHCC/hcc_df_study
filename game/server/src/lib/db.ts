@@ -1,13 +1,18 @@
-import path from 'path';
 import sqlite from 'sqlite3';
 import { Either } from 'dfs-common';
 
-const dbDir = path.resolve(__dirname, "../../db/");
-const dbFile = path.join(dbDir, "main.db");
-const initSql = path.join(dbDir, "init.sql");
-
 type withDbFunction = (db: sqlite.Database) => any;
-export async function withDb<T>(fn: withDbFunction): Promise<Either<Error, T>>{
+
+const dbFile = process.env.DFS_DB_FILE;
+if(dbFile === undefined){
+	throw new Error("Missing DFS_DB_FILE env variable.");
+}
+
+export async function withDb<T>(fn: withDbFunction): Promise<Either<Error, T>> {
+	if(dbFile === undefined){
+		return new Error("dbFile undefined.");
+	}
+	
 	const db = new sqlite.Database(dbFile);
 	try {
 		const res = await fn(db);
@@ -16,7 +21,7 @@ export async function withDb<T>(fn: withDbFunction): Promise<Either<Error, T>>{
 	} catch (err: any) {
 		db.close();
 		// I do this check to narrow the type for typescript
-		if(err instanceof Error){
+		if (err instanceof Error) {
 			return new Error(err.message);
 		}
 		// This should never be reached, but who knows, depends on

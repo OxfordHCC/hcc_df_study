@@ -1,4 +1,4 @@
-import { dockerReq } from './dockerlib';
+import { dockerReq, ps } from './dockerlib';
 import { Either } from 'dfs-common';
 
 type CreateMurmurContainerParams = {
@@ -42,3 +42,4 @@ export function createMurmurContainer(
 		}
 	);
 }
+
