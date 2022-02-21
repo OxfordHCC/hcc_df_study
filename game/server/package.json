@@ -4,8 +4,8 @@
 	"description": "",
 	"scripts": {
 		"build": "npx ts-node ./scripts/build.ts",
-		"start": "npm run build && node --enable-source-maps build/main.js",
-		"test": "npx ts-node ./test/index.ts"
+		"start": "DFS_DB_FILE=./db/main.db npm run build && node --enable-source-maps build/main.js",
+		"test": "DFS_DB_FILE=./db/test.db npx ts-node ./test/index.ts"
 	},
 	"devDependencies": {
 		"@types/express": "^4.17.13",
