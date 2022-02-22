@@ -17,25 +17,21 @@ export declare namespace GameClientNs {
     }
 }
 export declare namespace AdminClientNs {
-    export interface ServerToClientEvents {
+    interface ServerToClientEvents {
         error: (msg: string) => void;
         state: (state: GameData) => void;
         init: (states: GameData[]) => void;
     }
-    type CreateSessionParams = {
-        blue: string;
-        red: string;
-        murmurPort: number;
-        grpcPort: number;
-    };
-    export interface ClientToServerEvents {
-        "create_session": ({ blue, red }: CreateSessionParams, cb: AckCb<Session>) => void;
+    type CreateSessionParams = Partial<Session<
+
+	
+    interface ClientToServerEvents {
+        "create_session": (params: CreateSessionParams, cb: AckCb<Session>) => void;
         "get_sessions": (cb: AckCb<Session[]>) => void;
     }
-    export interface InterServerEvents {
+    interface InterServerEvents {
     }
-    export interface SocketData {
+    interface SocketData {
     }
-    export {};
 }
 export {};

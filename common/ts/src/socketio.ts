@@ -30,16 +30,10 @@ export namespace AdminClientNs {
 		init: (states: GameData[]) => void;
 	}
 
-	type CreateSessionParams = {
-		blue: string,
-		red: string,
-		murmurPort: number,
-		grpcPort: number
-	}
+	export type CreateSessionParams = Partial<Session>;
 
 	export interface ClientToServerEvents {
-		"create_session": ({ blue, red }: CreateSessionParams,
-						   cb: AckCb<Session>) => void
+		"create_session": (params: CreateSessionParams, cb: AckCb<Session>) => void
 		"get_sessions": (cb: AckCb<Session[]>) => void
 	}
 
