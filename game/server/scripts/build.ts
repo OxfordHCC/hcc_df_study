@@ -6,7 +6,6 @@ function buildServer(){
 		entryPoints: ["./src/main.ts"],
 		outdir: "./build",
 		platform: "node",
-		external: ["aws-sdk", "nock", "mock-aws-s3"],
 		sourcemap: true
 	});
 }
