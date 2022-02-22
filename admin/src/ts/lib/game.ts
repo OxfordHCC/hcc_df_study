@@ -1,11 +1,9 @@
-import { io } from "socket.io-client";
-import { GameState } from 'dfs-common';
+import { socket } from './remote';
+import { GameData } from 'dfs-common';
 
 type EventCb = (...args: any[]) => void;
 const eventCbs = {};
-let games: GameState[] = [];
-
-const socket = io("ws://localhost:3000/admin");
+let games: GameData[] = [];
 
 const initted = new Promise((resolve, _reject) => {
 	socket.on("init", (newGames) => {
@@ -20,7 +18,7 @@ socket.io.on("error", (err) => {
 	trigger("error", err);
 });
 
-socket.on("state", (state: GameState) => {
+socket.on("state", (state: GameData) => {
 	console.log("state called", state);
 	const index = games.findIndex(g => g.gameId === state.gameId);
 	if(index !== -1){
@@ -39,28 +37,6 @@ socket.on("state", (state: GameState) => {
 export async function getGames(){
 	await initted;
 	return games;
-}
-
-type CreateGameParams = {
-	blue: string;
-	red: string;
-}
-
-export async function createGame(params: CreateGameParams): Promise<[Error, any]>{
-	try{
-		const data = await new Promise((resolve, reject) => {
-			socket.emit("create_game", params, (err, data) => {
-				if(err !== null){
-					return reject(err);
-				}
-				resolve(data);
-			});
-		});
-		
-		return [null, data];
-	}catch(err){
-		return [err, null];
-	}
 }
 
 function trigger(event: string, ...args: any){

@@ -1,7 +1,7 @@
 import React from "react";
 import {useState, useEffect } from 'react';
 import { Home } from './Home';
-import { CreatePairScreen } from './CreatePair';
+import { CreateSessionScreen } from './CreateSession';
 
 function parseParamString(paramString?: string): any {
 	if (paramString === undefined) {
@@ -40,7 +40,7 @@ export function Router(): JSX.Element {
 
 	switch(route){
 		case "#create_pair":
-			return (<CreatePairScreen/>);
+			return (<CreateSessionScreen/>);
 		default:
 			return (<Home/>);
 	}
