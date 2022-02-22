@@ -6,7 +6,8 @@ function buildServer(){
 		entryPoints: ["./src/main.ts"],
 		outdir: "./build",
 		platform: "node",
-		sourcemap: true
+		sourcemap: true,
+		external: ["sqlite3"]
 	});
 }
 
