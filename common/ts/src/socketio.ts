@@ -30,7 +30,7 @@ export namespace AdminClientNs {
 		init: (states: GameData[]) => void;
 	}
 
-	export type CreateSessionParams = Partial<Session>;
+	export type CreateSessionParams = Omit<Session,	"murmurId" | "sessionId" | "gameId">;
 
 	export interface ClientToServerEvents {
 		"create_session": (params: CreateSessionParams, cb: AckCb<Session>) => void

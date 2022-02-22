@@ -5,7 +5,6 @@ import { createGame } from './game';
 import { withDb } from './db';
 
 
-
 const insertSessionSQL = `
 INSERT INTO study_session
 (game_id, murmur_id, blue_participant, red_participant) 
@@ -51,10 +50,10 @@ export async function getSessions(){
 
 export async function createSession(
 	{ blueParticipant, redParticipant, murmurPort, grpcPort }: AdminClientNs.CreateSessionParams
-): Promise<Either<Error, Session>>{
+): Promise<Either<Error, Session>> {
 	const game = createGame(blueParticipant, redParticipant);
 
-	if(game instanceof Error){
+	if (game instanceof Error) {
 		return game;
 	}
 	
