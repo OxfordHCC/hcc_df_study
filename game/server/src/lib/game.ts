@@ -159,6 +159,16 @@ export function saveGame(game: Game){
 	memGames.push(game);
 }
 
+export function removeGame(gameId: string | Game) {
+	if(gameId instanceof Game){
+		gameId = gameId.gameId;
+	}
+
+	const memindx = memGames.findIndex(mg => mg.gameId === gameId);
+	memGames.splice(memindx,1);
+	return memGames.length;
+}
+
 export function getGames(): Game[] {
 	return memGames;
 }
@@ -167,9 +177,7 @@ export function getPlayerGame(
 	playerId: string
 ): Either<Error, Game> {
 	const game = memGames.find(({ players})	=>
-		players.find(p =>
-			(p.playerId === playerId) !== undefined
-		)
+		players.find(p => p.playerId === playerId) !== undefined
 	);
 
 	if(game === undefined){
@@ -213,22 +221,9 @@ export function createGame(blue: string, red: string): Either<Error, Game>{
 
 	if(playerGames.length > 0){
 		const messages = playerGames.map(([p, game]) =>
-			`Player ${p} already in game ${game.gameId}`
+			`Player ${p} already in game ${game.gameId};`
 		);
 		return new Error(messages.join(''));
-	}
-
-	const existsBlue = getPlayerGame(blue);
-	if(existsBlue instanceof Game){
-		return new Error(
-			`Player ${blue} is already in game: ${existsBlue.gameId}`
-		);
-	}
-	const existsRed = getPlayerGame(red);
-	if(existsRed instanceof Game){
-		return new Error(
-			`Player ${red} is already in game: ${existsRed.gameId}`
-		);
 	}
 
 	const gameId = crypto.randomUUID();

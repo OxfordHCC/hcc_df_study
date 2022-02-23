@@ -1,40 +1,9 @@
 import test from 'tape';
-import path from 'path';
-import { readFileSync } from 'fs';
-import { createSession } from '../src/lib/session';
+import { createSession, getSessions } from '../src/lib/session';
 import * as docker from '../src/lib/dockerlib';
 import { getGame, getGames } from '../src/lib/game';
-import { withDb } from '../src/lib/db';
+import { resetDb, resetContainers, resetGames } from './teardowns';
 
-const initSQLFile = path.resolve(__dirname, '../db/init.sql');
-const initSQL = readFileSync(initSQLFile, "utf8");
-
-async function resetDb() {
-	await withDb<void>(
-		db => new Promise((resolve, reject) => 
-			db.exec(initSQL, err =>
-				err && reject(err) || resolve(null)
-			)
-		)
-	);
-}
-
-async function resetContainers() {
-	const murmurContainers = await docker.ps({
-		all: true,
-		filters: {
-			ancestor: "mumble_server"
-		}
-	});
-
-	if(murmurContainers instanceof Error){
-		throw murmurContainers;
-	}
-
-	const cids = murmurContainers.map(c => c.Id)
-	await docker.stop(...cids);
-	await docker.rm(...cids);
-}
 
 test("resetting db", async (t) => {
 	await resetDb();
@@ -49,6 +18,8 @@ test("resetting murmur containers", async (t) => {
 test("creating session should create a murmur container and a game room", async (t) => {
 	t.teardown(resetDb);
 	t.teardown(resetContainers);
+	t.teardown(resetGames);
+	t.plan(1);
 	
 	const session = await createSession({
 		grpcPort: 3002,
@@ -75,12 +46,34 @@ test("creating session should create a murmur container and a game room", async 
 	}
 		
 	t.assert(containers.find(c => c.Id === session.murmurId) !== undefined, "container found");
-	t.end();
+});
+
+test("creating two sessions with different params, should succeed", async (t) => {
+	t.teardown(resetDb);
+	t.teardown(resetContainers);
+	t.teardown(resetGames);
+	t.plan(1);
+
+	const session = await createSession({
+		grpcPort: 3002,
+		murmurPort: 3001,
+		blueParticipant: "player_blue",
+		redParticipant: "player_red"
+	});
+	const session2 = await createSession({
+		grpcPort: 3003,
+		murmurPort: 3004,
+		blueParticipant: "player_orange",
+		redParticipant: "player_purple"
+	});
+
+	t.isEqual(session2 instanceof Error, false,	"second session creation should not result in error");
 });
 
 test("session should fail when already existing player is passed as param", async (t) => {
 	t.teardown(resetDb);
 	t.teardown(resetContainers);
+	t.teardown(resetGames);
 	t.plan(1);
 
 	await createSession({
@@ -103,6 +96,7 @@ test("session should fail when already existing player is passed as param", asyn
 test("session should fail when port is in use", async (t) => {
 	t.teardown(resetDb);
 	t.teardown(resetContainers);
+	t.teardown(resetGames);
 	t.plan(2);
 
 	await createSession({
@@ -115,8 +109,8 @@ test("session should fail when port is in use", async (t) => {
 	const grpcConflict = await createSession({
 		grpcPort: 3001,
 		murmurPort: 3003,
-		blueParticipant: "player_blue",
-		redParticipant: "player_red"
+		blueParticipant: "player_purple",
+		redParticipant: "player_orange"
 	});
 
 	t.assert(grpcConflict instanceof Error, "createSession with grpcPort conflict should result in an error");
@@ -124,8 +118,8 @@ test("session should fail when port is in use", async (t) => {
 	const murmurConflict = await createSession({
 		grpcPort: 3005,
 		murmurPort: 3002,
-		blueParticipant: "player_blue",
-		redParticipant: "player_red"
+		blueParticipant: "player_black",
+		redParticipant: "player_white"
 	});
 
 	t.assert(murmurConflict instanceof Error, "createSession with murmurPort conflict should result in an error");
@@ -134,6 +128,8 @@ test("session should fail when port is in use", async (t) => {
 test("conflicts should not result in partial failures", async (t) => {
 	t.teardown(resetDb);
 	t.teardown(resetContainers);
+	t.teardown(resetGames);
+	t.plan(2);
 
 	const gamesBefore = getGames();
 	const lenBefore = gamesBefore.length;
@@ -184,6 +180,4 @@ test("conflicts should not result in partial failures", async (t) => {
 
 	t.assert(lenBefore === lenAfter);
 	t.assert(lenContainersBefore === lenContainersAfter);
-
-	t.end();
 });

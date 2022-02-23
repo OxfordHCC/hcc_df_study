@@ -1,13 +1,16 @@
 import test from 'tape';
 import { deepClone } from 'dfs-common';
+import { resetGames } from './teardowns';
 import {
 	Game,
+	createGame,
+	getGames
 } from '../src/lib/game';
 import { createPlayer } from '../src/lib/player';
 import { ButtonRound, KeypadRound } from '../src/lib/round';
 
 
-function createFoobarGame(){
+function createButtonGame(id: string, blue: string, red: string){
 	const rounds = [
 		new ButtonRound(0, 10),
 		new ButtonRound(1, 10),
@@ -16,16 +19,20 @@ function createFoobarGame(){
 	];
 	
 	return new Game({
-		gameId: "foobar",
+		gameId: id,
 		players: [
-			createPlayer("kate"),
-			createPlayer("pete")
+			createPlayer(blue),
+			createPlayer(red)
 		],
 		rounds
 	});
 }
 
-function createGameSequence(){
+function createFoobarGame(){
+	return createButtonGame("foobar", "pete", "kate");
+}
+
+function createGameSequence() {
 	const msLength = 10;
 	const rounds = [
 		new KeypadRound([4,3,2,1]),
@@ -33,7 +40,39 @@ function createGameSequence(){
 	];
 }
 
+test("creating game should result in game being saved to memory", async (t) => {
+	t.plan(2);
+	t.teardown(resetGames);
+
+	const game = createGame("blue", "red");
+	t.assert(game instanceof Game, "createGame should return Game");
+
+	if (game instanceof Error) {
+		return;
+	}
+
+	const games = getGames();
+	const saved = games.find(g => g.gameId === game.gameId);
+	t.assert(saved !== undefined);
+});
+
+test("should be able to create two games with different players", async(t) => {
+	t.plan(2);
+	t.teardown(resetGames);
+
+	const game1 = createGame("blue", "red");
+	const game2 = createGame("orange", "purple");
+
+	t.assert(game2 instanceof Game, "second createGame should return Game");
+
+	const games = getGames();
+
+	t.equals(games.length, 2 ,"Should have 2 games in memory after 2 calls to createGame");
+
+});
+
 test('startTime is set in game state once started', (t) => {
+	t.teardown(resetGames);
 	const game = createFoobarGame();
 	game.start();
 	t.equal(("startTime" in game), true);
@@ -42,6 +81,7 @@ test('startTime is set in game state once started', (t) => {
 });
 
 test("answering correctly should return +1", (t) => {
+	t.teardown(resetGames);
 	const game = createFoobarGame();
 	game.start();
 	
@@ -55,6 +95,7 @@ test("answering correctly should return +1", (t) => {
 });
 
 test("answering incorrectly should return -1", (t) => {
+	t.teardown(resetGames);
 	const game = createFoobarGame();
 	game.start();
 
@@ -68,6 +109,7 @@ test("answering incorrectly should return -1", (t) => {
 });
 
 test("answering rounds after last round should not change state", (t) => {
+	t.teardown(resetGames);
 	const game = createFoobarGame();
 	game.start();
 
@@ -84,6 +126,7 @@ test("answering rounds after last round should not change state", (t) => {
 });
 
 test("answering round in the past should not change state", (t) => {
+	t.teardown(resetGames);
 	const game = createFoobarGame();
 	game.start();
 	
@@ -98,15 +141,17 @@ test("answering round in the past should not change state", (t) => {
 });
 
 test("answering round before game started should throw error", (t) => {
+	t.teardown(resetGames);
 	const game = createFoobarGame();
 
-	const err = game.answer({ round: 0, value: 1});
+	const err = game.answer({ round: 0, value: 1 });
 	t.equals(err instanceof Error, true);
 
 	t.end();
 });
 
 test("answering in a valid manner should return numbers", (t) => {
+	t.teardown(resetGames);
 	const game = createFoobarGame();
 	game.start();
 	
@@ -127,10 +172,11 @@ test("answering in a valid manner should return numbers", (t) => {
 });
 
 test("game triggers events", (t) => {
+	t.teardown(resetGames);
 	const game = createFoobarGame();
- 	const totalGameLen = game.rounds.reduce(
-		(acc, curr)	=> acc + curr.msLength
-	  , 0);
+	const totalGameLen = game.rounds.reduce(
+		(acc, curr) => acc + curr.msLength
+		, 0);
 	
 	let startCalled = 0;
 	let answerCalled = 0;
@@ -180,6 +226,9 @@ test("game triggers events", (t) => {
 });
 
 test("game only starts when both players are ready", (t) => {
+	t.teardown(resetGames);
+	t.plan(5);
+
 	const game = createFoobarGame();
 	t.equals(game.startTime, undefined);
 
@@ -193,7 +242,8 @@ test("game only starts when both players are ready", (t) => {
 	t.equals(game.startTime, undefined);
 
 	game.playerReady("pete", true);
-	t.notEquals(game.startTime, undefined);
+	setTimeout(() => {
+		t.notEquals(game.startTime, undefined);
+	}, 1000);
 
-	t.end();
 });

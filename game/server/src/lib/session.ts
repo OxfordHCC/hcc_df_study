@@ -1,7 +1,7 @@
 import { Either, Session, AdminClientNs } from 'dfs-common';
 import { createMurmurContainer } from './murmurlib';
-import { DockerError, start } from './dockerlib';
-import { createGame } from './game';
+import { DockerError, start, rm } from './dockerlib';
+import { removeGame, createGame } from './game';
 import { withDb } from './db';
 
 
@@ -52,21 +52,27 @@ export async function createSession(
 	{ blueParticipant, redParticipant, murmurPort, grpcPort }: AdminClientNs.CreateSessionParams
 ): Promise<Either<Error, Session>> {
 	const game = createGame(blueParticipant, redParticipant);
+	const murmur = await createMurmurContainer({
+		murmurPort,
+		grpcPort
+	});
 
 	if (game instanceof Error) {
 		return game;
 	}
 	
-	const murmur = await createMurmurContainer({
-		murmurPort,
-		grpcPort
-	});
-	
 	if(murmur instanceof Error){
+		removeGame(game);
 		return murmur;
 	}
-	
-	await start(murmur.Id);
+
+	const startRes = await start(murmur.Id);
+
+	if (startRes instanceof Error) {
+		await rm(murmur.Id);
+		removeGame(game);
+		return startRes;
+	}
 		
 	const session = {
 		gameId: game.gameId,
