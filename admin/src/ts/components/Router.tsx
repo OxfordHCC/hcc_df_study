@@ -1,6 +1,6 @@
 import React from "react";
 import {useState, useEffect } from 'react';
-import { Home } from './Home';
+import { HomeScreen } from './HomeScreen';
 import { CreateSessionScreen } from './CreateSession';
 
 function parseParamString(paramString?: string): any {
@@ -12,9 +12,10 @@ function parseParamString(paramString?: string): any {
 	return JSON.parse(decoded);
 }
 
+type RouteName = "#create_pair" | "#home";
+
 export function Router(): JSX.Element {
-	const [foo, setFoo] = useState(0);
-	const [route, setRoute] = useState<string>("");
+	const [route, setRoute] = useState<RouteName>("#home");
 	const [params, setParams] = useState<any>({});
 
 	useEffect(() => {
@@ -40,8 +41,8 @@ export function Router(): JSX.Element {
 
 	switch(route){
 		case "#create_pair":
-			return (<CreateSessionScreen/>);
+			return (<CreateSessionScreen />);
 		default:
-			return (<Home/>);
+			return (<HomeScreen />);
 	}
 }

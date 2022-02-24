@@ -3,7 +3,6 @@ import { Router } from './Router';
 import { StatusBar} from './StatusBar';
 
 export function App(){
-	
 	return (
 		<div>
 			<StatusBar/>
@@ -11,5 +10,3 @@ export function App(){
 		</div>
 	);
 }
-
-

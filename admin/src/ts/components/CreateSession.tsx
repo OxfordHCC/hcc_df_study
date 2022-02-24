@@ -1,14 +1,15 @@
 import React from 'react';
 import { useState } from 'react';
+import { valiturnCreateSessionParams } from 'dfs-common';
 import { createSession } from '../lib/session';
 import { goto } from '../lib/router';
 
 export function CreateSessionScreen(){
-	const [blue,setBlue] = useState<string>(null);
-	const [red, setRed] = useState<string>(null);
-	const [error, setError] = useState<string>(null);
-	const [grpcPort, setGrpcPort] = useState<number>(null);
-	const [murmurPort, setMurmurPort] = useState<number>(null);
+	const [blue,setBlue] = useState<string | undefined>(undefined);
+	const [red, setRed] = useState<string | undefined>(undefined);
+	const [error, setError] = useState<string | undefined>(undefined);
+	const [grpcPort, setGrpcPort] = useState<number | undefined>(undefined);
+	const [murmurPort, setMurmurPort] = useState<number | undefined>(undefined);
 	
 	const goHome = function(){
 		goto("#home");
@@ -31,13 +32,19 @@ export function CreateSessionScreen(){
 	}
 
 	const onCreateSession = async function() {
-		const createRes = await createSession({
+		const createSessionParams = valiturnCreateSessionParams({
 			blueParticipant: blue,
 			redParticipant: red,
 			grpcPort,
 			murmurPort
 		});
+		
+		if(createSessionParams instanceof Error){
+			setError(createSessionParams.message);
+			return;
+		}
 
+		const createRes = await createSession(createSessionParams);
 		if(createRes instanceof Error){
 			setError(createRes.message);
 			return;

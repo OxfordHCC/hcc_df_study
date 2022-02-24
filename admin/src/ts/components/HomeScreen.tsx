@@ -8,7 +8,7 @@ import { goto } from '../lib/router';
 import { SessionList } from './SessionList';
 import { getSessions } from '../lib/session';
 
-export function Home(){
+export function HomeScreen(){
 	const [sessions, setSessions] = useState<Session[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
 	const goToCreateSession = useCallback(() => goto("#create_pair"), []);
