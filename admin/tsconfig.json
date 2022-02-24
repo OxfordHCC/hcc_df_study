@@ -1,0 +1,12 @@
+{
+	"include": ["./src/**/*"],
+	"exclude": ["./build/**/*", "./node_modules/**/*"],
+	"compilerOptions": {
+		"target": "es6",
+		"esModuleInterop": true,
+		"strict": true,
+		"moduleResolution": "node",
+		"noEmit": true,
+		"jsx": "react"
+	}
+}

@@ -1,28 +1,14 @@
 import { Namespace } from "socket.io";
-import { AdminClientNs } from 'dfs-common';
+import { validateCreateSessionParams, AdminClientNs } from 'dfs-common';
 import { createSession, getSessions } from '../lib/session';
 import { Logger } from '../lib/log';
 import { Game, getGames } from '../lib/game';
+
 
 const { log } = Logger("socket.io/admin");
 
 type AdminNamespace = Namespace<AdminClientNs.ClientToServerEvents, AdminClientNs.ServerToClientEvents, AdminClientNs.InterServerEvents, AdminClientNs.SocketData>;
 
-
-function validateCheckUndefined(entries: Array<[string, any]>){
-	return entries.filter(([key, val]) => val === undefined)
-	.map(([key, _val]) => new Error(`${key} undefined`));
-}
-function validateCreateSessionParams(params: AdminClientNs.CreateSessionParams): Array<Error>{
-	let errors: Array<Error> = [];
-	errors = errors.concat(
-		validateCheckUndefined(
-			Object.entries(params)
-		)
-	);
-	
-	return errors;
-}
 
 export default function(admin: AdminNamespace) {
 	admin.on("connection", (socket) => {
