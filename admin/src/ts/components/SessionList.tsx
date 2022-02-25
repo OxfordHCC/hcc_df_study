@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Session } from 'dfs-common';
-import { GameListRow } from './GameListRow';
+import { SessionListRow } from './SessionListRow';
 import { Loading } from './Loading';
 type SessionListProps = {
 	sessions: Session[]
@@ -29,8 +29,8 @@ export function SessionList({ sessions, loading }: SessionListProps) {
 			</Gthead>
 			<tbody>
 				{
-					sessions.map(game =>
-						<GameListRow key={game.gameId} gameState={game} />)
+					sessions.map(sesh =>
+						<SessionListRow key={sesh.gameId} session={sesh}/>)
 				}
 			</tbody>
 		</Gtable>

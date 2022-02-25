@@ -1,5 +1,5 @@
 import React from 'react';
-import { onGame, offGame } from '../lib/game';
+import { onError, offError } from '../lib/globalerr';
 import { useState, useEffect } from 'react';
 
 export function StatusBar() {
@@ -8,7 +8,7 @@ export function StatusBar() {
 	useEffect(() => {
 		let warnTimeout: NodeJS.Timeout;
 
-		const onError = function(err) {
+		const onErrorCb = function(err: Error) {
 			setWarning(err.message);
 			clearTimeout(warnTimeout);
 			warnTimeout = setTimeout(() => {
@@ -16,10 +16,10 @@ export function StatusBar() {
 			}, 5000);
 		}
 
-		onGame("error", onError);
+		onError(onErrorCb);
 
 		return () => {
-			offGame("error", onError);
+			offError(onErrorCb);
 			clearTimeout(warnTimeout);
 		}
 	}, [])
