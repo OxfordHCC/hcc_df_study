@@ -20,17 +20,16 @@ export function SessionList({ sessions, loading }: SessionListProps) {
 		<Gtable>
 			<Gthead>
 				<tr>
-					<th>Game Id</th>
-					<th>Start Time</th>
-					<th>Current Round</th>
-					<th>Blue</th>
-					<th>Red</th>
+					<th>Session Id</th>
+					<th>Blue Participant</th>
+					<th>Red Participant</th>
+					<th>Murmur Port</th>
 				</tr>
 			</Gthead>
 			<tbody>
 				{
 					sessions.map(sesh =>
-						<SessionListRow key={sesh.gameId} session={sesh}/>)
+						<SessionListRow key={sesh.sessionId} session={sesh}/>)
 				}
 			</tbody>
 		</Gtable>

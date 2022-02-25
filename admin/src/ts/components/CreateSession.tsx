@@ -63,12 +63,12 @@ export function CreateSessionScreen(){
 		</div>
 		<div>
 			<div>
-				<label htmlFor="grpc">Blue Participant</label>
-				<input value={grpcPort} name="grpc" type="text" onChange={changeGrpcPort} />
+				<label htmlFor="grpc">GRPC Port</label>
+				<input value={grpcPort} name="grpc" type="number" onChange={changeGrpcPort} />
 			</div>
 			<div>
-				<label htmlFor="murmur">Blue Participant</label>
-				<input value={murmurPort} name="murmur" type="text" onChange={changeMurmurPort} />
+				<label htmlFor="murmur">MurmurPort</label>
+				<input value={murmurPort} name="murmur" type="number" onChange={changeMurmurPort} />
 			</div>
 			<div>
 				<label htmlFor="blue">Blue Participant</label>

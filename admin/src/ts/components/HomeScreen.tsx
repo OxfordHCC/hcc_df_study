@@ -23,7 +23,6 @@ export function HomeScreen(){
 				setLoading(false);
 				return;
 			}
-			
 			setSessions(sessions);
 			setLoading(false);
 		};
