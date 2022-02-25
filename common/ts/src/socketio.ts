@@ -1,7 +1,7 @@
 import { Answer, GameData } from './game';
 import { Session } from './session';
 
-type AckCb<T> = (error: Error | null, data: T | null) => void;
+type AckCb<T> = (error?: Error, data?: T) => void
 
 export namespace GameClientNs {
 	export interface ServerToClientEvents {

@@ -25,34 +25,31 @@ export default function(admin: AdminNamespace) {
 		socket.on("create_session", async (params, cb) => {
 			const validationErrors = validateCreateSessionParams(params);
 			if(validationErrors.length > 0) {
-				cb(new Error("Invalid arguments in create_game event"), null);
+				cb(new Error("Invalid arguments in create_session event"));
 				return;
 			}
 
-			const {
-				blueParticipant,
-				redParticipant
-			} = params;
+			const { blueParticipant, redParticipant } = params;
 			
 			log("create_session", blueParticipant, redParticipant);
 
 			const session = await createSession(params);
 			if(session instanceof Error){
-				cb(session, null);
+				cb(session);
 				return;
 			}
 			
-			cb(null, session);
+			cb(undefined, session);
 		});
 
 		socket.on("get_sessions", async (cb) => {
 			const sessions = await getSessions();
 			if(sessions instanceof Error){
-				cb(sessions, null);
+				cb(sessions);
 				return;
 			}
 			
-			cb(null, sessions);
+			cb(undefined, sessions);
 		});
 	});
 }

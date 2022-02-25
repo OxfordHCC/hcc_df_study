@@ -7,6 +7,9 @@ export function getSessions(): Promise<Either<Error, Session[]>>{
 			if (err) {
 				return resolve(err);
 			}
+			if(sessions === undefined){
+				return resolve(new Error("get_sessions call returned undefined. Server error."))
+			}
 			return resolve(sessions);
 		});
 	});
@@ -17,10 +20,14 @@ export function createSession(
 ): Promise<Either<Error, Session>>{
 	return new Promise((resolve, _reject) => {
 		socket.emit("create_session", params, (err, session) => {
-			if (err){
-				resolve(err);
-				return;
+			if(err){
+				return resolve(err);
 			}
+
+			if(session === undefined){
+				return resolve(new Error("create_session call returned undefined. Server Error."));
+			}
+
 			resolve(session);
 		});
 	});

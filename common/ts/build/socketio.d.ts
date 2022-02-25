@@ -1,6 +1,6 @@
 import { Answer, GameData } from './game';
 import { Session } from './session';
-declare type AckCb<T> = (error: Error | null, data: T | null) => void;
+declare type AckCb<T> = (error?: Error, data?: T) => void;
 export declare namespace GameClientNs {
     interface ServerToClientEvents {
         error: (msg: string) => void;
