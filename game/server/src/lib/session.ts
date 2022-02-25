@@ -32,6 +32,18 @@ function insertSession(session: InsertSessionParam) {
 	);
 }
 
+function normalizeDbSession(db_session: any): Session{
+	return {
+		sessionId: db_session.session_id,
+		gameId: db_session.game_id,
+		blueParticipant: db_session.blue_participant,
+		redParticipant: db_session.red_participant,
+		murmurId: db_session.murmur_id,
+		murmurPort: db_session.murmur_port,
+		grpcPort: db_session.grpc_port
+	};
+}
+
 const selectSessionsSQL = `
 SELECT * FROM study_session;
 `;
@@ -42,7 +54,7 @@ export async function getSessions(){
 				if(err){
 					return reject(err);
 				}
-				resolve(rows as Session[]);
+				resolve(rows.map(normalizeDbSession) as Session[]);
 			})
 		})
 	)
