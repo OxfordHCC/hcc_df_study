@@ -7,8 +7,8 @@ import { withDb } from './db';
 
 const insertSessionSQL = `
 INSERT INTO study_session
-(game_id, murmur_id, blue_participant, red_participant) 
-VALUES ($game_id, $murmur_id, $blue, $red);
+(game_id, murmur_id, blue_participant, red_participant, murmur_port, grpc_port) 
+VALUES ($game_id, $murmur_id, $blue, $red, $murmur, $grpc);
 `;
 type InsertSessionParam = Omit<Session, "sessionId">;
 type InsertSessionResult = { sessionId: number } 
@@ -19,7 +19,9 @@ function insertSession(session: InsertSessionParam) {
 				$game_id: session.gameId,
 				$murmur_id: session.murmurId,
 				$blue: session.blueParticipant,
-				$red: session.redParticipant
+				$red: session.redParticipant,
+				$murmur: session.murmurPort,
+				$grpc: session.grpcPort
 			}, function(err) {
 				if (err) {
 					return reject(err);

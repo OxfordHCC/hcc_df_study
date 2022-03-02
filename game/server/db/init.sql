@@ -4,7 +4,9 @@ CREATE TABLE study_session (
   game_id TEXT UNIQUE,
   murmur_id TEXT UNIQUE,
   blue_participant TEXT UNIQUE,
-  red_participant TEXT UNIQUE
+  red_participant TEXT UNIQUE,
+  grpc_port NUMBER UNIQUE,
+  murmur_port NUMBER UNIQUE
 );
 
 DROP TABLE IF EXISTS game_schedule;
@@ -19,6 +21,7 @@ CREATE TABLE game (
   game_data TEXT
 );
 
+DROP TABLE IF EXISTS murmur_container;
 CREATE TABLE murmur_container (
   murmur_id INTEGER PRIMARY KEY,
   grpc_port INTEGER UNIQUE,

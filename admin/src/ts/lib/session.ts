@@ -32,3 +32,7 @@ export function createSession(
 		});
 	});
 }
+
+export function deleteSession(sessionId: number){
+	
+}

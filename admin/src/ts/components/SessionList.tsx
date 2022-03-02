@@ -13,7 +13,7 @@ export function SessionList({ sessions, loading }: SessionListProps) {
 	}
 
 	if(sessions.length === 0){
-		return <div>No games</div>
+		return <div>No sessions</div>
 	}
 	
 	return (
@@ -24,12 +24,13 @@ export function SessionList({ sessions, loading }: SessionListProps) {
 					<th>Blue Participant</th>
 					<th>Red Participant</th>
 					<th>Murmur Port</th>
+					<th>GRPC Port</th>
 				</tr>
 			</Gthead>
 			<tbody>
 				{
 					sessions.map(sesh =>
-						<SessionListRow key={sesh.sessionId} session={sesh}/>)
+						<SessionListRow key={sesh.sessionId} session={sesh} />)
 				}
 			</tbody>
 		</Gtable>
