@@ -1,6 +1,6 @@
-import { Either } from 'dfs-common';
 import crypto from 'crypto';
 import {
+	Either,
 	Evented,
 	GameEvents,
 	Player,

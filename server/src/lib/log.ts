@@ -15,6 +15,13 @@ function logJoin(args: any[]): string{
 	return args.join(':');
 }
 
+type LogArg = string | number;
+
+
+function stringifyArgs(args: LogArg[]){
+	return args.map(arg => arg.toString());
+}
+
 export function Logger(namespace: string) {
 	function formatMessage(
 		levelLabel: string,
@@ -27,12 +34,14 @@ export function Logger(namespace: string) {
 			logJoin([levelLabel, timestamp, namespace, ...args]));
 	}
 
-	function log(...args: string[]) {
-		console.log(formatMessage("I", LogColor.Default, args));
+	function log(...args: LogArg[]) {
+		const strArgs = stringifyArgs(args);
+		console.log(formatMessage("I", LogColor.Default, strArgs));
 	}
 
-	function error(...args: string[]){
-		console.error(formatMessage("E", LogColor.Red, args));
+	function error(...args: LogArg[]){
+		const strArgs = stringifyArgs(args);
+		console.error(formatMessage("E", LogColor.Red, strArgs));
 	}
 
 	return { error, log };

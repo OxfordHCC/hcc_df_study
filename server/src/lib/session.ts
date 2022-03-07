@@ -2,7 +2,10 @@ import { Either, Session, AdminClientNs } from 'dfs-common';
 import { createMurmurContainer } from './murmurlib';
 import { DockerError, start, rm } from './dockerlib';
 import { removeGame, createGame } from './game';
+import { Logger } from './log';
 import { withDb } from './db';
+
+const { log, error } = Logger("session");
 
 
 const insertSessionSQL = `
@@ -118,7 +121,7 @@ async function initSession(session: Session): Promise<Either<Error, Session>>{
 	}
 
 	// start murmur container
-	const res = start(session.murmurId);
+	const res = await start(session.murmurId);
 	if(res instanceof DockerError){
 		if(res.statusCode === 404){
 			// create if does not exist
@@ -131,6 +134,9 @@ async function initSession(session: Session): Promise<Either<Error, Session>>{
 			if(murmur instanceof Error){
 				return murmur;
 			}
+		}
+		if(res.statusCode === 409){
+			error("container already exists");
 		}
 	}
 
@@ -152,5 +158,15 @@ export async function init(): Promise<Error[]>{
 	return errors;
 }
 
+export async function initSessions(){
+	const sessions = await getSessions();
+	if(sessions instanceof Error){
+		return sessions;
+	}
+	
+	log("sync", "sessions length", sessions.length);
+
+	sessions.map(sesh => initSession(sesh));
+}
 
 
