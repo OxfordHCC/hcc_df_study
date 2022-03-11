@@ -1,24 +1,15 @@
 import test from 'tape';
-import { createSession, getSessions } from '../src/lib/session';
+import { isError, joinErrors } from 'dfs-common';
+import { createSession, getCurrentGame } from '../src/lib/session';
 import * as docker from '../src/lib/dockerlib';
-import { getGame, getGames } from '../src/lib/game';
+import { getGame, isGame, getGames, getSessionGames } from '../src/lib/game';
 import { resetDb, resetContainers, resetGames } from './teardowns';
 
 
-test("resetting db", async (t) => {
+test("creating session should create a murmur container", async (t) => {
 	await resetDb();
-	t.end();
-});
-
-test("resetting murmur containers", async (t) => {
+	await resetGames();
 	await resetContainers();
-	t.end();
-});
-
-test("creating session should create a murmur container and a game room", async (t) => {
-	t.teardown(resetDb);
-	t.teardown(resetContainers);
-	t.teardown(resetGames);
 	t.plan(1);
 	
 	const session = await createSession({
@@ -38,20 +29,84 @@ test("creating session should create a murmur container and a game room", async 
 		t.fail(`Retrieving docker containers failed: ${containers.message}`);
 		return;
 	}
-	
-	const game = getGame(session.gameId);
-	if(game instanceof Error){
-		t.fail(`Retrieving game returned error: ${game.message}`);
-		return;
-	}
 		
 	t.assert(containers.find(c => c.Id === session.murmurId) !== undefined, "container found");
 });
 
+test("creating a session should result in 2 games being inserted in the database", async (t) => {
+	await resetDb();
+	await resetGames();
+	await resetContainers();
+	t.plan(1);
+
+
+	const session = await createSession({
+		blueParticipant: "blue",
+		redParticipant: "red",
+		murmurPort: 3001,
+		grpcPort: 5001
+	});
+
+	if (session instanceof Error) {
+		t.fail(session.message);
+		return;
+	}
+
+	const gameRows = await getSessionGames(session.sessionId);
+	if (gameRows instanceof Error) {
+		t.fail(gameRows.message);
+		return;
+	}
+
+	t.equals(gameRows.length, 2, "length of sessionGames array");
+});
+
+test("creating a session should result in 2 game objects being created", async (t) => {
+	try {
+		await resetDb();
+		await resetGames();
+		await resetContainers();
+		t.plan(1);
+
+		const session = await createSession({
+			blueParticipant: "blue",
+			redParticipant: "red",
+			murmurPort: 3001,
+			grpcPort: 5001
+		});
+
+		if (session instanceof Error) {
+			t.fail(session.message);
+			return;
+		}
+
+		const gameRows = await getSessionGames(session.sessionId);
+
+		if (gameRows instanceof Error) {
+			t.fail(gameRows.message);
+			return;
+		}
+
+		const gameResults = gameRows.map(row => getGame(row.gameId));
+		const errors = gameResults.filter(isError);
+		if (errors.length > 0) {
+			t.fail(joinErrors(errors).message);
+			return;
+		}
+
+		const games = gameResults.filter(isGame);
+		t.assert(games.length === 2);
+	} catch (err) {
+		console.log(err);
+	}
+});
+
+
+
 test("creating two sessions with different params, should succeed", async (t) => {
-	t.teardown(resetDb);
-	t.teardown(resetContainers);
-	t.teardown(resetGames);
+	await resetDb();
+	await resetGames();
+	await resetContainers();
 	t.plan(1);
 
 	const session = await createSession({
@@ -67,13 +122,13 @@ test("creating two sessions with different params, should succeed", async (t) =>
 		redParticipant: "player_purple"
 	});
 
-	t.isEqual(session2 instanceof Error, false,	"second session creation should not result in error");
+	t.isEqual(session2 instanceof Error, false, "second session creation should not result in error");
 });
 
 test("session should fail when already existing player is passed as param", async (t) => {
-	t.teardown(resetDb);
-	t.teardown(resetContainers);
-	t.teardown(resetGames);
+	await resetDb();
+	await resetGames();
+	await resetContainers();
 	t.plan(1);
 
 	await createSession({
@@ -94,9 +149,9 @@ test("session should fail when already existing player is passed as param", asyn
 });
 
 test("session should fail when port is in use", async (t) => {
-	t.teardown(resetDb);
-	t.teardown(resetContainers);
-	t.teardown(resetGames);
+	await resetDb();
+	await resetGames();
+	await resetContainers();
 	t.plan(2);
 
 	await createSession({
@@ -125,27 +180,36 @@ test("session should fail when port is in use", async (t) => {
 	t.assert(murmurConflict instanceof Error, "createSession with murmurPort conflict should result in an error");
 });
 
+
 test("conflicts should not result in partial failures", async (t) => {
-	t.teardown(resetDb);
-	t.teardown(resetContainers);
-	t.teardown(resetGames);
+	await resetDb();
+	await resetGames();
+	await resetContainers();
 	t.plan(2);
 
-	const gamesBefore = getGames();
-	const lenBefore = gamesBefore.length;
+
+	await createSession({
+		grpcPort: 3001,
+		murmurPort: 3002,
+		blueParticipant: "player_blue",
+		redParticipant: "player_red"
+	});
+
+	const gamesBefore = (getGames()).length;
+
 	const containersBefore = await docker.ps({
 		all: true,
 		filters: {
 			ancestor: "mumble_server"
 		}
 	});
-	
-	if(containersBefore instanceof Error){
+
+	if (containersBefore instanceof Error) {
 		t.fail("docker ps should not return error");
 		return;
 	}
 
-	const lenContainersBefore = containersBefore.length;
+	const containersBeforeLen = containersBefore.length;
 
 	await createSession({
 		grpcPort: 3001,
@@ -154,15 +218,7 @@ test("conflicts should not result in partial failures", async (t) => {
 		redParticipant: "player_red"
 	});
 
-	await createSession({
-		grpcPort: 3001,
-		murmurPort: 3002,
-		blueParticipant: "player_blue",
-		redParticipant: "player_red"
-	});
-
-	const gamesAfter = getGames();
-	const lenAfter = gamesAfter.length;
+	const gamesAfter = (getGames()).length;
 
 	const containersAfter = await docker.ps({
 		all: true,
@@ -171,13 +227,57 @@ test("conflicts should not result in partial failures", async (t) => {
 		}
 	});
 
-	if(containersAfter instanceof Error){
+	if (containersAfter instanceof Error) {
 		t.fail("docker ps should not return error");
 		return;
 	}
-	
-	const lenContainersAfter = containersAfter.length;
 
-	t.assert(lenBefore === lenAfter);
-	t.assert(lenContainersBefore === lenContainersAfter);
+	console.log(containersAfter);
+
+	const containersAfterLen = containersAfter.length;
+
+	t.equal(gamesAfter, gamesBefore, "no game objects should be added");
+	t.equal(containersAfterLen, containersBeforeLen, "no containers should be added");
+});
+
+
+
+test("current session game should update when game ends", async (t) => {
+	await resetDb();
+	await resetGames();
+	await resetContainers();
+
+	t.plan(1);
+
+	const session = await createSession({
+		grpcPort: 3001,
+		murmurPort: 5001,
+		blueParticipant: "blue",
+		redParticipant: "red"
+	});
+
+	if (session instanceof Error) {
+		return t.fail(session.message);
+	}
+
+	const game = await getCurrentGame(session.sessionId);
+	if (game instanceof Error) {
+		t.fail(game.message);
+		return;
+	}
+
+	game.start();
+	
+	// answer all rounds (correctly in this case, but it doesn't matter)
+	game.rounds.forEach((round, i) => {
+		game.answer({ round: i, value: round.solution });
+	});
+
+	const gameAfter = await getCurrentGame(session.sessionId);
+	if (gameAfter instanceof Error) {
+		t.fail(gameAfter.message);
+		return;
+	}
+
+	t.assert(gameAfter !== game, "games should not be the same object");
 });

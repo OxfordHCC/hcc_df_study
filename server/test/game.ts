@@ -3,8 +3,6 @@ import { deepClone } from 'dfs-common';
 import { resetGames } from './teardowns';
 import {
 	Game,
-	createGame,
-	getGames
 } from '../src/lib/game';
 import { createPlayer } from '../src/lib/player';
 import { ButtonRound, KeypadRound } from '../src/lib/round';
@@ -39,37 +37,6 @@ function createGameSequence() {
 		new KeypadRound([4,3,2,1])
 	];
 }
-
-test("creating game should result in game being saved to memory", async (t) => {
-	t.plan(2);
-	t.teardown(resetGames);
-
-	const game = createGame("blue", "red");
-	t.assert(game instanceof Game, "createGame should return Game");
-
-	if (game instanceof Error) {
-		return;
-	}
-
-	const games = getGames();
-	const saved = games.find(g => g.gameId === game.gameId);
-	t.assert(saved !== undefined);
-});
-
-test("should be able to create two games with different players", async(t) => {
-	t.plan(2);
-	t.teardown(resetGames);
-
-	const game1 = createGame("blue", "red");
-	const game2 = createGame("orange", "purple");
-
-	t.assert(game2 instanceof Game, "second createGame should return Game");
-
-	const games = getGames();
-
-	t.equals(games.length, 2 ,"Should have 2 games in memory after 2 calls to createGame");
-
-});
 
 test('startTime is set in game state once started', (t) => {
 	t.teardown(resetGames);

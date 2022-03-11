@@ -3,7 +3,6 @@ import { Either } from './util';
 
 export type Session = {
 	sessionId: number;
-	gameId: string;
 	murmurId: string;
 	blueParticipant: string;
 	redParticipant: string;

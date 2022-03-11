@@ -11,6 +11,7 @@ export interface RoundData {
     startTime?: number;
     endTime?: number;
 }
+export declare function isRoundData(x: any): x is RoundData;
 export interface SingleRoundData extends RoundData {
     solution: number;
     options: number[];

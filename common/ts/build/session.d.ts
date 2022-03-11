@@ -2,7 +2,6 @@ import { AdminClientNs } from './socketio';
 import { Either } from './util';
 export declare type Session = {
     sessionId: number;
-    gameId: string;
     murmurId: string;
     blueParticipant: string;
     redParticipant: string;

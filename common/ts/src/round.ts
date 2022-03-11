@@ -6,9 +6,20 @@ export type RoundName =
 	| SingleRoundName
 	| SequenceRoundName;
 
+function isRoundName(x: any): x is RoundName{
+	return x === "button"
+		|| x === "wire"
+		|| x === "keypad";
+}
+
 export type Solution =
 	| number
 	| number[];
+
+function isSolution(x: any): x is Solution{
+	return typeof x === "number"
+		|| Array.isArray(x) && x.every(xi => typeof xi === "number");
+}
 
 export interface RoundData {
 	name: RoundName
@@ -17,6 +28,14 @@ export interface RoundData {
 	answer?: Solution
 	startTime?: number
 	endTime?: number
+}
+export function isRoundData(x: any): x is RoundData{
+	return isRoundName(x.name)
+		&& typeof x.msLength === "number"
+		&& isSolution(x.solution)
+		&& (x.answer === undefined || isSolution(x.answer))
+		&& (x.startTime === undefined || typeof x.startTime === "number")
+		&& (x.endTime === undefined || typeof x.endTime === "number");
 }
 
 export interface SingleRoundData extends RoundData{

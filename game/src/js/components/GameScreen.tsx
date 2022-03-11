@@ -9,13 +9,16 @@ import { Answer, GameData } from 'dfs-common';
 
 type GameScreenProps = {
 	playerId: string
+	gameId: number
 }
 
-export function GameScreen({ playerId } : GameScreenProps): JSX.Element{
+export function GameScreen({ playerId, gameId } : GameScreenProps): JSX.Element{
 	const [loading, setLoading] = useState<boolean>(true);
 	const [gameData, setGameState] = useState<GameData>();
 
-	const game = useMemo(() => new GameClient({ playerId }), [ playerId ]);
+	const game = useMemo(
+		() => new GameClient({ playerId }), [ playerId, gameId ]
+	);
 
 	useEffect(() => {
 		const onConnect = function(){
@@ -48,7 +51,7 @@ export function GameScreen({ playerId } : GameScreenProps): JSX.Element{
 			game.off("error", onError);
 			game.off("connect", onConnect);
 		};
-	}, [playerId]);
+	}, [game]);
 
 
 	function onPlayerReadyChange(val: boolean){

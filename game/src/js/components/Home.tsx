@@ -6,7 +6,7 @@ import { Center } from './Center';
 
 export function Home(): JSX.Element{
 	const [playerId, setPlayerId] = useState("");
-
+	
 	const updatePlayerId = useCallback(
 		(e: ChangeEvent<HTMLInputElement>) => {
 			setPlayerId(e.target.value);

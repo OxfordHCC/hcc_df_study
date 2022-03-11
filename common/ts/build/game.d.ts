@@ -7,6 +7,7 @@ export interface Player {
     playerId: string;
     ready: boolean;
 }
+export declare function isPlayer(x: any): x is Player;
 export interface GameData {
     players: Player[];
     gameId: string;
@@ -15,6 +16,7 @@ export interface GameData {
     startTime?: number;
     endTime?: number;
 }
+export declare function isGameData(x: any): x is GameData;
 export declare type GameEvents = {
     "start": () => void;
     "stop": () => void;

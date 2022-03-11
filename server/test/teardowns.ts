@@ -10,8 +10,8 @@ import * as docker from '../src/lib/dockerlib';
 const initSQLFile = path.resolve(__dirname, '../db/init.sql');
 const initSQL = readFileSync(initSQLFile, "utf8");
 
-export function resetGames() {
-	getGames().map(removeGame);
+export async function resetGames() {
+	await Promise.all(getGames().map(removeGame));
 }
 
 export async function resetDb() {
@@ -36,8 +36,15 @@ export async function resetContainers() {
 		throw murmurContainers;
 	}
 
-	const cids = murmurContainers.map(c => c.Id)
-	await docker.stop(...cids);
-	await docker.rm(...cids);
+	const cids = murmurContainers.map(c => c.Id);
+	const stopRes = await docker.stop(...cids);
+	const rmRes = await docker.rm(...cids);
+
+	if(stopRes instanceof Error){
+		throw stopRes;
+	}
+	if(rmRes instanceof Error){
+		throw rmRes;
+	}
 }
 

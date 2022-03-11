@@ -2,7 +2,7 @@ import http from 'http';
 import { Either } from 'dfs-common';
 import { Logger } from './log';
 
-const { log } = Logger("dockerlib");
+const { log, error } = Logger("dockerlib");
 
 export class DockerError extends Error{
 	statusCode: number;
@@ -98,6 +98,19 @@ function rmContainer(name: string){
 	return dockerReq("DELETE", `/containers/${name}`);
 }
 
+type DockerCreateResult = {
+	Id: string
+	Warning: unknown[]
+}
+export function create(name: string | undefined, config: any){
+	return dockerReq<DockerCreateResult>(
+		"POST",
+		"/containers/create",
+		{ name },
+		config
+	)
+}
+
 export async function rm(...containers: string[]) {
 	const promises = containers.map(rmContainer);
 	return Promise.all(promises).catch(err => {
@@ -124,3 +137,4 @@ export function ps({ all, filters }: PsProps = {}){
 		{ all, filters: filtersStr }
 	);
 }
+

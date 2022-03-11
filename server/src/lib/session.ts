@@ -1,17 +1,22 @@
-import { Either, Session, AdminClientNs } from 'dfs-common';
-import { createMurmurContainer } from './murmurlib';
-import { DockerError, start, rm } from './dockerlib';
-import { removeGame, createGame } from './game';
+import { isError, joinErrors, isGameData, Either, Session, AdminClientNs } from 'dfs-common';
+import { createMurmurContainer, initMurmurContainer } from './murmurlib';
+import {
+	Game,
+	getGame,
+	createGame,
+	gameSchedules,
+	initGame,
+	getSessionGames
+} from './game';
 import { Logger } from './log';
 import { withDb } from './db';
 
 const { log, error } = Logger("session");
 
-
 const insertSessionSQL = `
 INSERT INTO study_session
-(game_id, murmur_id, blue_participant, red_participant, murmur_port, grpc_port) 
-VALUES ($game_id, $murmur_id, $blue, $red, $murmur, $grpc);
+(murmur_id, blue_participant, red_participant, murmur_port, grpc_port) 
+VALUES ($murmur_id, $blue, $red, $murmur, $grpc);
 `;
 type InsertSessionParam = Omit<Session, "sessionId">;
 type InsertSessionResult = { sessionId: number } 
@@ -19,12 +24,11 @@ function insertSession(session: InsertSessionParam) {
 	return withDb<InsertSessionResult>((db) =>
 		new Promise((resolve, reject) => {
 			db.run(insertSessionSQL, {
-				$game_id: session.gameId,
 				$murmur_id: session.murmurId,
 				$blue: session.blueParticipant,
 				$red: session.redParticipant,
 				$murmur: session.murmurPort,
-				$grpc: session.grpcPort
+				$grpc: session.grpcPort,
 			}, function(err) {
 				if (err) {
 					return reject(err);
@@ -40,12 +44,11 @@ function insertSession(session: InsertSessionParam) {
 function normalizeDbSession(db_session: any): Session{
 	return {
 		sessionId: db_session.session_id,
-		gameId: db_session.game_id,
 		blueParticipant: db_session.blue_participant,
 		redParticipant: db_session.red_participant,
 		murmurId: db_session.murmur_id,
 		murmurPort: db_session.murmur_port,
-		grpcPort: db_session.grpc_port
+		grpcPort: db_session.grpc_port,
 	};
 }
 
@@ -67,33 +70,20 @@ export async function getSessions(){
 
 export async function createSession(
 	{ blueParticipant, redParticipant, murmurPort, grpcPort }: AdminClientNs.CreateSessionParams
-): Promise<Either<Error, Session>> {
-	const game = createGame(blueParticipant, redParticipant);
+): Promise<Either<Error, Session>>{
+	log("createSession", blueParticipant, redParticipant, murmurPort, grpcPort);
 	const murmur = await createMurmurContainer({
 		murmurPort,
 		grpcPort
 	});
 
-	if (game instanceof Error) {
-		return game;
-	}
-	
-	if(murmur instanceof Error){
-		removeGame(game);
+	if (murmur instanceof Error) {
 		return murmur;
 	}
 
-	const startRes = await start(murmur.Id);
-
-	if (startRes instanceof Error) {
-		await rm(murmur.Id);
-		removeGame(game);
-		return startRes;
-	}
-		
+	// save session
 	const session = {
-		gameId: game.gameId,
-		murmurId: murmur.Id,
+		murmurId: murmur.id,
 		blueParticipant,
 		redParticipant,
 		murmurPort,
@@ -107,66 +97,104 @@ export async function createSession(
 
 	const { sessionId } = insertRes;
 
+	const createGameResults = await Promise.all([
+		createGame(blueParticipant, redParticipant, sessionId, gameSchedules[0], true),
+		createGame(redParticipant, blueParticipant, sessionId, gameSchedules[1], false)
+ 	]);
+	
+	const createGameErrors = createGameResults.filter(isError);
+	const gamesData = createGameResults.filter(isGameData);
+	
+	if(createGameErrors.length > 0){
+	 	return joinErrors(createGameErrors);
+	}
+
+	const games = gamesData.map(initGame);
+
+	games[0].on("stop",() => setCurrentGame(sessionId, games[1].gameId));
+
 	return {
 		...session,
 		sessionId
 	}
 }
 
+const updateSessionGameQuery = `
+BEGIN TRANSACTION;
+UPDATE game
+SET is_current = false
+WHERE session_id = $session_id;
+UPDATE game
+SET is_current = true
+WHERE game_id = $game_id;
+COMMIT;
+`;
+function setCurrentGame(sessionId: number, gameId: string) {
+	log("set current game", sessionId, gameId);
+	withDb(db => {
+		db.run(updateSessionGameQuery, {
+			$session_id: sessionId,
+			$game_id: gameId
+		});
+	})
+}
+
 async function initSession(session: Session): Promise<Either<Error, Session>>{
-	// create game
-	const game = createGame(session.blueParticipant, session.redParticipant);
-	if(game instanceof Error){
-		return game;
+	// init games
+	const gameRows = await getSessionGames(session.sessionId);
+	if(gameRows instanceof Error){
+		return gameRows;
 	}
-
-	// start murmur container
-	const res = await start(session.murmurId);
-	if(res instanceof DockerError){
-		if(res.statusCode === 404){
-			// create if does not exist
-			const murmur = await createMurmurContainer({
-				name: session.murmurId,
-				murmurPort: session.murmurPort,
-				grpcPort: session.grpcPort
-			});
-			
-			if(murmur instanceof Error){
-				return murmur;
-			}
-		}
-		if(res.statusCode === 409){
-			error("container already exists");
-		}
+	
+	const sessionGamesData = gameRows.map(row => row.gameData)
+	const games = sessionGamesData.map(initGame);
+	games[0].on("stop", () => {
+		setCurrentGame(session.sessionId, games[1].gameId);
+	});
+	
+	// init murmur container
+	const murmur = await initMurmurContainer(session);
+	if(murmur instanceof Error){
+		return murmur;
 	}
-
+	
 	return session;
 }
 
-function isError(x: any): x is Error{
-	return x instanceof Error;
-}
-export async function init(): Promise<Error[]>{
+// init sessions:
+// - start murmur containers;
+// - create in-memory game-handling objects
+export async function initSessions(): Promise<Array<Error | Session>> {
+	log("init start");
 	const sessions = await getSessions();
-	if(sessions instanceof Error){
+	if (sessions instanceof Error) {
 		return [sessions];
 	}
 	
-	const initted = await Promise.all(sessions.map(initSession));
-	const errors = initted.filter(isError);
+	const initResults = await Promise.all(sessions.map(initSession));
+	const initErrors = initResults.filter(isError);
 
-	return errors;
-}
-
-export async function initSessions(){
-	const sessions = await getSessions();
-	if(sessions instanceof Error){
-		return sessions;
+	if (initErrors.length > 0) {
+		return initErrors;
 	}
 	
-	log("sync", "sessions length", sessions.length);
-
-	sessions.map(sesh => initSession(sesh));
+	log("init OK");
+	return sessions;
 }
 
+export async function getCurrentGame(
+	sessionId: number
+): Promise<Either<Error, Game>>{
+	const gameRows = await getSessionGames(sessionId);
+	if(gameRows instanceof Error){
+		return gameRows;
+	}
+	
+	const currentGame = gameRows.find(game => game.isCurrent === true);
+	if(currentGame === undefined){
+		return new Error("Current game not found for session");
+	}
+	
+	return getGame(currentGame.gameId);
+}
 

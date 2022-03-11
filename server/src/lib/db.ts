@@ -22,9 +22,9 @@ export async function withDb<T>(fn: withDbFunction): Promise<Either<Error, T>> {
 		db.close();
 		// I do this check to narrow the type for typescript
 		if (err instanceof Error) {
-			return new Error(err.message);
+			return err
 		}
-		// This should never be reached, but who knows, depends on
+		// This should never be reached, but who knows. Depends on
 		// the sqlite library
 		return new Error("Unknown sqlite error.");
 	}
