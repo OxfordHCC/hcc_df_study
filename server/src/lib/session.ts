@@ -119,24 +119,18 @@ export async function createSession(
 	}
 }
 
-const updateSessionGameQuery = `
-BEGIN TRANSACTION;
-UPDATE game
-SET is_current = false
-WHERE session_id = $session_id;
-UPDATE game
-SET is_current = true
-WHERE game_id = $game_id;
-COMMIT;
-`;
 function setCurrentGame(sessionId: number, gameId: string) {
 	log("set current game", sessionId, gameId);
-	withDb(db => {
-		db.run(updateSessionGameQuery, {
-			$session_id: sessionId,
+	return withDb(db => {
+		db.run("BEGIN TRANSACTION");
+		db.run("UPDATE game SET is_current = 0 WHERE session_id = $session_id", {
+			$session_id: sessionId
+		});
+		db.run("UPDATE game SET is_current = 1 WHERE game_id = $game_id", {
 			$game_id: gameId
 		});
-	})
+		db.run("COMMIT");
+	});
 }
 
 async function initSession(session: Session): Promise<Either<Error, Session>>{
@@ -189,7 +183,8 @@ export async function getCurrentGame(
 	if(gameRows instanceof Error){
 		return gameRows;
 	}
-	
+
+
 	const currentGame = gameRows.find(game => game.isCurrent === true);
 	if(currentGame === undefined){
 		return new Error("Current game not found for session");
