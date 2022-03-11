@@ -113,10 +113,11 @@ export class Game extends Evented<keyof GameEvents> implements GameData{
 	currentRound: number
 	startTime?: number
 	endTime?: number
+	nextGame?: string
 	
 	constructor({ gameId, players, rounds, currentRound }: GameParams){
 		super();
-
+		
 		this.currentRound = currentRound || 0;
 		this.rounds = rounds;
 		this.gameId = gameId;
@@ -124,8 +125,9 @@ export class Game extends Evented<keyof GameEvents> implements GameData{
 		
 		this.on("player_ready", () =>
 			this.startIfPlayersReady());
-		//this.on("state", () => saveGame(this))
-		this.on('state', () => log("state", JSON.stringify(this)))
+		
+		this.on("state", () => saveGame(this));
+		this.on('state', () => log("state", JSON.stringify(this)));
 		this.on("player_ready", () => this.trigger("state"));
 		this.on("answer", () => this.trigger("state"));
 		this.on("stop",	() => this.trigger("state"));
@@ -257,12 +259,10 @@ function saveGame(game: Game){
 	});
 }
 
-
 const deleteGameQuery = `
 DELETE FROM game
 WHERE game_id = $game_id;
 `;
-
 export async function removeGame(gameId: string | Game) {
 	if (gameId instanceof Game){
 		gameId = gameId.gameId;

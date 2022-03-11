@@ -40,7 +40,8 @@ export type GameEvents = {
 	"answer": () => void,
 	"error": () => void,
 	"round": () => void,
-	"player_ready": () => void
+	"player_ready": () => void,
+	"handoff": () => void
 }
 
 

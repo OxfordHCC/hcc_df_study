@@ -111,8 +111,6 @@ export async function createSession(
 
 	const games = gamesData.map(initGame);
 
-	games[0].on("stop",() => setCurrentGame(sessionId, games[1].gameId));
-
 	return {
 		...session,
 		sessionId
@@ -134,17 +132,15 @@ function setCurrentGame(sessionId: number, gameId: string) {
 }
 
 async function initSession(session: Session): Promise<Either<Error, Session>>{
+	log("init session", session.sessionId);
 	// init games
 	const gameRows = await getSessionGames(session.sessionId);
 	if(gameRows instanceof Error){
-		return gameRows;
+		return gameRows; 
 	}
 	
 	const sessionGamesData = gameRows.map(row => row.gameData)
 	const games = sessionGamesData.map(initGame);
-	games[0].on("stop", () => {
-		setCurrentGame(session.sessionId, games[1].gameId);
-	});
 	
 	// init murmur container
 	const murmur = await initMurmurContainer(session);

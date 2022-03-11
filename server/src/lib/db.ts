@@ -12,22 +12,14 @@ export async function withDb<T>(fn: withDbFunction): Promise<Either<Error, T>> {
 	if(dbFile === undefined){
 		return new Error("dbFile undefined.");
 	}
-	
-	const db = new sqlite.Database(dbFile);
-	try {
-		return new Promise(async (resolve, reject) => {
-			const res = await fn(db);
-			db.close((err) => err && reject(err) || resolve(res));
-		});
-	} catch (err: any) {
-		db.close();
-		// I do this check to narrow the type for typescript
-		if (err instanceof Error) {
-			return err
-		}
-		// This should never be reached, but who knows. Depends on
-		// the sqlite library
-		return new Error("Unknown sqlite error.");
-	}
-}
 
+	return new Promise(async (resolve, reject) => {
+		const db = new sqlite.Database(dbFile);
+		try {
+			const res = await fn(db);
+			db.close((err) => err && resolve(err) || resolve(res));
+		} catch (err) {
+			db.close((closeErr) => closeErr && resolve(closeErr) || resolve(err as Error));
+		}
+	});
+}

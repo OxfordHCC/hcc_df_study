@@ -25,4 +25,5 @@ export declare type GameEvents = {
     "error": () => void;
     "round": () => void;
     "player_ready": () => void;
+    "handoff": () => void;
 };
