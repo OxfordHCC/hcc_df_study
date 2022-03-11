@@ -13,6 +13,21 @@ import { withDb } from './db';
 
 const { log, error } = Logger("session");
 
+export async function getPlayerSession(playerId: string){
+	const sessions = await getSessions();
+	if(sessions instanceof Error){
+		return sessions;
+	}
+
+	const playerSession = sessions.find(sess => {
+		return sess.blueParticipant === playerId
+			|| sess.redParticipant === playerId;
+	});
+
+	return playerSession
+		|| new Error("Player session not found.");
+}
+
 const insertSessionSQL = `
 INSERT INTO study_session
 (murmur_id, blue_participant, red_participant, murmur_port, grpc_port) 
@@ -179,7 +194,6 @@ export async function getCurrentGame(
 	if(gameRows instanceof Error){
 		return gameRows;
 	}
-
 
 	const currentGame = gameRows.find(game => game.isCurrent === true);
 	if(currentGame === undefined){

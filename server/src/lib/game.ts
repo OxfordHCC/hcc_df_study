@@ -113,15 +113,15 @@ export class Game extends Evented<keyof GameEvents> implements GameData{
 	currentRound: number
 	startTime?: number
 	endTime?: number
-	nextGame?: string
 	
-	constructor({ gameId, players, rounds, currentRound }: GameParams){
+	constructor({ gameId, players, rounds, currentRound, startTime }: GameParams){
 		super();
 		
 		this.currentRound = currentRound || 0;
 		this.rounds = rounds;
 		this.gameId = gameId;
-		this.players = players
+		this.players = players;
+		this.startTime = startTime;
 		
 		this.on("player_ready", () =>
 			this.startIfPlayersReady());
@@ -204,15 +204,18 @@ export class Game extends Evented<keyof GameEvents> implements GameData{
 		const player = this.players.find(p => p.playerId === playerId);
 		
 		if(!player){
-			return new Error("Player not found in game.")
+			return new Error("Player not found in game.");
 		}
 	
 		player.ready = ready;
 		this.trigger("player_ready", player);
 	}
-
 	
 	startIfPlayersReady(): boolean {
+		if(this.startTime !== undefined){
+			return false;
+		}
+		
 		const [blue, red] = this.players;
 		
 		if (blue.ready !== true) {
@@ -238,6 +241,11 @@ export function deserializeGame(gameData: GameData) {
 		...gameData,
 		rounds
 	});
+
+	// resume game
+	if(game.startTime !== undefined){
+		game.gotoRound(game.currentRound);
+	}
 	
 	return game;	
 }
@@ -249,6 +257,7 @@ WHERE game_id = $game_id;
 `;
 // persist game state
 function saveGame(game: Game){
+	log("saveGame", game.gameId);
 	const gameData = game.state();
 
 	return withDb(db => {
@@ -425,6 +434,7 @@ export function getSessionGames(sessionId: number): Promise<Either<Error, GameRo
 }
 
 export function initGame(gameData: GameData): Game{
+	log("initGame", gameData.gameId, gameData.currentRound);
 	const game = deserializeGame(gameData);
 	// if game with same id is already cached, we simply replace it
 	const memIndx = memGames.findIndex(mg => mg.gameId === game.gameId);

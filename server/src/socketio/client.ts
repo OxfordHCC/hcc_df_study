@@ -2,7 +2,8 @@ import { Socket, Server, Namespace } from "socket.io";
 import { Either, deepClone, Answer, GameData, GameClientNs } from 'dfs-common';
 import { io } from './index';
 import { Logger } from '../lib/log';
-import { Game, getGame, getPlayerGame } from "../lib/game";
+import { getPlayerSession, getCurrentGame } from '../lib/session';
+import { Game, getGame } from "../lib/game";
 
 const { log, error } = Logger("socket.io/client");
 
@@ -77,7 +78,7 @@ function getHandshakeQuery(socket: Socket): Either<Error, HandshakeQuery> {
 	return { playerId };
 }
 
-function onConnect(socket: Socket): Either<Error, undefined> {
+async function onConnect(socket: Socket): Promise<Either<Error, undefined>> {
 	const hShakeQuery = getHandshakeQuery(socket);
 
 	if(hShakeQuery instanceof Error){
@@ -85,12 +86,17 @@ function onConnect(socket: Socket): Either<Error, undefined> {
 	}
 	
 	const { playerId } = hShakeQuery;
-	const game = getPlayerGame(playerId);
+	const session = await getPlayerSession(playerId);
 
-	if(game instanceof Error){
-		return game
+	if(session instanceof Error){
+		return session;
 	}
-	
+
+	const game = await getCurrentGame(session.sessionId);
+	if(game instanceof Error){
+		return game;
+	}
+		
 	const { gameId } = game;
 
 	// cache some data related to this socket
@@ -104,15 +110,16 @@ function onConnect(socket: Socket): Either<Error, undefined> {
 
 	// when game state changes, let socket know
 	game.on("state", () => socket.emit("state", getClientGameState(game, playerId)));
-	
-	// when a new client connects, send game info and roundInfo if
-	const gameState = getClientGameState(game, playerId);
-	socket.emit("state", gameState);
 
 	// handle events from socket
 	socket.on('game:player_ready', onPlayerReady(socket, io));
 	socket.on('game:answer', onAnswer(socket, io));
 	socket.on('disconnect', onDisconnect(socket, io));
+
+	// when a new client connects, send game info and roundInfo if
+	const gameState = getClientGameState(game, playerId);
+	console.log(gameState);
+	socket.emit("state", gameState);
 }
 
 function onDisconnect(socket: Socket, _io: Server) {

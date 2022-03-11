@@ -5,7 +5,6 @@ import * as docker from '../src/lib/dockerlib';
 import { getGame, isGame, getGames, getSessionGames } from '../src/lib/game';
 import { resetDb, resetContainers, resetGames } from './teardowns';
 
-
 test("creating session should create a murmur container", async (t) => {
 	await resetDb();
 	await resetGames();
@@ -240,6 +239,9 @@ test("conflicts should not result in partial failures", async (t) => {
 	t.equal(containersAfterLen, containersBeforeLen, "no containers should be added");
 });
 
+test("game shoud save progress ", async (t) => {
+	t.fail("not implemented");
+});
 
 test("current session game should update when game ends", async (t) => {
 	await resetDb();

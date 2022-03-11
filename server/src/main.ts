@@ -8,6 +8,7 @@ const { log,error } = Logger("main");
 (async () => {
 	const initResults = await initSessions();
 	const errors = initResults.filter(isError);
+	
 	if(errors.length > 0){
 		errors.forEach(err => error("init", err.message));
 		return process.exit(1);
