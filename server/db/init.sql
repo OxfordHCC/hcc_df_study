@@ -14,6 +14,7 @@ CREATE TABLE game (
   game_data TEXT,
   is_current BOOL,
   session_id INTEGER,
+  game_order INTEGER,
   FOREIGN KEY(session_id) REFERENCES study_session(session_id)
 );
 

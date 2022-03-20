@@ -70,14 +70,14 @@ export async function scheduleAttack(attack: Attack){
 	// TODO handle errors
 	// register event handler to trigger the attack
 	game.on("round", ({ round }: { round: number }) => {
-		log("launching attack", attack.gameId)
 		if(round === attack.round) {
+			log("launching attack", attack.gameId)
 			// launch attack
-			
+
 			// TODO: mute source player
-			
+
 			// send audio
-			const res = execSync(`mumble-cli 127.0.0.1:${session.grpcPort} send	-u 0 -t 1 -f /Users/alexzugravu/tmp/hello_jack.wav	-d 20`,	{ encoding: "utf8" });
+			const res = execSync(`mumble-cli 127.0.0.1:${session.grpcPort} send	-u 0 -t 1 -f /Users/alexzugravu/tmp/taunt.wav	-d 20`, { encoding: "utf8" });
 			log("attack_status", "send_audio", attack.gameId, res);
 			// TODO: unmute source player
 			

@@ -118,7 +118,6 @@ async function onConnect(socket: Socket): Promise<Either<Error, undefined>> {
 
 	// when a new client connects, send game info and roundInfo if
 	const gameState = getClientGameState(game, playerId);
-	console.log(gameState);
 	socket.emit("state", gameState);
 }
 

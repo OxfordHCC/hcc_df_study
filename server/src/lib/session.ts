@@ -99,7 +99,7 @@ export async function createSession(
 	}
 
 	// insert session in database
-	const session = {
+	const sessionPartial = {
 		murmurId: murmur.id,
 		blueParticipant,
 		redParticipant,
@@ -107,16 +107,17 @@ export async function createSession(
 		grpcPort
 	};
 
-	const insertRes = await insertSession(session);
+	const insertRes = await insertSession(sessionPartial);
 	if(insertRes instanceof Error){
 		return insertRes;
 	}
 
 	const { sessionId } = insertRes;
 
+	// create games
 	const createGameResults = await Promise.all([
-		createGame(blueParticipant, redParticipant, sessionId, gameSchedules[0], true),
-		createGame(redParticipant, blueParticipant, sessionId, gameSchedules[1], false)
+		createGame(blueParticipant, redParticipant, sessionId, 0, gameSchedules[0], true),
+		createGame(redParticipant, blueParticipant, sessionId, 1, gameSchedules[1], false)
  	]);
 
 	// handle createGame errors
@@ -128,7 +129,8 @@ export async function createSession(
 	// handle createGame results
 	const gamesData = createGameResults.filter(isGameData);
 	const games = gamesData.map(initGame);
-	
+
+	// create attacks
 	const attack = await createAttack({
 		gameId: games[0].gameId,
 		sessionId: sessionId,
@@ -141,39 +143,39 @@ export async function createSession(
 	if(attack instanceof Error){
 		return attack;
 	}
-	
-	await scheduleAttack(attack);
-	
-	return {
-		...session,
+
+	const session = {
+		...sessionPartial,
 		sessionId
 	}
-}
 
-function setCurrentGame(sessionId: number, gameId: string) {
-	log("set current game", sessionId, gameId);
-	return withDb(db => {
-		db.run("BEGIN TRANSACTION");
-		db.run("UPDATE game SET is_current = 0 WHERE session_id = $session_id", {
-			$session_id: sessionId
-		});
-		db.run("UPDATE game SET is_current = 1 WHERE game_id = $game_id", {
-			$game_id: gameId
-		});
-		db.run("COMMIT");
-	});
+	await initSession(session);
+
+	return session;
 }
 
 async function initSession(session: Session): Promise<Either<Error, Session>>{
 	log("init session", session.sessionId);
+
 	// init games
 	const gameRows = await getSessionGames(session.sessionId);
 	if(gameRows instanceof Error){
 		return gameRows; 
 	}
-	
-	const sessionGamesData = gameRows.map(row => row.gameData)
-	const games = sessionGamesData.map(initGame);
+
+	const games = gameRows.sort((a,b) => a.gameOrder - b.gameOrder)
+	.map(row => initGame(row.gameData));
+
+	// TODO: schedule attacks
+
+	// chain games
+	games.reduceRight((acc, curr) => {
+		curr.on('stop', async () => {
+			await setCurrentGame(session.sessionId, acc.gameId);
+		});
+		
+		return curr;
+	});
 	
 	// init murmur container
 	const murmur = await initMurmurContainer(session);
@@ -205,6 +207,8 @@ export async function initSessions(): Promise<Array<Error | Session>> {
 	return sessions;
 }
 
+// current game
+
 export async function getCurrentGame(
 	sessionId: number
 ): Promise<Either<Error, Game>>{
@@ -219,5 +223,21 @@ export async function getCurrentGame(
 	}
 	
 	return getGame(currentGame.gameId);
+}
+
+function setCurrentGame(sessionId: number, gameId: string) {
+	log("set current game", sessionId, gameId);
+	return withDb(db => {
+		db.serialize(function(){
+			db.run("BEGIN TRANSACTION");
+			db.run("UPDATE game SET is_current = 0 WHERE session_id = $session_id", {
+				$session_id: sessionId
+			});
+			db.run("UPDATE game SET is_current = 1 WHERE game_id = $game_id", {
+				$game_id: gameId
+			});
+			db.run("COMMIT");
+		});
+	});
 }
 

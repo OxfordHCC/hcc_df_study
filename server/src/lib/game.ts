@@ -324,11 +324,11 @@ export function getGame(gameId: string): Either<Error, Game> {
 // insert game in table and create in-memory representation
 const insertGameQuery = `
 INSERT INTO game
-(game_id, game_data, is_current, session_id)
-VALUES ($game_id, $game_data, $is_current, $session_id);
+(game_id, game_data, is_current, session_id, game_order)
+VALUES ($game_id, $game_data, $is_current, $session_id, $game_order);
 `;
 export async function createGame(
-	blue: string, red: string, sessionId: number,
+	blue: string, red: string, sessionId: number, gameOrder: number,
 	schedule: ConcreteRoundData[], isCurrent: boolean
 ): Promise<Either<Error, GameData>>{
 	log("createGame", sessionId, blue, red);
@@ -357,12 +357,13 @@ export async function createGame(
 				$game_data: JSON.stringify(gameData),
 				$session_id: sessionId,
 				$is_current: isCurrent,
+				$game_order: gameOrder
 			}, function(err){
 				if(err){
 					return reject(err);
 				}
 				const sessionId = this.lastID;
-				resolve(null);
+				resolve(sessionId);
 			});
 		});
 	});
@@ -391,12 +392,14 @@ type GameRow = {
 	sessionId: number;
 	gameData: GameData;
 	isCurrent: boolean;
+	gameOrder: number;
 }
 function isGameRow(x: any): x is GameRow{
 	return typeof x.gameId === "string"
 		&& typeof x.sessionId === "number"
 		&& isGameData(x.gameData)
-		&& typeof x.isCurrent === "boolean";
+		&& typeof x.isCurrent === "boolean"
+	    && typeof x.gameOrder === "number";
 }
 function normalizeGameRow(db_game: any): Either<Error, GameRow>{
 	const gameData = parseJSON(db_game.game_data);
@@ -408,7 +411,8 @@ function normalizeGameRow(db_game: any): Either<Error, GameRow>{
 		gameId: db_game.game_id,
 		gameData: gameData,
 		sessionId: db_game.session_id,
-		isCurrent: Boolean(db_game.is_current)
+		isCurrent: Boolean(db_game.is_current),
+		gameOrder: parseInt(db_game.game_order)
 	}
 }
 export function getSessionGames(sessionId: number): Promise<Either<Error, GameRow[]>>{

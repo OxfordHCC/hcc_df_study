@@ -2,7 +2,7 @@ import test from 'tape';
 import { isError, joinErrors } from 'dfs-common';
 import { createSession, getCurrentGame } from '../src/lib/session';
 import * as docker from '../src/lib/dockerlib';
-import { getGame, isGame, getGames, getSessionGames } from '../src/lib/game';
+import { getGame, isGame, getGames, Game, getSessionGames } from '../src/lib/game';
 import { resetDb, resetContainers, resetGames } from './teardowns';
 
 test("creating session should create a murmur container", async (t) => {
@@ -248,8 +248,6 @@ test("current session game should update when game ends", async (t) => {
 	await resetGames();
 	await resetContainers();
 
-	t.plan(1);
-
 	const session = await createSession({
 		grpcPort: 3001,
 		murmurPort: 5001,
@@ -261,17 +259,48 @@ test("current session game should update when game ends", async (t) => {
 		return t.fail(session.message);
 	}
 
-	const game = await getCurrentGame(session.sessionId);
-	if (game instanceof Error) {
-		t.fail(game.message);
-		return;
+	const sessionGames = await getSessionGames(session.sessionId);
+	if(sessionGames instanceof Error){
+		return t.fail(sessionGames.message);
 	}
 
-	game.start();
+	const game1Row = sessionGames.find(game => game.isCurrent === true);
+	const game2Row = sessionGames.find(game => game.isCurrent === false);
+	if(game1Row === undefined || game2Row === undefined){
+		return t.fail("One of the games is undefined.");
+	}
+
+	const gameEithers = await Promise.all([game1Row, game2Row].map(row => getGame(row.gameId)));
+	const gamesErrors = gameEithers.filter(isError);
+	if(gamesErrors instanceof Error){
+		return gamesErrors;
+	}
+
+	const games = gameEithers.filter(isGame);
+	const [game1, game2] = games;
+
+	const currentGame = await getCurrentGame(session.sessionId);
+	if (currentGame instanceof Error) {
+		t.fail(currentGame.message);
+		return;
+	}
+	
+	t.equals(currentGame.gameId, game1.gameId, "current game should be game1");
+	
+	game1.on('stop', async () => {
+		const currentGameAfter = await getCurrentGame(session.sessionId);
+		if (currentGameAfter instanceof Error) {
+			return t.fail(currentGameAfter.message);
+		}
+
+		t.equal(currentGameAfter.gameId, game2.gameId, "after game1 stops, current game should be game2");
+		t.end();
+	});
 
 	// answer all rounds (correctly in this case, but it doesn't matter)
-	game.rounds.forEach((round, i) => {
-		game.answer({ round: i, value: round.solution });
+	currentGame.start();
+	currentGame.rounds.forEach((round, i) => {
+		currentGame.answer({ round: i, value: round.solution });
 	});
 });
 
