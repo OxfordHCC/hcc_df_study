@@ -10,6 +10,7 @@ import {
 } from './game';
 import { Logger } from './log';
 import { withDb } from './db';
+import { createAttack, scheduleAttack } from './attacklib';
 
 const { log, error } = Logger("session");
 
@@ -80,13 +81,14 @@ export async function getSessions(){
 				resolve(rows.map(normalizeDbSession) as Session[]);
 			})
 		})
-	)
+	);
 }
 
 export async function createSession(
 	{ blueParticipant, redParticipant, murmurPort, grpcPort }: AdminClientNs.CreateSessionParams
 ): Promise<Either<Error, Session>>{
 	log("createSession", blueParticipant, redParticipant, murmurPort, grpcPort);
+	// create murmur container
 	const murmur = await createMurmurContainer({
 		murmurPort,
 		grpcPort
@@ -96,7 +98,7 @@ export async function createSession(
 		return murmur;
 	}
 
-	// save session
+	// insert session in database
 	const session = {
 		murmurId: murmur.id,
 		blueParticipant,
@@ -116,16 +118,32 @@ export async function createSession(
 		createGame(blueParticipant, redParticipant, sessionId, gameSchedules[0], true),
 		createGame(redParticipant, blueParticipant, sessionId, gameSchedules[1], false)
  	]);
-	
+
+	// handle createGame errors
 	const createGameErrors = createGameResults.filter(isError);
-	const gamesData = createGameResults.filter(isGameData);
-	
 	if(createGameErrors.length > 0){
 	 	return joinErrors(createGameErrors);
 	}
 
+	// handle createGame results
+	const gamesData = createGameResults.filter(isGameData);
 	const games = gamesData.map(initGame);
-
+	
+	const attack = await createAttack({
+		gameId: games[0].gameId,
+		sessionId: sessionId,
+		round: 4,
+		audioPath: "foobar",
+		sourceUser: "blue",
+		targetUser: "red"
+	});
+	
+	if(attack instanceof Error){
+		return attack;
+	}
+	
+	await scheduleAttack(attack);
+	
 	return {
 		...session,
 		sessionId

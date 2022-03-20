@@ -9,15 +9,14 @@ import { Answer, GameData } from 'dfs-common';
 
 type GameScreenProps = {
 	playerId: string
-	gameId: number
 }
 
-export function GameScreen({ playerId, gameId } : GameScreenProps): JSX.Element{
+export function GameScreen({ playerId } : GameScreenProps): JSX.Element{
 	const [loading, setLoading] = useState<boolean>(true);
 	const [gameData, setGameState] = useState<GameData>();
 
 	const game = useMemo(
-		() => new GameClient({ playerId }), [ playerId, gameId ]
+		() => new GameClient({ playerId }), [ playerId ]
 	);
 
 	useEffect(() => {

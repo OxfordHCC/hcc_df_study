@@ -239,7 +239,7 @@ test("conflicts should not result in partial failures", async (t) => {
 	t.equal(containersAfterLen, containersBeforeLen, "no containers should be added");
 });
 
-test("game shoud save progress ", async (t) => {
+test("game should save progress ", async (t) => {
 	t.fail("not implemented");
 });
 

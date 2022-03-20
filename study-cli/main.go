@@ -24,7 +24,6 @@ func parseUint32(arg string) (error, uint32){
 	return nil, val32
 }
 
-
 func getServerList(client MurmurRPC.V1Client) (error, []*MurmurRPC.Server) {
 	ctx, cancel := getCtx()
 	defer cancel()
@@ -67,11 +66,11 @@ type commandTree = map[string]func(a MurmurRPC.V1Client, b []string)(error, stri
 
 func help(commands commandTree) string{
 	var sb strings.Builder;
-
-	sb.WriteString(fmt.Sprintf("Subcommands:\n"));
+	sb.WriteString(fmt.Sprintf("Syntax:\n> mumble-clic <host>:<port> <subcommand>\n\n"));
+	sb.WriteString(fmt.Sprintf("<subcommand>=\n"));
 
 	for k := range commands {
-		sb.WriteString(fmt.Sprintf(" %s \n", k));
+		sb.WriteString(fmt.Sprintf("| %s \n", k));
 	}
 	
 	return sb.String();
@@ -86,16 +85,17 @@ func main(){
 	commands["servers"] = serversCmd; // get servers
 	//commands["spoof"] = spoofCmd; // spoof audio/text message
 
-	if len(os.Args) < 2 {
+	if len(os.Args) < 4 {
 		fmt.Fprintln(os.Stderr, help(commands))
 		return
 	}
-	
-	cmd := os.Args[1];
+
+	dialAddr := os.Args[1];
+	cmd := os.Args[2];
 	cmdFn, ok := commands[cmd];
 
 	conn, err := grpc.Dial(
-		"127.0.0.1:50051",
+		dialAddr,
 		grpc.WithInsecure(),
 		grpc.WithBlock(),
 		grpc.FailOnNonTempDialError(true),
@@ -113,7 +113,7 @@ func main(){
 		return
 	}
 
-	err, res := cmdFn(client, os.Args[2:]);
+	err, res := cmdFn(client, os.Args[3:]);
 	if err != nil{
 		fmt.Fprintln(os.Stderr, err);
 		return

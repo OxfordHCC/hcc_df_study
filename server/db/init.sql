@@ -16,3 +16,16 @@ CREATE TABLE game (
   session_id INTEGER,
   FOREIGN KEY(session_id) REFERENCES study_session(session_id)
 );
+
+DROP TABLE IF EXISTS attack;
+CREATE TABLE attack(
+  attack_id INTEGER PRIMARY KEY,
+  game_id TEXT,
+  session_id TEXT,
+  round INTEGER,
+  source_user TEXT,
+  target_user TEXT,
+  audio_path TEXT,
+  FOREIGN KEY(session_id) REFERENCES study_session(session_id),
+  FOREIGN KEY(game_id) REFERENCES game(game_id)
+);

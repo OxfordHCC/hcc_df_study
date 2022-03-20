@@ -2,11 +2,13 @@ import { io } from "./socketio";
 import { Logger } from './lib/log';
 import { initSessions } from './lib/session';
 import { isError } from 'dfs-common';
+import { initAttacks } from './lib/attacklib';
 
 const { log,error } = Logger("main");
 
 (async () => {
 	const initResults = await initSessions();
+	const attacks = await initAttacks();
 	const errors = initResults.filter(isError);
 	
 	if(errors.length > 0){

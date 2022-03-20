@@ -1,5 +1,5 @@
 import React from "react";
-import {useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { GameScreen } from './GameScreen';
 import { Home } from './Home';
 import { TestScreen } from './TestScreen';
