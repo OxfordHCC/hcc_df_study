@@ -4,7 +4,7 @@ import { Logger } from './log';
 import { getGame } from './game';
 import { getSessions } from './session';
 import { withDb } from './db';
-import { Either, isError } from 'dfs-common';
+import { Either, isError, Session } from 'dfs-common';
 import { execSync } from 'child_process';
 
 const { log, error } = Logger('attacklib');
@@ -50,8 +50,6 @@ export async function createAttack(attack: Omit<Attack, "attackId">):Promise<Eit
 }
 
 export async function scheduleAttack(attack: Attack){
-	log("schedule", JSON.stringify(attack));
-	
 	const game = getGame(attack.gameId);
 	if(game instanceof Error){
 		return game;
@@ -67,9 +65,12 @@ export async function scheduleAttack(attack: Attack){
 		return new Error("Session not found for attack.");
 	}
 
+	log("schedule", JSON.stringify(attack));
+
 	// TODO handle errors
 	// register event handler to trigger the attack
 	game.on("round", ({ round }: { round: number }) => {
+		console.log(round, attack.round, round === attack.round);
 		if(round === attack.round) {
 			log("launching attack", attack.gameId)
 			// launch attack
@@ -77,8 +78,9 @@ export async function scheduleAttack(attack: Attack){
 			// TODO: mute source player
 
 			// send audio
-			const res = execSync(`mumble-cli 127.0.0.1:${session.grpcPort} send	-u 0 -t 1 -f /Users/alexzugravu/tmp/taunt.wav	-d 20`, { encoding: "utf8" });
-			log("attack_status", "send_audio", attack.gameId, res);
+			const shellCmd = `mumble-cli 127.0.0.1:${session.grpcPort} send -s 1 -u 1 -t 2 -f /Users/alexzugravu/tmp/hello_jack.wav -d 44 -r 16000`;
+			const res = execSync(shellCmd, { encoding: "utf8" });
+			log("attack_status", shellCmd, res.trim());
 			// TODO: unmute source player
 			
 		}
@@ -97,7 +99,7 @@ function normalizeDbAttack(db_attack: any): Attack{
 	}
 }
 
-function getAttacks(): Promise<Either<Error, Attack[]>>{
+export function getAttacks(): Promise<Either<Error, Attack[]>>{
 	return withDb(db => new Promise((resolve, reject) => {
 		db.all("SELECT * FROM attack", (err, rows) => {
 			if(err){
@@ -123,5 +125,3 @@ export async function initAttacks(){
 		return 0;
 	}
 }
-
-

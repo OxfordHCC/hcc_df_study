@@ -22,7 +22,7 @@ DROP TABLE IF EXISTS attack;
 CREATE TABLE attack(
   attack_id INTEGER PRIMARY KEY,
   game_id TEXT,
-  session_id TEXT,
+  session_id INTEGER,
   round INTEGER,
   source_user TEXT,
   target_user TEXT,

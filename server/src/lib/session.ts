@@ -10,7 +10,7 @@ import {
 } from './game';
 import { Logger } from './log';
 import { withDb } from './db';
-import { createAttack, scheduleAttack } from './attacklib';
+import { createAttack, getAttacks, scheduleAttack } from './attacklib';
 
 const { log, error } = Logger("session");
 
@@ -87,7 +87,7 @@ export async function getSessions(){
 export async function createSession(
 	{ blueParticipant, redParticipant, murmurPort, grpcPort }: AdminClientNs.CreateSessionParams
 ): Promise<Either<Error, Session>>{
-	log("createSession", blueParticipant, redParticipant, murmurPort, grpcPort);
+	log("create_session", blueParticipant, redParticipant, murmurPort, grpcPort);
 	// create murmur container
 	const murmur = await createMurmurContainer({
 		murmurPort,
@@ -95,6 +95,7 @@ export async function createSession(
 	});
 
 	if (murmur instanceof Error) {
+		error("create_session", "create_murmur", grpcPort, murmurPort, murmur.message);
 		return murmur;
 	}
 
@@ -155,10 +156,11 @@ export async function createSession(
 }
 
 async function initSession(session: Session): Promise<Either<Error, Session>>{
-	log("init session", session.sessionId);
+	const { sessionId } = session;
+	log("init session", sessionId);
 
 	// init games
-	const gameRows = await getSessionGames(session.sessionId);
+	const gameRows = await getSessionGames(sessionId);
 	if(gameRows instanceof Error){
 		return gameRows; 
 	}
@@ -166,12 +168,23 @@ async function initSession(session: Session): Promise<Either<Error, Session>>{
 	const games = gameRows.sort((a,b) => a.gameOrder - b.gameOrder)
 	.map(row => initGame(row.gameData));
 
-	// TODO: schedule attacks
+	// schedule attacks
+	const attacks = await getAttacks();
+	if(attacks instanceof Error){
+		return attacks;
+	}
+
+	const sessionAttacks = attacks.filter(a => a.sessionId === sessionId);
+	const scheduledAttacks = sessionAttacks.map(scheduleAttack);
+	const scheduledErrors = scheduledAttacks.filter(isError);
+	if(scheduledErrors.length > 0){
+		return joinErrors(scheduledErrors);
+	}
 
 	// chain games
 	games.reduceRight((acc, curr) => {
 		curr.on('stop', async () => {
-			await setCurrentGame(session.sessionId, acc.gameId);
+			await setCurrentGame(sessionId, acc.gameId);
 		});
 		
 		return curr;

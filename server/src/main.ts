@@ -8,7 +8,6 @@ const { log,error } = Logger("main");
 
 (async () => {
 	const initResults = await initSessions();
-	const attacks = await initAttacks();
 	const errors = initResults.filter(isError);
 	
 	if(errors.length > 0){

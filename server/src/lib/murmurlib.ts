@@ -2,7 +2,7 @@ import * as docker from './dockerlib';
 import { Either, Session } from 'dfs-common';
 import { Logger } from './log';
 
-const { error } = Logger("murmurlib");
+const { log, error } = Logger("murmurlib");
 
 type CreateMurmurContainerParams = {
 	grpcPort: number;
@@ -37,16 +37,19 @@ export async function createMurmurContainer(
 		}
 	});
 
-	if(createRes instanceof Error){
+	if (createRes instanceof Error) {
 		return createRes;
 	}
 
 	const murmurId = createRes.Id;
 	const startRes = await docker.start(murmurId);
 	if(startRes instanceof Error){
+
 		await docker.rm(murmurId);
 		return startRes;
 	}
+	
+	log("create_container", murmurId);
 
 	return {
 		id: murmurId
