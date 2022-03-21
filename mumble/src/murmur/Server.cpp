@@ -89,13 +89,11 @@ void Server::recordLoop(){
 	// - this function terminates before bRecording is set to true :: I find this hard to believe since assignment of primitives should be atomic;
 	// - the compiler optimizes the function's while loop out of existence, because it sees bRecording as false, and perhaps it can see that this function is only called from a thread? This also doesn't make sense to me, since threads can share memory so the compiler should have no guarantee that bRecording cannot be changed at runtime...
 
-	qWarning("something");
 	while (bRecording) {
 		if(recordingQueue.size() <= 0){
 			continue;
 		}
 
-		qWarning("recording queue is non-empty");
 		const AudioMsg msg = recordingQueue.front();
 		
 		try{
