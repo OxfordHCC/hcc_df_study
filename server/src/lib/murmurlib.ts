@@ -1,8 +1,14 @@
+import { mkdirSync } from 'fs';
+import path from 'path';
 import * as docker from './dockerlib';
 import { Either, Session } from 'dfs-common';
 import { Logger } from './log';
 
 const { log, error } = Logger("murmurlib");
+
+const recDir = path.resolve(__dirname, '../var/rec');
+mkdirSync(recDir, { recursive: true });
+
 
 type CreateMurmurContainerParams = {
 	grpcPort: number;
@@ -15,6 +21,15 @@ type MurmurContainer = {
 export async function createMurmurContainer(
 	{ grpcPort, murmurPort, name }: CreateMurmurContainerParams
 ): Promise<Either<Error, MurmurContainer>>{
+	// create rec directory in host
+	const key = `g${grpcPort}_m${murmurPort}`;
+	const sourceRecPath = path.resolve(recDir, key);
+	try{
+		mkdirSync(sourceRecPath);
+	}catch(err){
+		return err as Error;
+	}
+	
 	const createRes = await docker.create(name, {
 		Image: "mumble_server",
 		ExposedPorts: {
@@ -23,6 +38,14 @@ export async function createMurmurContainer(
 			"50051": {}
 		},
 		HostConfig: {
+			Mounts: [
+				{
+					Target: "/var/hcc/rec/",
+					Source: sourceRecPath,
+					Type: "bind",
+					ReadOnly: false
+				}
+			],
 			PortBindings: {
 				"64738/udp": [{
 					HostPort: murmurPort.toString()

@@ -1081,7 +1081,6 @@ void MurmurRPCImpl::contextAction(const ::User *user, const QString &action, uns
 // *Must* functions return the requested value, or throw a ::grpc::Status
 // exception.
 
-
 ::ServerUser *MustUser(const Server *server, unsigned int session) {
 	auto user = server->qhUsers.value(session);
 	if (!user || user->sState != ServerUser::Authenticated) {
@@ -1371,6 +1370,7 @@ namespace Wrapper {
 
 		// get params from request
 		auto server = MustServer(request);
+		
 		ServerUser* user = MustUser(server, request);
 		ServerUser* target = MustTarget(server, request);
 		std::string data = request.data();
