@@ -87,7 +87,7 @@ function stopContainer(name: string){
 	return dockerReq("POST", `/containers/${name}/stop`);
 }
 
-export async function stop(...containers: string[]){
+export async function stop(...containers: string[]): Promise<Either<Error, void>>{
 	const promises = containers.map(stopContainer);
 	return Promise.all(promises).catch(err => {
 		return new Error(err);

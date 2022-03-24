@@ -14,7 +14,7 @@ export class GameClient extends Evented<keyof ClientGameEvents>{
 	constructor({ playerId }: GameParams){
 		super();
 		this.playerId = playerId;
-		this.socket = io("ws://localhost:3000/client",{
+		this.socket = io("ws://cambridge-station.serveminecraft.net:3000/client",{
 			autoConnect: false,
 			query:{
 				playerId: this.playerId

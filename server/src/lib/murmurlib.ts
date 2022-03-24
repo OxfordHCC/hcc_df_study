@@ -10,6 +10,14 @@ const recDir = path.resolve(__dirname, '../var/rec');
 mkdirSync(recDir, { recursive: true });
 
 
+function eitherMkdir(dirPath: string): Either<NodeJS.ErrnoException, void>{
+	try{
+		mkdirSync(dirPath);
+	}catch(err){
+		return err as NodeJS.ErrnoException;
+	}
+}
+
 type CreateMurmurContainerParams = {
 	grpcPort: number;
 	murmurPort: number;
@@ -20,16 +28,16 @@ type MurmurContainer = {
 }
 export async function createMurmurContainer(
 	{ grpcPort, murmurPort, name }: CreateMurmurContainerParams
-): Promise<Either<Error, MurmurContainer>>{
+): Promise<Either<Error, MurmurContainer>> {
 	// create rec directory in host
 	const key = `g${grpcPort}_m${murmurPort}`;
 	const sourceRecPath = path.resolve(recDir, key);
-	try{
-		mkdirSync(sourceRecPath);
-	}catch(err){
-		return err as Error;
+	const recDirErr = eitherMkdir(sourceRecPath);
+	if(recDirErr instanceof Error){
+		return recDirErr;
 	}
-	
+
+	log("create murmur", "rec dir", sourceRecPath);
 	const createRes = await docker.create(name, {
 		Image: "mumble_server",
 		ExposedPorts: {
@@ -61,27 +69,38 @@ export async function createMurmurContainer(
 	});
 
 	if (createRes instanceof Error) {
+		error(createRes.message);
 		return createRes;
 	}
-
+	
 	const murmurId = createRes.Id;
+	
+	log("create murmur","created", murmurId);
 	const startRes = await docker.start(murmurId);
-	if(startRes instanceof Error){
-
-		await docker.rm(murmurId);
+	if (startRes instanceof Error) {
+		await removeMurmurContainer(murmurId);
 		return startRes;
 	}
 	
-	log("create_container", murmurId);
+	log("create murmur","started", murmurId);
 
 	return {
 		id: murmurId
 	};
 }
 
+export async function removeMurmurContainer(murmurId: string){
+	// remove rec dir
+	// stop container
+	// remove container
+	log("remove murmur", murmurId);
+	await docker.stop(murmurId);
+	await docker.rm(murmurId);
+}
+
 export async function initMurmurContainer(
 	session: Session
-): Promise<Either<Error, MurmurContainer>>{
+): Promise<Either<Error, MurmurContainer>> {
 	// start murmur container
 	const res = await docker.start(session.murmurId);
 	if(res instanceof docker.DockerError){

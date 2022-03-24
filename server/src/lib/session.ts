@@ -132,19 +132,28 @@ export async function createSession(
 	const games = gamesData.map(initGame);
 
 	// create attacks
-	const attack = await createAttack({
+	const attacks = await Promise.all([createAttack({
 		gameId: games[0].gameId,
 		sessionId: sessionId,
 		round: 4,
 		audioPath: "foobar",
-		sourceUser: "blue",
-		targetUser: "red"
-	});
-	
-	if(attack instanceof Error){
-		return attack;
-	}
+		sourceUser: "1",
+		targetUser: "2"
+	}), createAttack({
+		gameId: games[1].gameId,
+		sessionId: sessionId,
+		round: 4,
+		audioPath: "foobar",
+		sourceUser: "2",
+		targetUser: "1"
+	})]);
 
+	const attackErrors = attacks.filter(isError);
+
+	if (attackErrors.length > 0) {
+		return joinErrors(attackErrors);
+	}
+	
 	const session = {
 		...sessionPartial,
 		sessionId
@@ -155,6 +164,8 @@ export async function createSession(
 	return session;
 }
 
+
+// TODO: init session based on sessionID?
 async function initSession(session: Session): Promise<Either<Error, Session>>{
 	const { sessionId } = session;
 	log("init session", sessionId);

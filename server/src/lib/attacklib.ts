@@ -78,7 +78,7 @@ export async function scheduleAttack(attack: Attack){
 			// TODO: mute source player
 
 			// send audio
-			const shellCmd = `mumble-cli 127.0.0.1:${session.grpcPort} send -s 1 -u 1 -t 2 -f /Users/alexzugravu/tmp/hello_jack.wav -d 44 -r 16000`;
+			const shellCmd = `mumble-cli 127.0.0.1:${session.grpcPort} send -s 1 -u ${attack.sourceUser} -t ${attack.targetUser} -f /Users/alexzugravu/tmp/hello_jack.wav -d 44 -r 16000`;
 			const res = execSync(shellCmd, { encoding: "utf8" });
 			log("attack_status", shellCmd, res.trim());
 			// TODO: unmute source player
