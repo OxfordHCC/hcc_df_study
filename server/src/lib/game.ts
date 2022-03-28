@@ -1,6 +1,9 @@
 import crypto from 'crypto';
+import { List, Either, Left, Right } from 'monet';
+import { parallel, FutureInstance, resolve, reject, map, chain } from 'fluture';
+import { e2f } from './util';
+
 import {
-	Either,
 	Evented,
 	GameEvents,
 	Player,
@@ -19,6 +22,21 @@ import { Logger } from './log';
 const { log } = Logger("gamelib");
 
 const memGames:Game[] = [];
+
+type GameRow = {
+	gameId: string;
+	sessionId: number;
+	gameData: GameData;
+	isCurrent: boolean;
+	gameOrder: number;
+}
+function isGameRow(x: any): x is GameRow{
+	return typeof x.gameId === "string"
+		&& typeof x.sessionId === "number"
+		&& isGameData(x.gameData)
+		&& typeof x.isCurrent === "boolean"
+	    && typeof x.gameOrder === "number";
+}
 
 export const gameSchedules: ConcreteRoundData[][] = [
 	[
@@ -144,15 +162,15 @@ export class Game extends Evented<keyof GameEvents> implements GameData{
 		const roundObj = this.rounds[round];
 
 		if (roundObj === undefined) {
-			return new Error("invalid round number");
+			return Left(new Error("invalid round number"));
 		}
 
 		if (roundObj.endTime !== undefined) {
-			return new Error("round ended");
+			return Left(new Error("round ended"));
 		}
 		
 		if (roundObj.startTime === undefined){
-			return new Error("round not started");
+			return Left(new Error("round not started"));
 		}
 		
 		clearTimeout(getTimer(this.gameId));
@@ -166,16 +184,16 @@ export class Game extends Evented<keyof GameEvents> implements GameData{
 			this.gotoRound(round + 1);
 		}
 		
-		return answerStatus
+		return Right(answerStatus);
 	}
 
-	gotoRound(round: number): Either<void, Error> {
+	gotoRound(round: number): Either<Error, Game> {
 		this.currentRound = round;
 
 		const roundObj: Round = this.rounds[round];
 		if (roundObj === undefined) {
 			this.stop();
-			return new Error("round does not exit")
+			return Left(new Error("round does not exit"));
 		}
 		
 		roundObj.startTime = Date.now();
@@ -185,6 +203,8 @@ export class Game extends Evented<keyof GameEvents> implements GameData{
 		scheduleTimer(this.gameId, () => {
 			this.gotoRound(round + 1);
 		}, roundObj.msLength);
+
+		return Right(this);
 	}
 
 	start(): boolean{
@@ -199,16 +219,18 @@ export class Game extends Evented<keyof GameEvents> implements GameData{
 		this.trigger("stop");
 	}
 
-	playerReady(playerId: string, ready: boolean)
-	: Either<Error, undefined>{
+	playerReady(
+		playerId: string, ready: boolean
+	): Either<Error, Game>{
 		const player = this.players.find(p => p.playerId === playerId);
 		
 		if(!player){
-			return new Error("Player not found in game.");
+			return Left(new Error("Player not found in game."));
 		}
 	
 		player.ready = ready;
 		this.trigger("player_ready", player);
+		return Right(this);
 	}
 	
 	startIfPlayersReady(): boolean {
@@ -234,20 +256,20 @@ export function isGame(x: any): x is Game{
 	return x instanceof Game;
 }
 
-export function deserializeGame(gameData: GameData) {
-	const roundsEither = gameData.rounds.map(createRound);
-	const rounds = roundsEither.filter(isRound);
-	const game = new Game({
-		...gameData,
-		rounds
-	});
-
-	// resume game
+function resumeGame(game: Game): Game{
 	if(game.startTime !== undefined){
 		game.gotoRound(game.currentRound);
 	}
-	
-	return game;	
+	return game;
+}
+
+export function deserializeGame(gameData: GameData): Either<Error, Game>{
+	const roundsE = List.fromArray(gameData.rounds.map(createRound));
+
+	return roundsE.sequence<Error, Round>(Either)
+	.map(roundsL => roundsL.toArray())
+	.map(rounds => new Game({ ...gameData, rounds }))
+	.map(resumeGame);
 }
 
 const updateGameQuery = `
@@ -256,44 +278,53 @@ SET game_data = $game_data
 WHERE game_id = $game_id;
 `;
 // persist game state
-function saveGame(game: Game){
+function saveGame(game: Game): FutureInstance<Error, Game>{
 	log("saveGame", game.gameId);
 	const gameData = game.state();
 
-	return withDb(db => {
-		db.run(updateGameQuery, {
+	return withDb(({run}) => {
+		return run(updateGameQuery, {
 			$game_id: game.gameId,
 			$game_data: JSON.stringify(gameData)
 		});
-	});
+	})
+	.pipe(map(_gameId => game));
+}
+
+function removeMemGame(game: Game): Game{
+	const memindx = memGames.findIndex(mg => mg.gameId === game.gameId);
+	memGames.splice(memindx, 1);
+	
+	return game;
+}
+
+function setMemGame(game: Game): Game{
+	const memIndx = memGames.findIndex(mg => mg.gameId === game.gameId);
+ 	if (memIndx !== -1) {
+ 		memGames[memIndx] = game;
+ 		return game;
+ 	}
+ 	
+ 	memGames.push(game);
+	return game;
 }
 
 const deleteGameQuery = `
 DELETE FROM game
 WHERE game_id = $game_id;
-`;
-export async function removeGame(gameId: string | Game) {
-	if (gameId instanceof Game){
-		gameId = gameId.gameId;
-	}
+n`;
+export function removeGame(game: Game): FutureInstance<Error, Game> {
+	const { gameId } = game;
+
 	log("removeGame", gameId)
-
-	await withDb(db => {
-		new Promise((resolve, reject) => {
-			db.run(deleteGameQuery, {
-				$game_id: gameId
-			}, (err) => {
-				if(err){
-					return reject(err);
-				}
-				resolve(null);
-			});
-		})
-	});
-
-	const memindx = memGames.findIndex(mg => mg.gameId === gameId);
-	memGames.splice(memindx, 1);
-	return memGames.length;
+	
+	return withDb(({run}) => {
+		return run(deleteGameQuery, {
+			$game_id: gameId
+		});
+	})
+	.pipe(map(_ => game))
+	.pipe(map(removeMemGame));
 }
 
 export function getGames(): Game[] {
@@ -306,19 +337,19 @@ export function getPlayerGame(playerId: string): Either<Error, Game> {
 	);
 
 	if(game === undefined){
-		return new Error("No game found for player.");
+		return Left(new Error("No game found for player."));
 	}
 	
-	return game;
+	return Right(game);
 }
 
 export function getGame(gameId: string): Either<Error, Game> {
 	const game = memGames.find(g => g.gameId === gameId);
 	if(game === undefined){
-		return new Error("Game not found.");
+		return Left(new Error("Game not found."));
 	}
 	
-	return game;
+	return Right(game);
 }
 
 // insert game in table and create in-memory representation
@@ -327,59 +358,55 @@ INSERT INTO game
 (game_id, game_data, is_current, session_id, game_order)
 VALUES ($game_id, $game_data, $is_current, $session_id, $game_order);
 `;
-export async function createGame(
+
+function insertGame(
+	{ gameId, gameData, sessionId, isCurrent, gameOrder }: GameRow
+): FutureInstance<Error, number>{
+	return withDb(({run}) => {
+		return run(insertGameQuery, {
+			$game_id: gameId,
+			$game_data: JSON.stringify(gameData),
+			$session_id: sessionId,
+			$is_current: isCurrent,
+			$game_order: gameOrder
+		})
+	})
+}
+
+export function createGame(
 	blue: string, red: string, sessionId: number, gameOrder: number,
 	schedule: ConcreteRoundData[], isCurrent: boolean
-): Promise<Either<Error, GameData>>{
+): FutureInstance<Error, Game> {
 	log("createGame", sessionId, blue, red);
 	const gameId = crypto.randomUUID();
 	const players = [blue, red].map<Player>(createPlayer);
-	const createdRounds = schedule.map(createRound);
-	const errorRounds = createdRounds.filter(isError);
+	const game = List.fromArray(schedule.map(createRound))
+	.sequenceEither<Error, Round>()
+	.map(roundsL => roundsL.toArray())
+	.map(rounds => new Game({ gameId, players, rounds }));
 
-	if(errorRounds.length > 0){
-		return new Error(errorRounds.map(err => err.message).join('\n'));
-	}
-	
-	const rounds = createdRounds.filter(isRound);
-	const game = new Game({
-		gameId,
-		players,
-		rounds
-	});
-	const gameData = game.state();
-
-	// insert game into database
-	await withDb((db) => {
-		return new Promise((resolve, reject) => {
-			db.run(insertGameQuery, {
-				$game_id: gameId,
-				$game_data: JSON.stringify(gameData),
-				$session_id: sessionId,
-				$is_current: isCurrent,
-				$game_order: gameOrder
-			}, function(err){
-				if(err){
-					return reject(err);
-				}
-				const sessionId = this.lastID;
-				resolve(sessionId);
-			});
-		});
-	});
-
-	return gameData;
+	return e2f(game)
+	.pipe(chain(game => insertGame({
+		gameData: game.state(),
+		gameId: game.gameId,
+		sessionId,
+		isCurrent,
+		gameOrder
+	})))
+	.pipe(chain(_gameId => e2f(game)));
 }
 
-function parseJSON(arg: string){
+function parseJSON<T>(arg: string): Either<Error, T>{
 	try{
 		return JSON.parse(arg);
 	}catch(err){
-		if(err instanceof SyntaxError){
-			return new Error(err.message + "\nInput:" + arg);
+		if (err instanceof Error) {
+			if (err instanceof SyntaxError) {
+				return Left(new Error(err.message + "\nInput:" + arg));
+			}
+			return Left(err);
 		}
-
-		return err;
+		return Left(new Error("Unknown error thrown by JSON.parse"));
 	}
 }
 
@@ -387,66 +414,30 @@ const getSessionGamesQuery = `
 SELECT * FROM game
 WHERE session_id = $session_id;
 `;
-type GameRow = {
-	gameId: string;
-	sessionId: number;
-	gameData: GameData;
-	isCurrent: boolean;
-	gameOrder: number;
-}
-function isGameRow(x: any): x is GameRow{
-	return typeof x.gameId === "string"
-		&& typeof x.sessionId === "number"
-		&& isGameData(x.gameData)
-		&& typeof x.isCurrent === "boolean"
-	    && typeof x.gameOrder === "number";
-}
+
 function normalizeGameRow(db_game: any): Either<Error, GameRow>{
-	const gameData = parseJSON(db_game.game_data);
-	if(gameData instanceof Error){
-		return gameData;
-	}
-	
-	return {
+	return parseJSON<GameData>(db_game.game_data)
+	.map((gameData) => ({
 		gameId: db_game.game_id,
 		gameData: gameData,
 		sessionId: db_game.session_id,
 		isCurrent: Boolean(db_game.is_current),
 		gameOrder: parseInt(db_game.game_order)
-	}
+	}));
 }
-export function getSessionGames(sessionId: number): Promise<Either<Error, GameRow[]>>{
-	return withDb(db => {
-		return new Promise((resolve, reject) => {
-			db.all(getSessionGamesQuery, {
-				$session_id: sessionId
-			}, (err, rows) => {
-				if(err){
-					return reject(err);
-				}
-				const normalized = rows.map(normalizeGameRow);
-				const errors = normalized.filter(isError);
-				const gameRows = normalized.filter(isGameRow);
-				
-				if(errors.length > 0){
-					return reject(joinErrors(errors));
-				}
-				resolve(gameRows);
-			});
-		});
-	});
+export function getSessionGames(sessionId: number): FutureInstance<Error, GameRow[]>{
+	return withDb(({ all }) =>
+		all(getSessionGamesQuery, {
+			$session_id: sessionId
+		})
+	)
+	.pipe(map(rows => rows.map(normalizeGameRow)))
+	.pipe(map(rowsE => rowsE.map(e2f)))
+	.pipe(chain(rowsF => parallel(1)(rowsF)))
 }
 
-export function initGame(gameData: GameData): Game{
+export function initGame(gameData: GameData): Either<Error, Game>{
 	log("initGame", gameData.gameId, gameData.currentRound);
-	const game = deserializeGame(gameData);
-	// if game with same id is already cached, we simply replace it
-	const memIndx = memGames.findIndex(mg => mg.gameId === game.gameId);
- 	if (memIndx !== -1) {
- 		memGames[memIndx] = game;
- 		return game;
- 	}
- 	
- 	memGames.push(game);
- 	return game;
+	return deserializeGame(gameData)
+	.map(setMemGame);
 }
