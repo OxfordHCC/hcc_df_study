@@ -115,6 +115,7 @@ function createGamesAndAttacks(session: Session){
 	.pipe(map(_attacks => session));
 }
 
+
 export function createSession(
 	{ blueParticipant, redParticipant, murmurPort, grpcPort }: AdminClientNs.CreateSessionParams
 ): FutureInstance<Error, Session> {

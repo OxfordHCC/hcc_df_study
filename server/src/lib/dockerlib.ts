@@ -119,7 +119,7 @@ type PsProps = {
 	all?: boolean,
 	filters?: PsFilters
 }
-type Container = {
+export type Container = {
 	Id: string
 }
 export function ps({ all, filters }: PsProps = {}){

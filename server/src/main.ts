@@ -1,20 +1,25 @@
+import { resolve, fork, Future, debugMode } from 'fluture';
+
 import { io } from "./socketio";
 import { Logger } from './lib/log';
 import { initSessions } from './lib/session';
-import { isError } from 'dfs-common';
-import { initAttacks } from './lib/attacklib';
+
 
 const { log,error } = Logger("main");
 
-(async () => {
-	const initResults = await initSessions();
-	const errors = initResults.filter(isError);
-	
-	if(errors.length > 0){
-		errors.forEach(err => error("init", err.message));
-		return process.exit(1);
-	}
+// enable fluture's debug moge
+debugMode(true);
 
-	io.listen(3000);
-	log("websockets-listening", "3000");
-})()
+;(() => {
+	initSessions()
+		.pipe(fork(err => {
+			if (err instanceof Error) {
+				return error(err.message);
+			}
+			return error("unknown error");
+		})(_sessions => {
+			io.listen(3000);
+			log("websockets-listening", "3000")
+		}))
+})();
+

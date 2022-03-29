@@ -1,6 +1,5 @@
-import { Answer, RoundData } from 'dfs-common';
+import { Solution, Answer, RoundData } from 'dfs-common';
 import { Round } from './round';
-
 
 type SequenceRoundParams = RoundData & {
 	solution: number[]
@@ -19,11 +18,12 @@ export class SequenceRound extends Round{
 	}
 	
 	onAnswer({ value, step }: SequenceRoundAnswer){
+		console.error("sequenceRound onAnswer not implemented", value, step)
 		return 1;
 	}
 }
 
-function isSequenceSolution(sol: Solution): sol is number[]{
+export function isSequenceSolution(sol: Solution): sol is number[]{
 	if(!Array.isArray(sol)){
 		return false;
 	}

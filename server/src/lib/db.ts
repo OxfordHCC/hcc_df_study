@@ -6,6 +6,7 @@ type WithDbFunctionParams = {
 	all: (query: string, params?: object) => FutureInstance<Error, any[]>
 	serialize: (...dbRuns: FutureInstance<Error, any>[]) => FutureInstance<Error, unknown>
 	run: (query: string, params?: object) => FutureInstance<Error, RowID>
+	exec: (query: string) => FutureInstance<Error, void>
 };
 
 type withDbFunction<T> = (params: WithDbFunctionParams) => FutureInstance<Error, T>;
@@ -23,19 +24,33 @@ export function withDb<T>(fn: withDbFunction<T>): FutureInstance<Error, T> {
 	const db = new sqlite.Database(dbFile);
 
 	function closeDb(x: any){
-		return node(db.close)
+		return node(db.close.bind(db))
 		.pipe(map((_void) => x));
 	}
 
-	function all(query: string, params?: object){
-		return Future<Error, any[]>((rej, res) => {
-			db.all(query, params, function(err, rows){
+	function exec(query: string){
+		return Future<Error, void>(function(rej, res){
+			db.exec(query, function(err){
 				if(err !== null){
 					return rej(err);
 				}
+				return res();
+			});
+			return () => {};
+		});
+	}
+
+	function all(query: string, params?: object){
+		return Future<Error, any[]>(function(rej, res){
+			res([]);
+			db.all(query, params, (err, rows) => {
+				if (err !== null) {
+					return rej(err);
+				}
+
 				return res(rows);
 			});
-			
+
 			return () => {}
 		});
 	}
@@ -58,6 +73,6 @@ export function withDb<T>(fn: withDbFunction<T>): FutureInstance<Error, T> {
 		return parallel(1)(dbRuns);
 	}
 	
-	return fn({	run, serialize, all })
+	return fn({	run, serialize, all, exec })
 	.pipe(chain(closeDb));
 }

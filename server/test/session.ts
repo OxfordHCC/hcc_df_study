@@ -1,35 +1,36 @@
 import test from 'tape';
-import { isError, joinErrors } from 'dfs-common';
+import { promise, both, resolve, ap, fork, chain, map, parallel } from 'fluture';
+import { Session, isError, joinErrors } from 'dfs-common';
 import { createSession, getCurrentGame } from '../src/lib/session';
 import * as docker from '../src/lib/dockerlib';
 import { getGame, isGame, getGames, Game, getSessionGames } from '../src/lib/game';
 import { resetDb, resetContainers, resetGames } from './teardowns';
 
 test("creating session should create a murmur container", async (t) => {
-	await resetDb();
+	await resetDb()
 	await resetGames();
 	await resetContainers();
 	t.plan(1);
 
-	const session = await createSession({
+	const session = createSession({
 		grpcPort: 3002,
 		murmurPort: 3001,
 		blueParticipant: "player_blue",
 		redParticipant: "player_red"
-	});
+	})
 
-	if (session instanceof Error) {
-		t.fail(`Creating session returned error: ${session.message}`);
-		return;
-	}
+	const containers = docker.ps();
 
-	const containers = await docker.ps();
-	if (containers instanceof Error) {
-		t.fail(`Retrieving docker containers failed: ${containers.message}`);
-		return;
-	}
-
-	t.assert(containers.find(c => c.Id === session.murmurId) !== undefined, "container found");
+	(both(session)(containers)).pipe(fork(e => {
+		if(e instanceof Error){
+			return t.fail(e.message);
+		}
+		return t.fail("Unknown error");s
+	})(([session, containers]) => {
+		t.assert(containers.find(c => c.Id === session.murmurId) !== undefined,
+				 "container found");
+	}))
+	
 });
 
 test("creating a session should result in 2 games being inserted in the database", async (t) => {
@@ -39,19 +40,19 @@ test("creating a session should result in 2 games being inserted in the database
 	t.plan(1);
 
 
-	const session = await createSession({
+	const session = await promise(createSession({
 		blueParticipant: "blue",
 		redParticipant: "red",
 		murmurPort: 3001,
 		grpcPort: 5001
-	});
+	}));
 
 	if (session instanceof Error) {
 		t.fail(session.message);
 		return;
 	}
 
-	const gameRows = await getSessionGames(session.sessionId);
+	const gameRows = await promise(getSessionGames(session.sessionId));
 	if (gameRows instanceof Error) {
 		t.fail(gameRows.message);
 		return;
@@ -67,19 +68,19 @@ test("creating a session should result in 2 game objects being created", async (
 		await resetContainers();
 		t.plan(1);
 
-		const session = await createSession({
+		const session = await promise(createSession({
 			blueParticipant: "blue",
 			redParticipant: "red",
 			murmurPort: 3001,
 			grpcPort: 5001
-		});
+		}));
 
 		if (session instanceof Error) {
 			t.fail(session.message);
 			return;
 		}
 
-		const gameRows = await getSessionGames(session.sessionId);
+		const gameRows = await promise(getSessionGames(session.sessionId));
 
 		if (gameRows instanceof Error) {
 			t.fail(gameRows.message);
@@ -106,18 +107,18 @@ test("creating two sessions with different params, should succeed", async (t) =>
 	await resetContainers();
 	t.plan(1);
 
-	const session = await createSession({
+	const session = await promise(createSession({
 		grpcPort: 3002,
 		murmurPort: 3001,
 		blueParticipant: "player_blue",
 		redParticipant: "player_red"
-	});
-	const session2 = await createSession({
+	}));
+	const session2 = await promise(createSession({
 		grpcPort: 3003,
 		murmurPort: 3004,
 		blueParticipant: "player_orange",
 		redParticipant: "player_purple"
-	});
+	}));
 
 	t.isEqual(
 		session2 instanceof Error,
@@ -248,18 +249,18 @@ test("current session game should update when game ends", async (t) => {
 	await resetGames();
 	await resetContainers();
 
-	const session = await createSession({
+	const session = await promise(createSession({
 		grpcPort: 3001,
 		murmurPort: 5001,
 		blueParticipant: "blue",
 		redParticipant: "red"
-	});
+	}));
 
 	if (session instanceof Error) {
 		return t.fail(session.message);
 	}
 
-	const sessionGames = await getSessionGames(session.sessionId);
+	const sessionGames = await promise(getSessionGames(session.sessionId));
 	if(sessionGames instanceof Error){
 		return t.fail(sessionGames.message);
 	}
@@ -279,7 +280,7 @@ test("current session game should update when game ends", async (t) => {
 	const games = gameEithers.filter(isGame);
 	const [game1, game2] = games;
 
-	const currentGame = await getCurrentGame(session.sessionId);
+	const currentGame = await promise(getCurrentGame(session.sessionId));
 	if (currentGame instanceof Error) {
 		t.fail(currentGame.message);
 		return;
@@ -288,7 +289,7 @@ test("current session game should update when game ends", async (t) => {
 	t.equals(currentGame.gameId, game1.gameId, "current game should be game1");
 	
 	game1.on('stop', async () => {
-		const currentGameAfter = await getCurrentGame(session.sessionId);
+		const currentGameAfter = await promise(getCurrentGame(session.sessionId));
 		if (currentGameAfter instanceof Error) {
 			return t.fail(currentGameAfter.message);
 		}
