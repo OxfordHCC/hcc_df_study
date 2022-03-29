@@ -17,9 +17,9 @@ function logJoin(args: any[]): string{
 
 type LogArg = string | number;
 
-
 function stringifyArgs(args: LogArg[]){
-	return args.map(arg => arg.toString());
+	return args.filter(x => x !== undefined && x !== null)
+	.map(arg => arg.toString());
 }
 
 export function Logger(namespace: string) {

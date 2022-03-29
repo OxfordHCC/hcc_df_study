@@ -1,7 +1,9 @@
 import { mkdirSync, rmdirSync } from 'fs';
 import path from 'path';
-import { Either } from 'monet';
+import { Either, Right, Left } from 'monet';
 import { map, chain, FutureInstance } from 'fluture';
+import { Session } from 'dfs-common';
+
 import { e2f } from './util';
 import { Logger } from './log';
 import * as docker from './dockerlib';
@@ -11,10 +13,6 @@ const { log } = Logger('murmurlib');
 const recDirRoot = path.resolve(__dirname, '../var/rec');
 mkdirSync(recDirRoot, { recursive: true });
 
-type CreateMurmurParams = {
-	grpcPort: number;
-	murmurPort: number;
-}
 
 type Murmur = {
 	id: string,
@@ -24,38 +22,48 @@ type Murmur = {
 	recDir: string;
 }
 
-type ParamsWithMurmurName = CreateMurmurParams & Pick<Murmur, "name">;
-// get rec dir name from murmur params
-function resolveMurmurName(params: CreateMurmurParams): ParamsWithMurmurName{
+type ParamsWithRecDir = CreateMurmurParams & Pick<Murmur, "recDir" | "name">;
+function resolveParams(params: CreateMurmurParams): ParamsWithRecDir {
 	const { grpcPort, murmurPort } = params;
 	const name = `g${grpcPort}_m${murmurPort}`;
-	
+
+	const recDir = path.resolve(recDirRoot, name);
+
 	return {
 		...params,
-		name
-	}
+		name,
+		recDir
+	};
 }
 
-type ParamsWithRecDir = ParamsWithMurmurName & Pick<Murmur, "recDir">;
+function isNodeError(x: any): x is NodeJS.ErrnoException{
+	const isError = x instanceof Error;
+	const hasCode = x['code'] !== undefined;
+	
+	return isError && hasCode;
+}
+
 function createRecDir(
-	params: ParamsWithMurmurName
+	params: ParamsWithRecDir, ignoreExists: boolean = false
 ): Either<NodeJS.ErrnoException, ParamsWithRecDir> {
-	const { name } = params;
-	const recDir = path.resolve(recDirRoot, name);
+	const { recDir } = params;
 	return Either.fromTry(() => {
-		mkdirSync(recDir);
-		return {
-			...params,
-			recDir
-		};
+		try{
+			mkdirSync(recDir);
+			return params;
+		}catch(err){
+			if(ignoreExists === true && isNodeError(err) && err.code === "EEXIST"){
+				return params;
+			}
+			throw err;
+		}
 	});
 }
 
 function removeRecDir(
-	params: ParamsWithMurmurName
+	params: ParamsWithRecDir
 ): Either<Error, void>{
-	const { name } = params;
-	const recDir = path.resolve(recDirRoot, name);
+	const { recDir } = params;
 	return Either.fromTry(() => {
 		rmdirSync(recDir);
 	});
@@ -104,13 +112,16 @@ function createContainer(
 	})));
 }
 
+type CreateMurmurParams = {
+	grpcPort: number;
+	murmurPort: number;
+}
 export function createMurmur(
 	params: CreateMurmurParams
-): FutureInstance<Error, Murmur>{
-	const name = resolveMurmurName(params);
-	const dirEither = createRecDir(name);
+): FutureInstance<Error, Murmur> {
+	const recAndNameParams = resolveParams(params);
 
-	return e2f(dirEither)
+	return e2f(createRecDir(recAndNameParams))
 	.pipe(chain(createContainer));
 }
 
@@ -123,10 +134,21 @@ export function removeMurmur(
 	.pipe(map(_void => murmur));
 }
 
+// session -> murmur
+export function murmurFromSession(session: Session): Murmur{
+	const recAndName = resolveParams(session);
+	return {
+		id: session.murmurId,
+		...recAndName,
+		...session
+	};
+}
+
 export function initMurmur(
-	murmurId: string
+	murmur: Murmur
 ): FutureInstance<Error, string> {
-	log("init murmur", murmurId);
-	return docker.start(murmurId)
-	.pipe(map(_ => murmurId))
+	log("init murmur", murmur.name);
+	return e2f(createRecDir(murmur, true))
+	.pipe(chain(_ => docker.start(murmur.id)))
+	.pipe(map(_ => murmur.id));
 }

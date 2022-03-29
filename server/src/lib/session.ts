@@ -1,7 +1,7 @@
 import { parallel, chain, map, reject, resolve, FutureInstance } from 'fluture';
 import { GameData, Session, AdminClientNs } from 'dfs-common';
 import { find, filter, e2f } from './util';
-import { createMurmur, initMurmur } from './murmurlib';
+import { createMurmur, murmurFromSession, initMurmur } from './murmurlib';
 import {
 	Game,
 	getGame,
@@ -161,7 +161,7 @@ function initSession(session: Session): FutureInstance<Error, Session> {
 		.pipe(map(a => a.map(scheduleAttack)))
 		.pipe(chain(parallel(1)));
 
-	const doMurmur = () => initMurmur(session.murmurId);
+	const doMurmur = () => initMurmur(murmurFromSession(session));
 
 	const returnSession = () => session;
 
