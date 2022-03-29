@@ -3,8 +3,10 @@ import path from 'path';
 import { Either } from 'monet';
 import { map, chain, FutureInstance } from 'fluture';
 import { e2f } from './util';
-
+import { Logger } from './log';
 import * as docker from './dockerlib';
+
+const { log } = Logger('murmurlib');
 
 const recDirRoot = path.resolve(__dirname, '../var/rec');
 mkdirSync(recDirRoot, { recursive: true });
@@ -124,6 +126,7 @@ export function removeMurmur(
 export function initMurmur(
 	murmurId: string
 ): FutureInstance<Error, string> {
+	log("init murmur", murmurId);
 	return docker.start(murmurId)
 	.pipe(map(_ => murmurId))
 }

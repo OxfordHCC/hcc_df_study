@@ -1,6 +1,8 @@
 import http from 'http';
 import { Future, parallel, map } from 'fluture';
+import { Logger } from './log';
 
+const { log } = Logger('dockerlib');
 
 export class DockerError extends Error{
 	statusCode: number;
@@ -56,7 +58,7 @@ export function dockerReq<T>(
 				const { statusCode } = res;
 				const resData = parseResponseBody(resDataStr);
 
-				if (statusCode !== undefined && statusCode > 400) {
+				if (statusCode !== undefined && statusCode >= 400) {
 					const err = new DockerError(
 						statusCode,
 						resData.message || "Unknown error"
@@ -78,7 +80,9 @@ export function dockerReq<T>(
 	});
 }
 
+// TODO: why is this not a variadic function?
 export function start(containerId: string){
+	log('start', containerId);
 	return dockerReq("POST", `/containers/${containerId}/start`);
 }
 

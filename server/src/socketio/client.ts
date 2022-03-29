@@ -1,6 +1,6 @@
 import { Socket, Server, Namespace } from "socket.io";
 import { Either, Left, Right } from 'monet';
-import { FutureInstance, chain, map } from "fluture";
+import { FutureInstance, chain, map, fork } from "fluture";
 import { deepClone, Answer, GameData, GameClientNs } from 'dfs-common';
 
 import { e2f } from '../lib/util';
@@ -16,11 +16,8 @@ type GameClientNamespace = Namespace<GameClientNs.ClientToServerEvents, GameClie
 export default function(client: GameClientNamespace){
 	client.on("connection", (socket: Socket) => {
 		log("connection", socket.id);
-		const connErr = onConnect(socket);
-		if (connErr instanceof Error) {
-			socket.disconnect();
-			error("connection", socket.id, connErr.message);
-		}
+		onConnect(socket)
+		.pipe(fork(emitError(socket))(() => {}));
 	});
 }
 
