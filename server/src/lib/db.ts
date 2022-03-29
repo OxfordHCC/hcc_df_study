@@ -42,12 +42,10 @@ export function withDb<T>(fn: withDbFunction<T>): FutureInstance<Error, T> {
 
 	function all(query: string, params?: object){
 		return Future<Error, any[]>(function(rej, res){
-			res([]);
 			db.all(query, params, (err, rows) => {
 				if (err !== null) {
 					return rej(err);
 				}
-
 				return res(rows);
 			});
 

@@ -395,7 +395,7 @@ export function createGame(
 
 function parseJSON<T>(arg: string): Either<Error, T>{
 	try{
-		return JSON.parse(arg);
+		return Right(JSON.parse(arg));
 	}catch(err){
 		if (err instanceof Error) {
 			if (err instanceof SyntaxError) {

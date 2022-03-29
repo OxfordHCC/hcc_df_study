@@ -7,7 +7,7 @@ import { Logger } from '../lib/log';
 import { Game, getGames } from '../lib/game';
 import { e2f } from '../lib/util';
 
-const { log } = Logger("socket.io/admin");
+const { log, error } = Logger("socket.io/admin");
 
 type AdminNamespace = Namespace<AdminClientNs.ClientToServerEvents, AdminClientNs.ServerToClientEvents, AdminClientNs.InterServerEvents, AdminClientNs.SocketData>;
 
@@ -71,6 +71,7 @@ export default function(admin: AdminNamespace) {
 			.pipe(chain(x => x))
 			.pipe(fork(x => {
 				if(x instanceof Error){
+					error("create_session", x.message);
 					return cb(x);
 				}
 				return cb(new UnknownError());
