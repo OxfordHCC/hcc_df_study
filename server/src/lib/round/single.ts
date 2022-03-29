@@ -29,3 +29,10 @@ implements SingleRoundData {
 		return -1;
 	}
 }
+
+export function isSingleRoundData(x: any): x is SingleRoundData{
+	return x!== undefined
+		&& typeof x.solution === "number"
+		&& Array.isArray(x.options)
+		&& x.options.every((opt: unknown) => typeof opt === "number");
+}

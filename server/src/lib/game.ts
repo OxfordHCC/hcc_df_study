@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { List, Either, Left, Right } from 'monet';
-import { parallel, FutureInstance, resolve, reject, map, chain } from 'fluture';
-import { e2f } from './util';
+import { parallel, FutureInstance, map, chain } from 'fluture';
+import { aoe2ea, e2f } from './util';
 
 import {
 	Evented,
@@ -10,13 +10,10 @@ import {
 	Answer,
 	GameData,
 	ConcreteRoundData,
-	joinErrors,
-	isError,
-	isGameData
 } from 'dfs-common';
 import { withDb } from './db';
 import { createPlayer } from './player';
-import { Round, createRound, isRound } from './round';
+import { Round, createRound } from './round';
 import { Logger } from './log';
 
 const { log } = Logger("gamelib");
@@ -30,12 +27,12 @@ type GameRow = {
 	isCurrent: boolean;
 	gameOrder: number;
 }
-function isGameRow(x: any): x is GameRow{
-	return typeof x.gameId === "string"
-		&& typeof x.sessionId === "number"
-		&& isGameData(x.gameData)
-		&& typeof x.isCurrent === "boolean"
-	    && typeof x.gameOrder === "number";
+
+export function initGameRows(gRows: GameRow[]) {
+	return aoe2ea(
+		gRows.sort((a, b) => a.gameOrder - b.gameOrder)
+		.map(gRow => gRow.gameData)
+		.map(initGame))
 }
 
 export const gameSchedules: ConcreteRoundData[][] = [
@@ -441,3 +438,4 @@ export function initGame(gameData: GameData): Either<Error, Game>{
 	return deserializeGame(gameData)
 	.map(setMemGame);
 }
+

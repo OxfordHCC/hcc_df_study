@@ -1,6 +1,8 @@
-import { RoundData, Either, Solution } from 'dfs-common';
+import { Either, Left } from 'monet';
+
+import { RoundData } from 'dfs-common';
 import { Round } from './round';
-import { ButtonRound } from './button';
+import { createButtonRound } from './button';
 
 export * from './keypad';
 export * from './button';
@@ -13,24 +15,8 @@ export function isRound(round: any): round is Round {
 export function createRound(data: RoundData): Either<Error, Round>{
 	switch(data.name){
 		case "button":
-			if(!isSingleSolution(data.solution)){
-				return new Error(
-					"Invalid solution type. Must be number.")
-			}
-			return new ButtonRound(data.solution);
+			return createButtonRound(data);
 		default:
-			return new Error("Unknown round name.")
+			return Left(new Error("Unknown round name."));
 	}
-}
-
-function isSingleSolution(x: Solution): x is number{
-	return typeof x === "number";
-}
-
-function isSequenceSolution(sol: Solution): sol is number[]{
-	if(!Array.isArray(sol)){
-		return false;
-	}
-	
-	return sol.every(x => typeof x === "number");
 }

@@ -23,3 +23,10 @@ export class SequenceRound extends Round{
 	}
 }
 
+function isSequenceSolution(sol: Solution): sol is number[]{
+	if(!Array.isArray(sol)){
+		return false;
+	}
+	
+	return sol.every(x => typeof x === "number");
+}

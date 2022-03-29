@@ -1,44 +1,68 @@
-import { mkdirSync } from 'fs';
+import { mkdirSync, rmdirSync } from 'fs';
 import path from 'path';
+import { Either } from 'monet';
+import { map, chain, FutureInstance } from 'fluture';
+import { e2f } from './util';
+
 import * as docker from './dockerlib';
-import { Either, Session } from 'dfs-common';
-import { Logger } from './log';
 
-const { log, error } = Logger("murmurlib");
+const recDirRoot = path.resolve(__dirname, '../var/rec');
+mkdirSync(recDirRoot, { recursive: true });
 
-const recDir = path.resolve(__dirname, '../var/rec');
-mkdirSync(recDir, { recursive: true });
-
-
-function eitherMkdir(dirPath: string): Either<NodeJS.ErrnoException, void>{
-	try{
-		mkdirSync(dirPath);
-	}catch(err){
-		return err as NodeJS.ErrnoException;
-	}
-}
-
-type CreateMurmurContainerParams = {
+type CreateMurmurParams = {
 	grpcPort: number;
 	murmurPort: number;
-	name?: string
 }
-type MurmurContainer = {
-	id: string,
-}
-export async function createMurmurContainer(
-	{ grpcPort, murmurPort, name }: CreateMurmurContainerParams
-): Promise<Either<Error, MurmurContainer>> {
-	// create rec directory in host
-	const key = `g${grpcPort}_m${murmurPort}`;
-	const sourceRecPath = path.resolve(recDir, key);
-	const recDirErr = eitherMkdir(sourceRecPath);
-	if(recDirErr instanceof Error){
-		return recDirErr;
-	}
 
-	log("create murmur", "rec dir", sourceRecPath);
-	const createRes = await docker.create(name, {
+type Murmur = {
+	id: string,
+	name: string,
+	grpcPort: number;
+	murmurPort: number;
+	recDir: string;
+}
+
+type ParamsWithMurmurName = CreateMurmurParams & Pick<Murmur, "name">;
+// get rec dir name from murmur params
+function resolveMurmurName(params: CreateMurmurParams): ParamsWithMurmurName{
+	const { grpcPort, murmurPort } = params;
+	const name = `g${grpcPort}_m${murmurPort}`;
+	
+	return {
+		...params,
+		name
+	}
+}
+
+type ParamsWithRecDir = ParamsWithMurmurName & Pick<Murmur, "recDir">;
+function createRecDir(
+	params: ParamsWithMurmurName
+): Either<NodeJS.ErrnoException, ParamsWithRecDir> {
+	const { name } = params;
+	const recDir = path.resolve(recDirRoot, name);
+	return Either.fromTry(() => {
+		mkdirSync(recDir);
+		return {
+			...params,
+			recDir
+		};
+	});
+}
+
+function removeRecDir(
+	params: ParamsWithMurmurName
+): Either<Error, void>{
+	const { name } = params;
+	const recDir = path.resolve(recDirRoot, name);
+	return Either.fromTry(() => {
+		rmdirSync(recDir);
+	});
+}
+
+function createContainer(
+	{ name, grpcPort, murmurPort, recDir }: ParamsWithRecDir
+): FutureInstance<Error, Murmur>{
+	const container = docker.create(name, {
 		Image: "mumble_server",
 		ExposedPorts: {
 			"64738/tcp": {},
@@ -49,7 +73,7 @@ export async function createMurmurContainer(
 			Mounts: [
 				{
 					Target: "/var/hcc/rec/",
-					Source: sourceRecPath,
+					Source: recDir,
 					Type: "bind",
 					ReadOnly: false
 				}
@@ -68,68 +92,38 @@ export async function createMurmurContainer(
 		}
 	});
 
-	if (createRes instanceof Error) {
-		error(createRes.message);
-		return createRes;
-	}
-	
-	const murmurId = createRes.Id;
-	
-	log("create murmur","created", murmurId);
-	const startRes = await docker.start(murmurId);
-	if (startRes instanceof Error) {
-		await removeMurmurContainer(murmurId);
-		return startRes;
-	}
-	
-	log("create murmur","started", murmurId);
 
-	return {
-		id: murmurId
-	};
+	return container.pipe(map(x => ({
+		id: x.Id,
+		name,
+		grpcPort,
+		murmurPort,
+		recDir
+	})));
 }
 
-export async function removeMurmurContainer(murmurId: string){
-	// remove rec dir
-	// stop container
-	// remove container
-	log("remove murmur", murmurId);
-	await docker.stop(murmurId);
-	await docker.rm(murmurId);
+export function createMurmur(
+	params: CreateMurmurParams
+): FutureInstance<Error, Murmur>{
+	const name = resolveMurmurName(params);
+	const dirEither = createRecDir(name);
+
+	return e2f(dirEither)
+	.pipe(chain(createContainer));
 }
 
-export async function initMurmurContainer(
-	session: Session
-): Promise<Either<Error, MurmurContainer>> {
-	// start murmur container
-	const res = await docker.start(session.murmurId);
-	if(res instanceof docker.DockerError){
-		if(res.statusCode === 404){
-			// create if does not exist
-			const murmur = await createMurmurContainer({
-				name: session.murmurId,
-				murmurPort: session.murmurPort,
-				grpcPort: session.grpcPort
-			});
-			
-			if(murmur instanceof Error){
-				return murmur;
-			}
-		}
-		if(res.statusCode === 409){
-			error("container already exists");
-		}
-	}
-	
-	return { id: session.murmurId }
+export function removeMurmur(
+	murmur: Murmur
+): FutureInstance<Error, Murmur>{
+	return docker.stop(murmur.id)
+	.pipe(chain(([murmurId]) => docker.rm(murmurId)))
+	.pipe(chain(_x => e2f(removeRecDir(murmur))))
+	.pipe(map(_void => murmur));
 }
 
-type SendAudioParams = {
-	grpcPort: number
-	sourceUser: string
-	targetUser: string
-	audioFile: string
-}
-export function sendAudio(params: SendAudioParams){
-	// run docker cli
+export function initMurmur(
+	murmurId: string
+): FutureInstance<Error, string> {
+	return docker.start(murmurId)
+	.pipe(map(_ => murmurId))
 }

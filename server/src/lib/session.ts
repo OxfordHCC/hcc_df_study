@@ -1,32 +1,33 @@
-import { isError, joinErrors, isGameData, Either, Session, AdminClientNs } from 'dfs-common';
-import { createMurmurContainer, initMurmurContainer } from './murmurlib';
+import { parallel, chain, map, reject, resolve, FutureInstance } from 'fluture';
+import { GameData, Session, AdminClientNs } from 'dfs-common';
+import { find, filter, e2f } from './util';
+import { createMurmur, initMurmur } from './murmurlib';
 import {
 	Game,
 	getGame,
 	createGame,
 	gameSchedules,
-	initGame,
+	initGameRows,
 	getSessionGames
 } from './game';
 import { Logger } from './log';
 import { withDb } from './db';
 import { createAttack, getAttacks, scheduleAttack } from './attacklib';
 
-const { log, error } = Logger("session");
+const { log } = Logger("session");
 
-export async function getPlayerSession(playerId: string){
-	const sessions = await getSessions();
-	if(sessions instanceof Error){
-		return sessions;
-	}
+export function getPlayerSession(playerId: string){
+	return getSessions().pipe(chain(sessions => {
+		const playerSession = sessions.find(sess => {
+			return sess.blueParticipant === playerId
+				|| sess.redParticipant === playerId;
+		});
 
-	const playerSession = sessions.find(sess => {
-		return sess.blueParticipant === playerId
-			|| sess.redParticipant === playerId;
-	});
-
-	return playerSession
-		|| new Error("Player session not found.");
+		if(playerSession === undefined){
+			return reject(new Error("Player session not found."));
+		}
+		return resolve(playerSession);
+	}));
 }
 
 const insertSessionSQL = `
@@ -35,29 +36,23 @@ INSERT INTO study_session
 VALUES ($murmur_id, $blue, $red, $murmur, $grpc);
 `;
 type InsertSessionParam = Omit<Session, "sessionId">;
-type InsertSessionResult = { sessionId: number } 
 function insertSession(session: InsertSessionParam) {
-	return withDb<InsertSessionResult>((db) =>
-		new Promise((resolve, reject) => {
-			db.run(insertSessionSQL, {
-				$murmur_id: session.murmurId,
-				$blue: session.blueParticipant,
-				$red: session.redParticipant,
-				$murmur: session.murmurPort,
-				$grpc: session.grpcPort,
-			}, function(err) {
-				if (err) {
-					return reject(err);
-				}
-
-				const sessionId = this.lastID;
-				resolve({ sessionId });
-			});
+	return withDb(({ run }) =>
+		run(insertSessionSQL, {
+			$murmur_id: session.murmurId,
+			$blue: session.blueParticipant,
+			$red: session.redParticipant,
+			$murmur: session.murmurPort,
+			$grpc: session.grpcPort,
 		})
-	);
+	)
+	.pipe((map(sessionId => ({
+		...session,
+		sessionId
+	}))));
 }
 
-function normalizeDbSession(db_session: any): Session{
+function normalizeDbSession(db_session: any): Session {
 	return {
 		sessionId: db_session.session_id,
 		blueParticipant: db_session.blue_participant,
@@ -71,197 +66,142 @@ function normalizeDbSession(db_session: any): Session{
 const selectSessionsSQL = `
 SELECT * FROM study_session;
 `;
-export async function getSessions(){
-	return withDb<Session[]>(db =>
-		new Promise((resolve, reject) => {
-			db.all(selectSessionsSQL, (err, rows) => {
-				if(err){
-					return reject(err);
-				}
-				resolve(rows.map(normalizeDbSession) as Session[]);
-			})
-		})
-	);
+export function getSessions(): FutureInstance<Error, Session[]>{
+	return withDb(({ all }) =>
+		all(selectSessionsSQL)
+	)
+	.pipe(map(rows => rows.map(normalizeDbSession)))
 }
 
-export async function createSession(
+export function getSessionById(sessionId: number): FutureInstance<Error, Session>{
+	return getSessions()
+	.pipe(map(find(session => session.sessionId === sessionId )))
+	.pipe(chain(e2f));
+}
+
+function createGameAttack(session: Session, game: GameData){
+	const { sessionId } = session;
+	const { gameId } = game;
+	
+	return createAttack({
+		gameId,
+		sessionId,
+		round: 4,
+		audioPath: "foobar",
+		sourceUser: "1",
+		targetUser: "2"
+	})
+}
+
+function createAttacks(session: Session, games: GameData[]) {
+	return parallel(1)(
+		games.map(
+			game => createGameAttack(session, game)));
+}
+
+function createGames(session: Session): FutureInstance<Error, GameData[]> {
+	const { blueParticipant, redParticipant, sessionId } = session;
+	
+	// create games
+	return parallel(1)([
+		createGame(blueParticipant, redParticipant, sessionId, 0, gameSchedules[0], true),
+		createGame(redParticipant, blueParticipant, sessionId, 1, gameSchedules[1], false)
+	]);
+}
+
+function createGamesAndAttacks(session: Session){
+	return createGames(session)
+	.pipe(chain(gamesData => createAttacks(session, gamesData)))
+	.pipe(map(_attacks => session));
+}
+
+export function createSession(
 	{ blueParticipant, redParticipant, murmurPort, grpcPort }: AdminClientNs.CreateSessionParams
-): Promise<Either<Error, Session>>{
+): FutureInstance<Error, Session> {
 	log("create_session", blueParticipant, redParticipant, murmurPort, grpcPort);
-	// create murmur container
-	const murmur = await createMurmurContainer({
-		murmurPort,
-		grpcPort
-	});
-
-	if (murmur instanceof Error) {
-		error("create_session", "create_murmur", grpcPort, murmurPort, murmur.message);
-		return murmur;
-	}
-
-	// insert session in database
-	const sessionPartial = {
+	
+	return createMurmur({ murmurPort, grpcPort })
+	.pipe(map(murmur => ({
 		murmurId: murmur.id,
 		blueParticipant,
 		redParticipant,
 		murmurPort,
 		grpcPort
-	};
-
-	const insertRes = await insertSession(sessionPartial);
-	if(insertRes instanceof Error){
-		return insertRes;
-	}
-
-	const { sessionId } = insertRes;
-
-	// create games
-	const createGameResults = await Promise.all([
-		createGame(blueParticipant, redParticipant, sessionId, 0, gameSchedules[0], true),
-		createGame(redParticipant, blueParticipant, sessionId, 1, gameSchedules[1], false)
- 	]);
-
-	// handle createGame errors
-	const createGameErrors = createGameResults.filter(isError);
-	if(createGameErrors.length > 0){
-	 	return joinErrors(createGameErrors);
-	}
-
-	// handle createGame results
-	const gamesData = createGameResults.filter(isGameData);
-	const games = gamesData.map(initGame);
-
-	// create attacks
-	const attacks = await Promise.all([createAttack({
-		gameId: games[0].gameId,
-		sessionId: sessionId,
-		round: 4,
-		audioPath: "foobar",
-		sourceUser: "1",
-		targetUser: "2"
-	}), createAttack({
-		gameId: games[1].gameId,
-		sessionId: sessionId,
-		round: 4,
-		audioPath: "foobar",
-		sourceUser: "2",
-		targetUser: "1"
-	})]);
-
-	const attackErrors = attacks.filter(isError);
-
-	if (attackErrors.length > 0) {
-		return joinErrors(attackErrors);
-	}
-	
-	const session = {
-		...sessionPartial,
-		sessionId
-	}
-
-	await initSession(session);
-
-	return session;
+	})))
+	.pipe(chain(insertSession))
+	.pipe(chain(createGamesAndAttacks))
+	.pipe(chain(initSession));
 }
 
+function chainGames(session: Session){
+	return (games: Game[]) => {
+		const { sessionId } = session;
+		return games.reduceRight((acc, curr) => {
+			curr.on('stop', () => {
+				setCurrentGame(sessionId, acc.gameId);
+			});
 
-// TODO: init session based on sessionID?
-async function initSession(session: Session): Promise<Either<Error, Session>>{
+			return curr;
+		});
+	}
+}
+
+function initSession(session: Session): FutureInstance<Error, Session> {
 	const { sessionId } = session;
 	log("init session", sessionId);
 
-	// init games
-	const gameRows = await getSessionGames(sessionId);
-	if(gameRows instanceof Error){
-		return gameRows; 
-	}
+	const doGames = () => getSessionGames(sessionId)
+		.pipe(map(initGameRows))
+		.pipe(chain(e2f))
+		.pipe(map(chainGames(session)))
 
-	const games = gameRows.sort((a,b) => a.gameOrder - b.gameOrder)
-	.map(row => initGame(row.gameData));
+	const doAttacks = () => getAttacks()
+		.pipe(map(filter(a => a.sessionId === sessionId)))
+		.pipe(map(a => a.map(scheduleAttack)))
+		.pipe(chain(parallel(1)));
 
-	// schedule attacks
-	const attacks = await getAttacks();
-	if(attacks instanceof Error){
-		return attacks;
-	}
+	const doMurmur = () => initMurmur(session.murmurId);
 
-	const sessionAttacks = attacks.filter(a => a.sessionId === sessionId);
-	const scheduledAttacks = sessionAttacks.map(scheduleAttack);
-	const scheduledErrors = scheduledAttacks.filter(isError);
-	if(scheduledErrors.length > 0){
-		return joinErrors(scheduledErrors);
-	}
+	const returnSession = () => session;
 
-	// chain games
-	games.reduceRight((acc, curr) => {
-		curr.on('stop', async () => {
-			await setCurrentGame(sessionId, acc.gameId);
-		});
-		
-		return curr;
-	});
-	
-	// init murmur container
-	const murmur = await initMurmurContainer(session);
-	if(murmur instanceof Error){
-		return murmur;
-	}
-	
-	return session;
+	return doGames() // init and chain games
+		.pipe(chain(doAttacks)) // schedule attacks
+		.pipe(chain(doMurmur)) // init murmur container
+		.pipe(map(returnSession)); // finally return session
 }
 
-// init sessions:
-// - start murmur containers;
-// - create in-memory game-handling objects
-export async function initSessions(): Promise<Array<Error | Session>> {
-	log("init start");
-	const sessions = await getSessions();
-	if (sessions instanceof Error) {
-		return [sessions];
-	}
-	
-	const initResults = await Promise.all(sessions.map(initSession));
-	const initErrors = initResults.filter(isError);
+export function initSessions(): FutureInstance<Error, Session[]> {
+	log("init sessions");
 
-	if (initErrors.length > 0) {
-		return initErrors;
-	}
-	
-	log("init OK");
-	return sessions;
+	return getSessions()
+	.pipe(map(sessions => sessions.map(initSession)))
+	.pipe(chain(parallel(1)));
 }
 
-// current game
-
-export async function getCurrentGame(
+export function getCurrentGame(
 	sessionId: number
-): Promise<Either<Error, Game>>{
-	const gameRows = await getSessionGames(sessionId);
-	if(gameRows instanceof Error){
-		return gameRows;
-	}
-
-	const currentGame = gameRows.find(game => game.isCurrent === true);
-	if(currentGame === undefined){
-		return new Error("Current game not found for session");
-	}
-	
-	return getGame(currentGame.gameId);
+): FutureInstance<Error, Game>{
+	return getSessionGames(sessionId)
+	.pipe(map(find(gr => gr.isCurrent === true)))
+	.pipe(map(game => game.map(g => g.gameId).chain(getGame)))
+	.pipe(chain(e2f));
 }
 
 function setCurrentGame(sessionId: number, gameId: string) {
 	log("set current game", sessionId, gameId);
-	return withDb(db => {
-		db.serialize(function(){
-			db.run("BEGIN TRANSACTION");
-			db.run("UPDATE game SET is_current = 0 WHERE session_id = $session_id", {
+
+	return withDb(({ serialize, run }) => {
+		return serialize(
+			run("BEGIN TRANSACTION"),
+			run("UPDATE game SET is_current = 0 WHERE session_id = $session_id", {
 				$session_id: sessionId
-			});
-			db.run("UPDATE game SET is_current = 1 WHERE game_id = $game_id", {
+			}),
+			run("UPDATE game SET is_current = 1 WHERE game_id = $game_id", {
 				$game_id: gameId
-			});
-			db.run("COMMIT");
-		});
+			}),
+			run("COMMIT")
+		);
 	});
 }
+
 

@@ -1,8 +1,6 @@
 import http from 'http';
-import { Either } from 'dfs-common';
-import { Logger } from './log';
+import { Future, parallel, map } from 'fluture';
 
-const { log, error } = Logger("dockerlib");
 
 export class DockerError extends Error{
 	statusCode: number;
@@ -25,7 +23,7 @@ function parseResponseBody(bodyStr: any){
 export function dockerReq<T>(
 	method: string, endpoint: string, queryParams: object = [],
 	body: object = {}
-): Promise<Either<Error, T>>{
+){
 	const queryStr = Object.entries(queryParams).map(
 		keyVal => keyVal.join('='));
 	const path = `${endpoint}?${queryStr}`;
@@ -37,8 +35,8 @@ export function dockerReq<T>(
 		"Content-Type": "application/json",
 		"Content-Length": contentLength
 	}
-
-	return new Promise((resolve, _reject) => {
+	
+	return Future<DockerError, T>((reject, resolve) => {
 		const req = http.request({
 			socketPath: "/var/run/docker.sock",
 			headers,
@@ -57,41 +55,40 @@ export function dockerReq<T>(
 			res.on('end', () => {
 				const { statusCode } = res;
 				const resData = parseResponseBody(resDataStr);
-				
+
 				if (statusCode !== undefined && statusCode > 400) {
 					const err = new DockerError(
 						statusCode,
 						resData.message || "Unknown error"
-					);	
-					resolve(err);
+					);
+					reject(err);
 				}
+				
 				resolve(resData);
 			});
 		});
 
 		req.on("error", (e) => {
-			resolve(e);
+			reject(new DockerError(500, e.message));
 		});
-		
+
 		req.end(bodyStr);
+		
+		return () => { };
 	});
 }
 
-export function start(
-	containerId: string
-): Promise<Either<Error, void>>{
+export function start(containerId: string){
 	return dockerReq("POST", `/containers/${containerId}/start`);
 }
 
 function stopContainer(name: string){
-	return dockerReq("POST", `/containers/${name}/stop`);
+	return dockerReq("POST", `/containers/${name}/stop`)
+	.pipe(map(_void => name));
 }
 
-export async function stop(...containers: string[]): Promise<Either<Error, void>>{
-	const promises = containers.map(stopContainer);
-	return Promise.all(promises).catch(err => {
-		return new Error(err);
-	});
+export function stop(...containers: string[]){
+	return parallel(Infinity)(containers.map(stopContainer))
 }
 
 function rmContainer(name: string){
@@ -111,11 +108,8 @@ export function create(name: string | undefined, config: any){
 	)
 }
 
-export async function rm(...containers: string[]) {
-	const promises = containers.map(rmContainer);
-	return Promise.all(promises).catch(err => {
-		return new Error(err);
-	});
+export function rm(...containers: string[]) {
+	return parallel(Infinity)(containers.map(rmContainer));
 }
 
 type PsFilters = {

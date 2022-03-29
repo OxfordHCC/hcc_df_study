@@ -1,13 +1,15 @@
-// this library is tasked with scheduling and running voice injection attacks
-// on the study environment
+// scheduling and run voice injection attacks 
+
+import { FutureInstance, map,chain, parallel } from 'fluture';
+
 import { Logger } from './log';
 import { getGame } from './game';
 import { getSessions } from './session';
 import { withDb } from './db';
-import { Either, isError, Session } from 'dfs-common';
 import { execSync } from 'child_process';
+import { find, e2f } from './util';
 
-const { log, error } = Logger('attacklib');
+const { log } = Logger('attacklib');
 
 type Attack = {
 	attackId: number
@@ -24,70 +26,58 @@ INSERT INTO attack
 (game_id, session_id, round, source_user, target_user, audio_path)
 VALUES ($game_id, $session_id, $round, $source_user, $target_user, $audio_path)
 `
-export async function createAttack(attack: Omit<Attack, "attackId">):Promise<Either<Error, Attack>>{
+export function createAttack(
+	attack: Omit<Attack, "attackId">
+): FutureInstance<Error, Attack> {
 	log("create", JSON.stringify(attack));
-	return withDb<Attack>(db => new Promise((resolve, reject) => {
-		db.run(insertAttackQuery, {
+	return withDb(({ run }) =>
+		run(insertAttackQuery, {
 			$game_id: attack.gameId,
 			$session_id: attack.sessionId,
 			$round: attack.round,
 			$source_user: attack.sourceUser,
 			$target_user: attack.targetUser,
 			$audio_path: attack.audioPath
-		}, function(err){
-			if(err){
-				return reject(err);
-			}
+		}))
+		.pipe(map(attackId => ({
+			attackId,
+			...attack
+		})));
+}
 
-			const attackId = this.lastID;
-			
-			resolve({
-				...attack,
-				attackId
-			});
-		})
+export function scheduleAttack(attack: Attack): FutureInstance<Error, Attack> {
+	log("schedule", JSON.stringify(attack));
+
+	// TODO: clean-up
+	return getSessions()
+	.pipe(map(find(s => s.sessionId === attack.sessionId)))
+	.pipe(chain(e2f))
+	.pipe(map(session => {
+		getGame(attack.gameId)
+		.map(game =>
+			game.on("round", ({ round }: { round: number }) => {
+				console.log(round, attack.round, round === attack.round);
+				if (round === attack.round) {
+					log("launching attack", attack.gameId)
+					// launch attack
+					
+					// TODO: mute source player
+					
+					// send audio
+					const shellCmd = `mumble-cli 127.0.0.1:${session.grpcPort} send -s 1 -u ${attack.sourceUser} -t ${attack.targetUser} -f /Users/alexzugravu/tmp/hello_jack.wav -d 44 -r 16000`;
+					const res = execSync(shellCmd, { encoding: "utf8" });
+					log("attack_status", shellCmd, res.trim());
+					
+					// TODO: unmute source player
+				}
+			})
+		);
+		
+		return attack;
 	}));
 }
 
-export async function scheduleAttack(attack: Attack){
-	const game = getGame(attack.gameId);
-	if(game instanceof Error){
-		return game;
-	}
-
-	const sessions = await getSessions();
-	if(sessions instanceof Error){
-		return sessions;
-	}
-
-	const session = sessions.find(s => s.sessionId === attack.sessionId);
-	if(session === undefined){
-		return new Error("Session not found for attack.");
-	}
-
-	log("schedule", JSON.stringify(attack));
-
-	// TODO handle errors
-	// register event handler to trigger the attack
-	game.on("round", ({ round }: { round: number }) => {
-		console.log(round, attack.round, round === attack.round);
-		if(round === attack.round) {
-			log("launching attack", attack.gameId)
-			// launch attack
-
-			// TODO: mute source player
-
-			// send audio
-			const shellCmd = `mumble-cli 127.0.0.1:${session.grpcPort} send -s 1 -u ${attack.sourceUser} -t ${attack.targetUser} -f /Users/alexzugravu/tmp/hello_jack.wav -d 44 -r 16000`;
-			const res = execSync(shellCmd, { encoding: "utf8" });
-			log("attack_status", shellCmd, res.trim());
-			// TODO: unmute source player
-			
-		}
-	});
-}
-
-function normalizeDbAttack(db_attack: any): Attack{
+function normalizeDbAttack(db_attack: any): Attack {
 	return {
 		attackId: db_attack.attack_id,
 		gameId: db_attack.game_id,
@@ -99,29 +89,16 @@ function normalizeDbAttack(db_attack: any): Attack{
 	}
 }
 
-export function getAttacks(): Promise<Either<Error, Attack[]>>{
-	return withDb(db => new Promise((resolve, reject) => {
-		db.all("SELECT * FROM attack", (err, rows) => {
-			if(err){
-				return reject(err);
-			}
-			
-			return resolve(rows.map(normalizeDbAttack));
-		})
-	}));
+export function getAttacks(): FutureInstance<Error, Attack[]>{
+	return withDb(({all}) => 
+		all("SELECT * FROM attack"))
+	.pipe(map(rows => rows.map(normalizeDbAttack)));
 }
 
-export async function initAttacks(){
+export function initAttacks(): FutureInstance<Error, Attack[]> {
 	// schedule all attacks from database
 	log("init");
-	const attacks = await getAttacks();
-	if(attacks instanceof Error){
-		return attacks;
-	}
-	
-	const scheduleRes = await Promise.all(attacks.map(scheduleAttack));
-	const scheduleErrors = scheduleRes.filter(isError);
-	if(scheduleErrors.length > 0){
-		return 0;
-	}
+	return getAttacks()
+	.pipe(map(attacks => attacks.map(scheduleAttack)))
+	.pipe(chain(parallel(1)));
 }
