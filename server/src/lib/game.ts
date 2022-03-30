@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { List, Either, Left, Right } from 'monet';
-import { parallel, FutureInstance, map, chain } from 'fluture';
+import { parallel, FutureInstance, map, chain, fork } from 'fluture';
 import { aoe2ea, e2f } from './util';
 
 import {
@@ -16,7 +16,7 @@ import { createPlayer } from './player';
 import { Round, createRound } from './round';
 import { Logger } from './log';
 
-const { log } = Logger("gamelib");
+const { log, error } = Logger("gamelib");
 
 const memGames:Game[] = [];
 
@@ -141,8 +141,12 @@ export class Game extends Evented<keyof GameEvents> implements GameData{
 		this.on("player_ready", () =>
 			this.startIfPlayersReady());
 		
-		this.on("state", () => saveGame(this));
-		this.on('state', () => log("state", JSON.stringify(this)));
+		this.on("state", () => fork((err) => {
+			error("error saving game", JSON.stringify(err));
+		}) ((x) => {
+			log("saved game", JSON.stringify(this));
+		})(saveGame(this)));
+
 		this.on("player_ready", () => this.trigger("state"));
 		this.on("answer", () => this.trigger("state"));
 		this.on("stop",	() => this.trigger("state"));
