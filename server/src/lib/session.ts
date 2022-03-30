@@ -120,7 +120,6 @@ export function createSession(
 	{ blueParticipant, redParticipant, murmurPort, grpcPort }: AdminClientNs.CreateSessionParams
 ): FutureInstance<Error, Session> {
 	log("create_session", blueParticipant, redParticipant, murmurPort, grpcPort);
-	
 	return createMurmur({ murmurPort, grpcPort })
 	.pipe(map(murmur => ({
 		murmurId: murmur.id,

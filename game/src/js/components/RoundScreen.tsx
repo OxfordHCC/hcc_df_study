@@ -70,8 +70,8 @@ export function RoundScreen({ gameData, playerId, onAnswer }: RoundScreenParams)
 			<Round round={currentRound}
 				roundData={currRoundData}
 				onAnswer={onAnswer}
-			isBlue={isBlue}
-			onClockUpdate={updateClock}
+				isBlue={isBlue}
+				onClockUpdate={updateClock}
 			/>
 		</Screen>
 	);

@@ -46,6 +46,8 @@ function isNodeError(x: any): x is NodeJS.ErrnoException{
 function createRecDir(
 	params: ParamsWithRecDir, ignoreExists: boolean = false
 ): Either<NodeJS.ErrnoException, ParamsWithRecDir> {
+	log("create rec dir", params.recDir, `ignoreEEXIST: ${ignoreExists}`);
+	
 	const { recDir } = params;
 	return Either.fromTry(() => {
 		try{
@@ -72,6 +74,8 @@ function removeRecDir(
 function createContainer(
 	{ name, grpcPort, murmurPort, recDir }: ParamsWithRecDir
 ): FutureInstance<Error, Murmur>{
+	log("create container", name);
+	
 	const container = docker.create(name, {
 		Image: "mumble_server",
 		ExposedPorts: {
@@ -102,7 +106,7 @@ function createContainer(
 		}
 	});
 
-
+	
 	return container.pipe(map(x => ({
 		id: x.Id,
 		name,
@@ -120,7 +124,8 @@ export function createMurmur(
 	params: CreateMurmurParams
 ): FutureInstance<Error, Murmur> {
 	const recAndNameParams = resolveParams(params);
-
+	log("create murmur", recAndNameParams.name);
+	
 	return e2f(createRecDir(recAndNameParams))
 	.pipe(chain(createContainer));
 }

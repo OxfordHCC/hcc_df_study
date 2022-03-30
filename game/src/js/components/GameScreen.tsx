@@ -36,11 +36,16 @@ export function GameScreen({ playerId } : GameScreenProps): JSX.Element{
 		const onDisconnect = function(){
 			setGameState(undefined);
 		}
+
+		const onRound = function(){
+			console.log("round change");
+		}
 	
 		game.on("error", onError);
 		game.on("connect", onConnect);
 		game.on("disconnect", onDisconnect);
 		game.on("state", onState);
+		game.on("round", onRound);
 
 		game.connect();
 
@@ -49,6 +54,7 @@ export function GameScreen({ playerId } : GameScreenProps): JSX.Element{
 			game.off("state", onState);
 			game.off("error", onError);
 			game.off("connect", onConnect);
+			game.off("round", onRound);
 		};
 	}, [game]);
 
@@ -61,7 +67,7 @@ export function GameScreen({ playerId } : GameScreenProps): JSX.Element{
 		game.answer(answer);
 	}
 
-	if (loading) {
+	if(loading) {
 		return <p>Loading</p>;
 	}
 

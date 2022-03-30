@@ -20,6 +20,7 @@ type Declaration = Array<TestComponent>;
 
 type SampleGame = Omit<GameData, "rounds"> & {
 	rounds: [
+		SingleRoundData,
 		SingleRoundData
 	]
 }
@@ -37,6 +38,12 @@ const sampleGameData: SampleGame = {
 	rounds: [
 		{
 			options: [1,2,3],
+			name: "button",
+			msLength: 5000,
+			solution: 1
+		},
+		{
+			options: [1, 2, 3],
 			name: "button",
 			msLength: 5000,
 			solution: 1

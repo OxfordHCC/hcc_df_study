@@ -87,6 +87,7 @@ export function start(containerId: string){
 }
 
 function stopContainer(name: string){
+	log("stop", name);
 	return dockerReq("POST", `/containers/${name}/stop`)
 	.pipe(map(_void => name));
 }
@@ -96,6 +97,7 @@ export function stop(...containers: string[]){
 }
 
 function rmContainer(name: string){
+	log("rm", name);
 	return dockerReq("DELETE", `/containers/${name}`);
 }
 
@@ -103,7 +105,8 @@ type DockerCreateResult = {
 	Id: string
 	Warning: unknown[]
 }
-export function create(name: string | undefined, config: any){
+export function create(name: string, config: any){
+	log("create", name);
 	return dockerReq<DockerCreateResult>(
 		"POST",
 		"/containers/create",

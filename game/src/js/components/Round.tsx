@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { RoundData, Answer, ButtonRoundData, RoundName } from 'dfs-common';
 import { ButtonRound } from './ButtonRound';
 import { Clock } from './Clock';
@@ -22,8 +22,19 @@ export function Round({ isBlue, roundData, round, onAnswer, onClockUpdate }: Rou
 	const { name } = roundData;
 
 	const [ doSlideOut, setDoSlideOut ] = useState<boolean>(false);
+	
 	console.log(doSlideOut);
 	console.log("round data", roundData);
+
+	useEffect(() => {
+		setTimeout(() => {
+			setDoSlideOut(false);
+		}, 500)
+
+		return () => {
+			setDoSlideOut(true);
+		}
+	}, [round])
 
 	function onAnswerWrap(answer: Answer){
 		setDoSlideOut(true);
