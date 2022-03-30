@@ -21,7 +21,6 @@ export type EquationInstructionsProps = {
 	roundData: RoundData
 }
 export function EqInstructions({ equation, roundData }: EquationInstructionsProps) {
-
 	const buttonSolutions: [string, number][] = equation.options.map(
 		(opt, i) => ([opt, i]));
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
-import { valiturnCreateSessionParams } from 'dfs-common';
+import { AdminClientNs } from 'dfs-common';
 import { createSession } from '../lib/session';
 import { goto } from '../lib/router';
 
@@ -32,14 +32,14 @@ export function CreateSessionScreen(){
 	}
 
 	const onCreateSession = async function() {
-		const createSessionParams = valiturnCreateSessionParams({
+		const createSessionParams = {
 			blueParticipant: blue,
 			redParticipant: red,
 			grpcPort,
 			murmurPort
-		});
-		
-		if(createSessionParams instanceof Error){
+		} as AdminClientNs.CreateSessionParams;
+
+		if (createSessionParams instanceof Error) {
 			setError(createSessionParams.message);
 			return;
 		}

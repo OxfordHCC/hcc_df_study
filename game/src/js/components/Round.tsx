@@ -22,6 +22,8 @@ export function Round({ isBlue, roundData, round, onAnswer, onClockUpdate }: Rou
 	const { name } = roundData;
 
 	const [ doSlideOut, setDoSlideOut ] = useState<boolean>(false);
+	console.log(doSlideOut);
+	console.log("round data", roundData);
 
 	function onAnswerWrap(answer: Answer){
 		setDoSlideOut(true);
