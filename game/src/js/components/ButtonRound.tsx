@@ -4,6 +4,8 @@ import styled from 'styled-components';
 import { Spacer } from './Spacer';
 import { Center } from './Center';
 import { BombButton } from './BombButton';
+import { chooseRandomEq } from '../lib/equations';
+import { EqInstructions } from './EqInstructions';
 
 
 export type ButtonRoundParams = {
@@ -12,30 +14,32 @@ export type ButtonRoundParams = {
 	onAnswer: (answer: ButtonRoundAnswer) => void
 	isBlue: boolean
 }
-
-export function ButtonRound({ round, roundData, onAnswer, isBlue }: ButtonRoundParams): JSX.Element{
-	const { solution } = roundData;
-
+export function ButtonRound({ round, roundData, onAnswer, isBlue }: ButtonRoundParams): JSX.Element {
 	const onButtonPress = (value: number) => onAnswer({ round, value });
-	
+	const equation = useMemo(() => chooseRandomEq(), [round]);
+
 	return (
 		<Center>
-			<Container>
+			<Container isBlue={isBlue}>
 				<InstructionsContainer>
-					Press the correct button to defuse the bomb.
+					{
+						isBlue
+						? "Solve the following to find the solution:"
+						: "Press the correct button to defuse the bomb."
+					}
 				</InstructionsContainer>
 				<Spacer height="100px" />
 				{
 					(isBlue)
-					? <BlueContainer>
-						Press {solution}
-					</BlueContainer>
-					: <RedContainer>
-						{
-							roundData.options.map(option =>
-								<BombButton key={option} onPress={onButtonPress} option={option}/>)
-						}
-					</RedContainer>
+						? <BlueContainer>
+							<EqInstructions roundData={roundData} equation={equation} />
+						</BlueContainer>
+						: <RedContainer>
+							{
+								roundData.options.map(option =>
+									<BombButton key={option} onPress={onButtonPress} option={option} />)
+							}
+						</RedContainer>
 				}
 
 			</Container >
@@ -47,9 +51,10 @@ const BlueContainer = styled.div`
 	text-align: center;
 	font-size: 4vw;
 `;
-const Container = styled.div`
+
+const Container = styled.div<{isBlue: boolean}>`
 	width: 40vw;
-	background: url("./textures/BROWNHUG.png");
+	background: ${props => props.isBlue? "beige": 'url("./textures/BROWNHUG.png")'};
 	padding: 50px;
 `;
 

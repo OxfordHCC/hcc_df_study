@@ -1,6 +1,6 @@
 import { Answer } from './game';
 
-export type SingleRoundName = "button" | "wire";
+export type SingleRoundName = "button" | "wire" | "pseudoKeypad";
 export type SequenceRoundName = "keypad";
 export type RoundName =
 	| SingleRoundName

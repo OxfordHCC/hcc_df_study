@@ -49,6 +49,18 @@ export function validateCreateSessionParams(
 	return Right(params);
 }
 
+function valiturnCreateSessionParams(
+	params: Partial<AdminClientNs.CreateSessionParams>
+): Either<Error, AdminClientNs.CreateSessionParams>{
+	const definedParams = validateRequired(params);
+	if(definedParams instanceof Error){
+		return definedParams;
+	}
+
+	return definedParams;
+}
+
+
 export default function(admin: AdminNamespace) {
 	admin.on("connection", (socket) => {
 		const games = getGames();
