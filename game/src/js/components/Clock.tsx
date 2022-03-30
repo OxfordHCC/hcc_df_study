@@ -42,7 +42,7 @@ export function Clock({ onUpdate, start = 0, length }: ClockParams) {
 
 	return (
 		<span>
-			{display}
+
 		</span>
 	);
 }

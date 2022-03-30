@@ -14,12 +14,4 @@ export function joinErrors(errs: any[]): Error{
 	return new Error(errs.filter(isError).map(err => err.message).join('\n'));
 }
 
-function eitherToFuture<E, A>(a: Either<E, A>): FutureInstance<E,A>{
-	return Future<E,A>((rej, res) => {
-		a.map(res).leftMap(rej);
-		
-		// cancellation function (noop)
-		return () => {}
-	});
-}
 

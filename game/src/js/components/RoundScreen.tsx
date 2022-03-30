@@ -6,7 +6,7 @@ import { Screen } from './Screen';
 import { Round } from './Round';
 
 
-type RoundScreenParams = {
+export type RoundScreenParams = {
 	gameData: GameData
 	playerId: string
 	onAnswer: (a: Answer) => void
@@ -79,7 +79,7 @@ export function RoundScreen({ gameData, playerId, onAnswer }: RoundScreenParams)
 
 const BarSquare = styled.div`
 	background: url("./textures/GRAY1.PNG");
-	background-size: contain;
+	background-size: cover;
 	background-repeat: no-repeat;
 	display: flex;
 	flex-direction: column;

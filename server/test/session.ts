@@ -25,7 +25,7 @@ test("creating session should create a murmur container", async (t) => {
 		if(e instanceof Error){
 			return t.fail(e.message);
 		}
-		return t.fail("Unknown error");s
+		return t.fail("Unknown error");
 	})(([session, containers]) => {
 		t.assert(containers.find(c => c.Id === session.murmurId) !== undefined,
 				 "container found");
@@ -133,19 +133,19 @@ test("session should fail when already existing player is passed as param", asyn
 	await resetContainers();
 	t.plan(1);
 
-	await createSession({
+	await promise(createSession({
 		grpcPort: 3002,
 		murmurPort: 3001,
 		blueParticipant: "player_blue",
 		redParticipant: "player_red"
-	});
+	}));
 
-	const res = await createSession({
+	const res = await promise(createSession({
 		grpcPort: 3003,
 		murmurPort: 3004,
 		blueParticipant: "player_blue",
 		redParticipant: "player_red"
-	})
+	}));
 
 	t.assert(res instanceof Error, "createSession result should be an error");
 });
@@ -156,28 +156,28 @@ test("session should fail when port is in use", async (t) => {
 	await resetContainers();
 	t.plan(2);
 
-	await createSession({
+	await promise(createSession({
 		grpcPort: 3001,
 		murmurPort: 3002,
 		blueParticipant: "player_blue",
 		redParticipant: "player_red"
-	});
+	}));
 
-	const grpcConflict = await createSession({
+	const grpcConflict = await promise(createSession({
 		grpcPort: 3001,
 		murmurPort: 3003,
 		blueParticipant: "player_purple",
 		redParticipant: "player_orange"
-	});
+	}));
 
 	t.assert(grpcConflict instanceof Error, "createSession with grpcPort conflict should result in an error");
 
-	const murmurConflict = await createSession({
+	const murmurConflict = await promise(createSession({
 		grpcPort: 3005,
 		murmurPort: 3002,
 		blueParticipant: "player_black",
 		redParticipant: "player_white"
-	});
+	}));
 
 	t.assert(murmurConflict instanceof Error, "createSession with murmurPort conflict should result in an error");
 });
@@ -190,21 +190,21 @@ test("conflicts should not result in partial failures", async (t) => {
 	t.plan(2);
 
 
-	await createSession({
+	await promise(createSession({
 		grpcPort: 3001,
 		murmurPort: 3002,
 		blueParticipant: "player_blue",
 		redParticipant: "player_red"
-	});
+	}));
 
 	const gamesBefore = (getGames()).length;
 
-	const containersBefore = await docker.ps({
+	const containersBefore = await promise(docker.ps({
 		all: true,
 		filters: {
 			ancestor: "mumble_server"
 		}
-	});
+	}));
 
 	if (containersBefore instanceof Error) {
 		t.fail("docker ps should not return error");
@@ -213,21 +213,21 @@ test("conflicts should not result in partial failures", async (t) => {
 
 	const containersBeforeLen = containersBefore.length;
 
-	await createSession({
+	await promise(createSession({
 		grpcPort: 3001,
 		murmurPort: 3002,
 		blueParticipant: "player_blue",
 		redParticipant: "player_red"
-	});
+	}));
 
 	const gamesAfter = (getGames()).length;
 
-	const containersAfter = await docker.ps({
+	const containersAfter = await promise(docker.ps({
 		all: true,
 		filters: {
 			ancestor: "mumble_server"
 		}
-	});
+	}));
 
 	if (containersAfter instanceof Error) {
 		t.fail("docker ps should not return error");

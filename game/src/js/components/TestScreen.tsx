@@ -3,6 +3,7 @@ import React, { FunctionComponent, useState } from 'react';
 import styled from 'styled-components';
 import { ButtonRound, ButtonRoundParams } from './ButtonRound';
 import { GameLobby, GameLobbyParams } from './LobbyScreen';
+import { RoundScreen, RoundScreenParams } from './RoundScreen';
 
 
 type DeclarationObject<T> = {
@@ -10,8 +11,11 @@ type DeclarationObject<T> = {
 	props: T
 }
 
-type Declaration = Array<DeclarationObject<ButtonRoundParams>
-				 | DeclarationObject<GameLobbyParams>>;
+type TestComponent = DeclarationObject<ButtonRoundParams>
+				   | DeclarationObject<GameLobbyParams>
+				   | DeclarationObject<RoundScreenParams>;
+
+type Declaration = Array<TestComponent>;
 
 
 type SampleGame = Omit<GameData, "rounds"> & {
@@ -21,7 +25,13 @@ type SampleGame = Omit<GameData, "rounds"> & {
 }
 
 const sampleGameData: SampleGame = {
-	players: [],
+	players: [{
+		playerId: "red",
+		ready: true
+	},{
+		playerId: "blue",
+		ready: true
+	}],
 	currentRound: 0,
 	gameId: "foo",
 	rounds: [
@@ -53,6 +63,14 @@ const components: Declaration = [
 			playerId: "foobar",
 			gameData: sampleGameData,
 			onReadyChange: () => {}
+		}
+	},
+	{
+		fn: RoundScreen,
+		props: {
+			gameData: sampleGameData,
+			playerId: "foo",
+			onAnswer: () => {}
 		}
 	}
 ];
