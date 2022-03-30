@@ -14,13 +14,29 @@ type GameScreenProps = {
 export function GameScreen({ playerId } : GameScreenProps): JSX.Element{
 	const [loading, setLoading] = useState<boolean>(true);
 	const [gameData, setGameState] = useState<GameData>();
+	const [popup, setPopup] = useState<OnAnswerPopup>({
+		show: false,
+		correct: true
+	});
 
 	const game = useMemo(
-		() => new GameClient({ playerId }), [ playerId ]
+		() => new GameClient({ playerId }), [playerId]
 	);
 
 	useEffect(() => {
-		const onConnect = function(){
+		// whenever we show pop-up, register a timeout callback
+		// to hide it immediately
+		if (popup.show === true) {
+			const timeout = setTimeout(() => {
+			}, 1000);
+			return () => {
+				clearTimeout(timeout);
+			}
+		}
+	}, [popup.show]);
+	
+	useEffect(() => {
+		const onConnect = function() {
 			setLoading(false);
 		}
 
@@ -58,6 +74,11 @@ export function GameScreen({ playerId } : GameScreenProps): JSX.Element{
 	}
 
 	function onAnswer(answer: Answer) {
+		//check answer, set
+		setPopup({
+			...popup,
+			show: true
+		});
 		game.answer(answer);
 	}
 

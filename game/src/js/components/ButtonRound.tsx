@@ -16,7 +16,7 @@ export type ButtonRoundParams = {
 export function ButtonRound({ round, roundData, onAnswer, isBlue }: ButtonRoundParams): JSX.Element{
 	const { solution } = roundData;
 
-	const onButtonPress = (value: number) => onAnswer({round, value});
+	const onButtonPress = (value: number) => onAnswer({ round, value });
 	
 	return (
 		<Center>

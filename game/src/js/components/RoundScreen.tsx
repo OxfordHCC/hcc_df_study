@@ -33,6 +33,7 @@ export function RoundScreen({ gameData, playerId, onAnswer }: RoundScreenParams)
 		setClock(clockStr);
 	}
 
+
 	return (
 		<Screen>
 			<Background>

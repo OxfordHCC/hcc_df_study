@@ -46,6 +46,14 @@ const sampleGameData: SampleGame = {
 
 const components: Declaration = [
 	{
+		fn: RoundScreen,
+		props: {
+			gameData: sampleGameData,
+			playerId: "foo",
+			onAnswer: () => {}
+		}
+	},
+	{
 		fn: ButtonRound,
 		props: {
 			onAnswer: () => {},
@@ -65,14 +73,7 @@ const components: Declaration = [
 			onReadyChange: () => {}
 		}
 	},
-	{
-		fn: RoundScreen,
-		props: {
-			gameData: sampleGameData,
-			playerId: "foo",
-			onAnswer: () => {}
-		}
-	}
+
 ];
 
 export function TestScreen() {
