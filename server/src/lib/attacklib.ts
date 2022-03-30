@@ -59,15 +59,23 @@ export function scheduleAttack(attack: Attack): FutureInstance<Error, Attack> {
 				console.log(round, attack.round, round === attack.round);
 				if (round === attack.round) {
 					log("launching attack", attack.gameId)
-					// launch attack
 					
-					// TODO: mute source player
-					
+					// mute player
+					const muteCmd = `mumble-cli 127.0.0.1:${session.grpcPort} shadowmute -s 1 -t ${attack.targetUser}`;
+					const muteRes = execSync(muteCmd, { encoding: "utf8" });
+					log("attack_status", attack.attackId,  muteCmd, muteRes.trim());
+
 					// send audio
 					const shellCmd = `mumble-cli 127.0.0.1:${session.grpcPort} send -s 1 -u ${attack.sourceUser} -t ${attack.targetUser} -f /Users/alexzugravu/tmp/hello_jack.wav -d 44 -r 16000`;
 					const res = execSync(shellCmd, { encoding: "utf8" });
-					log("attack_status", shellCmd, res.trim());
-					
+					log("attack_status", attack.attackId, shellCmd, res.trim());
+
+					// unmute player
+					const unmuteCmd = `mumble-cli 127.0.0.1:${session.grpcPort} shadowmute -s 1 -t ${attack.targetUser} -u`;
+					const unmuteRes = execSync(unmuteCmd, { encoding: "utf8" });
+					log("attack_status", attack.attackId, unmuteCmd, unmuteRes.trim());
+
+
 					// TODO: unmute source player
 				}
 			})
