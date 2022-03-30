@@ -49,7 +49,7 @@ const components: Declaration = [
 		fn: RoundScreen,
 		props: {
 			gameData: sampleGameData,
-			playerId: "red",
+			playerId: "blue",
 			onAnswer: () => {}
 		}
 	},
