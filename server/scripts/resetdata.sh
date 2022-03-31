@@ -12,7 +12,7 @@ read answer
 
 if [ "$answer" != "${answer#[Yy]}" ] ;then
 	echo "Resetting mumble containers and their mounts"
-	docker ps --filter ancestor=mumble_server | tail -1 | awk 'BEGIN{}{system("docker stop "$0)}END{}' && docker container prune;
+	docker ps -q -a --filter ancestor=mumble_server | awk 'BEGIN{}{system("docker stop "$0); system("docker rm "$0)}END{}';
 	rm -r ../var/rec/*;
 fi
 
