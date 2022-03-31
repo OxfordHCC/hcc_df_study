@@ -1,4 +1,4 @@
-import { parallel, chain, map, reject, resolve, FutureInstance } from 'fluture';
+import { parallel, chain, map, reject, resolve, FutureInstance, fork } from 'fluture';
 import { GameData, Session, AdminClientNs } from 'dfs-common';
 import { find, filter, e2f } from './util';
 import { createMurmur, murmurFromSession, initMurmur } from './murmurlib';
@@ -14,7 +14,7 @@ import { Logger } from './log';
 import { withDb } from './db';
 import { createAttack, getAttacks, scheduleAttack } from './attacklib';
 
-const { log } = Logger("session");
+const { log, error } = Logger("session");
 
 export function getPlayerSession(playerId: string){
 	return getSessions().pipe(chain(sessions => {
@@ -138,7 +138,13 @@ function chainGames(session: Session){
 		const { sessionId } = session;
 		return games.reduceRight((acc, curr) => {
 			curr.on('stop', () => {
-				setCurrentGame(sessionId, acc.gameId);
+				// Q: How is this usually handled in FP languages?
+				// Follow-up Q: Can be refactor s.t. we don't have to fork here?
+				fork((err) => {
+					error("set current game error", JSON.stringify(err))
+				})(() => {
+					log("set current game success");
+				})(setCurrentGame(sessionId, acc.gameId));
 			});
 
 			return curr;
