@@ -1,3 +1,5 @@
+import path from 'path';
+
 import { parallel, chain, map, reject, resolve, FutureInstance, fork } from 'fluture';
 import { GameData, Session, AdminClientNs } from 'dfs-common';
 import { find, filter, e2f } from './util';
@@ -73,7 +75,9 @@ export function getSessions(): FutureInstance<Error, Session[]>{
 	.pipe(map(rows => rows.map(normalizeDbSession)))
 }
 
-export function getSessionById(sessionId: number): FutureInstance<Error, Session>{
+export function getSessionById(
+	sessionId: number
+): FutureInstance<Error, Session>{
 	return getSessions()
 	.pipe(map(find(session => session.sessionId === sessionId )))
 	.pipe(chain(e2f));
@@ -82,15 +86,24 @@ export function getSessionById(sessionId: number): FutureInstance<Error, Session
 function createGameAttack(session: Session, game: GameData){
 	const { sessionId } = session;
 	const { gameId } = game;
-	
+	const [
+		sourceUser,
+		targetUser
+	] = game.players.map(p => p.playerId);
+
+	const audioPath = path.resolve(
+		__dirname,
+		"../../var/fakes/",
+		`${sourceUser}.wav`);
+
 	return createAttack({
 		gameId,
 		sessionId,
+		audioPath,
+		targetUser,
+		sourceUser,
 		round: 4,
-		audioPath: "foobar",
-		sourceUser: "1",
-		targetUser: "2"
-	})
+	});
 }
 
 function createAttacks(session: Session, games: GameData[]) {
