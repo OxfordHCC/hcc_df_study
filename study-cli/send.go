@@ -16,8 +16,8 @@ func sendCmd(client MurmurRPC.V1Client, args []string)(error, string){
 	bitrate := flagSet.Uint32P("bitrate", "b", 32000, "bitrate");
 	sampleRate := flagSet.Uint32P("sample-rate", "r", 48000, "sample rate");
 	frameSize := flagSet.Uint32P("frame-size", "p", 1920, "frame size");
-	userId := flagSet.Uint32P("user", "u", 0, "from user id");
-	targetId := flagSet.Uint32P("target", "t", 0, "to user id");
+	userName := flagSet.StringP("user", "u", "", "from user name");
+	targetName := flagSet.StringP("target", "t", "", "to user name");
 	sleepTime := flagSet.Uint32P("packet-delay", "d", 0, "milliseconds to sleep between packets");
 	serverId := flagSet.Uint32P("server", "s", 0, "server id");
 	bigEndian := flagSet.BoolP("big-endian", "e", false, "use big endianness when encoding");
@@ -26,8 +26,8 @@ func sendCmd(client MurmurRPC.V1Client, args []string)(error, string){
 	flagSet.Parse(args);
 
 	err, server := getServerById(client, *serverId);
-	err, user := getUserById(client, *userId, server);
-	err, target := getUserById(client, *targetId, server);
+	err, user := getUserByName(client, *userName, server);
+	err, target := getUserByName(client, *targetName, server);
 
 	var dat []byte;
 

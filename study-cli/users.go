@@ -25,6 +25,22 @@ func getUserById(client MurmurRPC.V1Client, channelId uint32, server *MurmurRPC.
 	return errors.New("user not found"), nil
 }
 
+func getUserByName(client MurmurRPC.V1Client, username string, server *MurmurRPC.Server)(error, *MurmurRPC.User){
+	err, users := getUsers(client, server)
+	if(err != nil){
+		return err, nil
+	}
+
+	for _, u := range users{
+		if u.GetName() == username {
+			return nil, u
+		}
+	}
+
+	return errors.New("user not found"), nil
+}
+
+
 func getUsers(client MurmurRPC.V1Client, server *MurmurRPC.Server) (error, []*MurmurRPC.User){
 	ctx, cancel := getCtx()
 	defer cancel()
