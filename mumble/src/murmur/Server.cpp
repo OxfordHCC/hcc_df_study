@@ -102,7 +102,6 @@ void Server::recordLoop(){
 		}
 
 		fileMap[msg.user]->write(msg.data, msg.len);
-		fileMap[msg.user]->write("\n", 1);
 
 		// remove from queue;
 		recordingQueue.pop();
