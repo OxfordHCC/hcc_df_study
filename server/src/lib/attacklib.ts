@@ -56,7 +56,6 @@ export function scheduleAttack(attack: Attack): FutureInstance<Error, Attack> {
 		getGame(attack.gameId)
 		.map(game =>
 			game.on("round", ({ round }: { round: number }) => {
-				console.log(round, attack.round, round === attack.round);
 				if (round === attack.round) {
 					log("launching attack", attack.gameId)
 					
@@ -70,13 +69,14 @@ export function scheduleAttack(attack: Attack): FutureInstance<Error, Attack> {
 					const res = execSync(shellCmd, { encoding: "utf8" });
 					log("attack_status", attack.attackId, shellCmd, res.trim());
 
+
+				}
+
+				if(round === attack.round + 1){
 					// unmute player
 					const unmuteCmd = `mumble-cli 127.0.0.1:${session.grpcPort} shadowmute -s 1 -t ${attack.targetUser} -u`;
 					const unmuteRes = execSync(unmuteCmd, { encoding: "utf8" });
 					log("attack_status", attack.attackId, unmuteCmd, unmuteRes.trim());
-
-
-					// TODO: unmute source player
 				}
 			})
 		);
