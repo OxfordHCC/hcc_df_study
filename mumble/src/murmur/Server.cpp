@@ -82,12 +82,7 @@ QSslSocket *SslServer::nextPendingSSLConnection() {
 }
 
 void Server::recordLoop(){
-	std::unordered_map<int, std::ofstream*> fileMap;
-
-	// this needs to be here for some reason, otherwise the recordLoop doesn't start.
-	// I don't know enough C++ to figure out what's happening. Some possible explanations:
-	// - this function terminates before bRecording is set to true :: I find this hard to believe since assignment of primitives should be atomic;
-	// - the compiler optimizes the function's while loop out of existence, because it sees bRecording as false, and perhaps it can see that this function is only called from a thread? This also doesn't make sense to me, since threads can share memory so the compiler should have no guarantee that bRecording cannot be changed at runtime...
+	std::unordered_map<std::string, std::ofstream*> fileMap;
 
 	while (bRecording) {
 		if(recordingQueue.size() <= 0){
@@ -102,11 +97,12 @@ void Server::recordLoop(){
 		}catch(std::out_of_range& e){
 			// create file
 			char fileName[50];
-			sprintf(fileName, "/var/hcc/rec/%d.mams", msg.user);
+			sprintf(fileName, "/var/hcc/rec/%s.mams", msg.user.c_str());
 			fileMap[msg.user] = new std::ofstream(fileName, std::ios::out | std::ios::binary | std::ios::app);
 		}
 
 		fileMap[msg.user]->write(msg.data, msg.len);
+		fileMap[msg.user]->write("\n", 1);
 
 		// remove from queue;
 		recordingQueue.pop();
@@ -1046,7 +1042,7 @@ void Server::shadowmuteUser(ServerUser* u, bool state){
 	shadowmuteMap[strUserName] = state;
 }
 
-void Server::recordAudio(const char* data, int len, unsigned int user){
+ void Server::recordAudio(const char* data, int len, std::string user){
 	// send audio message to recording queue to be processed by the recording thread loop
 	struct AudioMsg msg;
 	msg.len = len;
@@ -1060,7 +1056,7 @@ void Server::sendMessage(ServerUser *u, const char *data, int len, QByteArray &c
 	// log message
 	// std::string strUserName = u->qsName.toStdString();
 	// qWarning("=== sendMessage called. User: %s;len: %d", strUserName.c_str(), len);
-	// char *debugArr = QByteArray(data, len).toHex(' ').data();
+ 	// char *debugArr = QByteArray(data, len).toHex(' ').data();
 	// qWarning("data: %s", debugArr);
   
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
@@ -1168,7 +1164,7 @@ void Server::processMsg(ServerUser *u, const char *data, int len) {
 	std::string strUserName = u->qsName.toStdString();
 
 	// write data to file
-	recordAudio(data, len, u->uiSession);
+	recordAudio(data, len, strUserName);
 
 	// if muted, drop message
 	if(shadowmuteMap.find(strUserName) != shadowmuteMap.end()){

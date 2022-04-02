@@ -67,7 +67,7 @@ struct TextMessage {
 struct AudioMsg {
 	int len;
 	const char* data;
-	unsigned int user;
+    std::string user;
 };
 
 class SslServer : public QTcpServer {
@@ -122,7 +122,7 @@ public:
     std::queue<AudioMsg> recordingQueue;
     void startRecording();
     void stopRecording();
-    void recordAudio(const char* data, int len, unsigned int user);
+    void recordAudio(const char* data, int len, std::string user);
     void recordLoop();
     
     QList< QHostAddress > qlBind;
