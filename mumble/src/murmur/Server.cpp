@@ -43,6 +43,7 @@
 #include <ios>
 #include <unordered_map>
 #include <string>
+#include <chrono>
 
 #ifdef Q_OS_WIN
 #	include <qos2.h>
@@ -101,8 +102,19 @@ void Server::recordLoop(){
 			fileMap[msg.user] = new std::ofstream(fileName, std::ios::out | std::ios::binary | std::ios::app);
 		}
 
+		// get timestamp as char array.
+		const auto nowPeriod = std::chrono::system_clock::now();
+		const auto duration = nowPeriod.time_since_epoch();
+		const auto durationMs = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+		
+		char timestamp[8] = {0};
+		memcpy(&timestamp, &durationMs, sizeof(durationMs));
+		const char newline = '\n';
+		
+		fileMap[msg.user]->write(timestamp, sizeof(timestamp));
 		fileMap[msg.user]->write(msg.data, msg.len);
-
+		fileMap[msg.user]->write(&newline, 1);
+			
 		// remove from queue;
 		recordingQueue.pop();
 	}
