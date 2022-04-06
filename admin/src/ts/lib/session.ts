@@ -1,7 +1,8 @@
 import { Session, AdminClientNs } from 'dfs-common';
+import { RecFile } from 'dfs-common';
 import { socket } from './remote';
 
-export function getSessions(): Promise<Session[]>{
+export function getSessions(): Promise<Session[]> {
 	return new Promise((resolve, reject) => {
 		socket.emit("get_sessions", (err, sessions) => {
 			if (err) {
@@ -34,5 +35,26 @@ export function createSession(
 }
 
 export function deleteSession(sessionId: number){
-	
+
+}
+
+export async function getSessionData(sessionId: number): Promise<Session | undefined> {
+	const sessions = await getSessions();
+	const res = sessions.find(sess => sess.sessionId === sessionId);
+	return res;
+}3
+
+export function getSessionRecordings(sessionId: number): Promise<RecFile[]>{
+	return new Promise((res, rej) => {
+		socket.emit("get_recordings", { sessionId }, (err, recordings) => {
+			if(err !== null){
+				return rej(err);
+			}
+			if(recordings === undefined){
+				return rej(new Error("Undefined error while getting session recordings."));
+			}
+			
+			return res(recordings);
+		});
+	});
 }

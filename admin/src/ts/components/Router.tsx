@@ -2,6 +2,7 @@ import React from "react";
 import {useState, useEffect } from 'react';
 import { HomeScreen } from './HomeScreen';
 import { CreateSessionScreen } from './CreateSession';
+import { SessionScreen } from './SessionScreen';
 
 function parseParamString(paramString?: string): any {
 	if (paramString === undefined) {
@@ -12,7 +13,7 @@ function parseParamString(paramString?: string): any {
 	return JSON.parse(decoded);
 }
 
-type RouteName = "#create_pair" | "#home";
+type RouteName = "#create_pair" | "#home" | "#session";
 type Route = {
 	name: RouteName,
 	params?: any
@@ -47,6 +48,8 @@ export function Router(): JSX.Element {
 	switch(route.name){
 		case "#create_pair":
 			return (<CreateSessionScreen />);
+		case "#session":
+			return (<SessionScreen sessionId={route.params?.sessionId}/>);
 		default:
 			return (<HomeScreen />);
 	}

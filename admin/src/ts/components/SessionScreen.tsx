@@ -1,19 +1,65 @@
-import React, {useState} from 'react';
-import { Session } from 'dfs-common';
+import React, { useEffect, useState } from 'react';
+import { Session, RecFile } from 'dfs-common';
 import styled from 'styled-components';
 import { Loading } from './Loading';
-import { deleteSession } from '../lib/session';
+import { deleteSession,
+		 getSessionData,
+		 getSessionRecordings
+} from '../lib/session';
+import { RecordingList } from './RecordingList';
 
 
 type SessionScreenProps = Pick<Session, "sessionId">;
 type SessionScreenState = {
 	session?: Session,
-	loading: boolean
+	loading: boolean,
+	recordings: RecFile[]
 }
 
 export function SessionScreen({ sessionId }: SessionScreenProps) {
-	const [ screenState, setScreenState ] = useState<SessionScreenState>({loading: true});
+	const [ screenState, setScreenState ] = useState<SessionScreenState>({ loading: true, recordings: [] });
 	const { session, loading } = screenState;
+
+	useEffect(() => {
+		let unloaded = false;
+		
+		async function populateSessionData(){
+			const session = await getSessionData(sessionId);
+			
+			if(unloaded){
+				return;
+			}
+			
+			setScreenState({
+				...screenState,
+				loading: false,
+				session
+			});
+		}
+		
+		async function populateRecordings(){
+			console.log('aa');
+			const recordings = await getSessionRecordings(sessionId);
+			console.log("recordings", recordings);
+
+			if(unloaded){
+				return;
+			}
+			
+			setScreenState({
+				...screenState,
+				recordings
+			});
+		}
+
+		populateRecordings();
+		populateSessionData();
+
+		return () => {
+			unloaded = true;
+		}
+
+	}, [sessionId]);
 
 	function onDelete(){
 		if(session === undefined){
@@ -34,9 +80,11 @@ export function SessionScreen({ sessionId }: SessionScreenProps) {
 	return (
 		<>
 			<PlayerContainer>
-				Blue: {session.blueParticipant}
-				Red: {session.redParticipant}
+				<div>Blue: {session.blueParticipant}</div>
+				<div>Red: {session.redParticipant}</div>
 			</PlayerContainer>
+
+			<RecordingList recordings={screenState.recordings}/>
 
 			<button onClick={onDelete}>Delete session</button>
 		</>

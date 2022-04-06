@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import { Session } from 'dfs-common';
 import { SessionListRow } from './SessionListRow';
 import { Loading } from './Loading';
+import { goto } from '../lib/router';
+
 type SessionListProps = {
 	sessions: Session[]
 	loading: boolean
@@ -30,7 +32,7 @@ export function SessionList({ sessions, loading }: SessionListProps) {
 			<tbody>
 				{
 					sessions.map(sesh =>
-						<SessionListRow key={sesh.sessionId} session={sesh} />)
+						<SessionListRow onClick={() => goto("#session", { sessionId: sesh.sessionId })} key={sesh.sessionId} session={sesh} />)
 				}
 			</tbody>
 		</Gtable>
