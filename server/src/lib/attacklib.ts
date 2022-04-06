@@ -1,15 +1,14 @@
 // scheduling and run voice injection attacks 
 
-import { FutureInstance, map,chain, parallel } from 'fluture';
+import { FutureInstance, map,chain, parallel, fork } from 'fluture';
 
 import { Logger } from './log';
 import { getGame } from './game';
 import { getSessions } from './session';
 import { withDb } from './db';
-import { execSync } from 'child_process';
-import { find, e2f } from './util';
+import { execF, find, e2f } from './util';
 
-const { log } = Logger('attacklib');
+const { log, error } = Logger('attacklib');
 
 type Attack = {
 	attackId: number
@@ -45,6 +44,7 @@ export function createAttack(
 		})));
 }
 
+
 export function scheduleAttack(attack: Attack): FutureInstance<Error, Attack> {
 	log("schedule", JSON.stringify(attack));
 
@@ -57,26 +57,38 @@ export function scheduleAttack(attack: Attack): FutureInstance<Error, Attack> {
 		.map(game =>
 			game.on("round", ({ round }: { round: number }) => {
 				if (round === attack.round) {
-					log("launching attack", attack.gameId)
-					
+					log(attack.attackId, "launching");
+
 					// mute player
-					const muteCmd = `mumble-cli 127.0.0.1:${session.grpcPort} shadowmute -s 1 -t ${attack.targetUser}`;
-					const muteRes = execSync(muteCmd, { encoding: "utf8" });
-					log("attack_status", attack.attackId,  muteCmd, muteRes.trim());
-
-					// send audio
-					const shellCmd = `mumble-cli 127.0.0.1:${session.grpcPort} send -s 1 -u ${attack.sourceUser} -t ${attack.targetUser} -f /Users/alexzugravu/tmp/hello_jack.wav -d 44 -r 16000`;
-					const res = execSync(shellCmd, { encoding: "utf8" });
-					log("attack_status", attack.attackId, shellCmd, res.trim());
-
-
+					execF(`mumble-cli 127.0.0.1:${session.grpcPort}`
+						+` shadowmute -s 1 -t ${attack.targetUser}`)
+					.pipe(chain(muteRes => 
+						execF(`mumble-cli 127.0.0.1:${session.grpcPort}`
+						+` send -s 1 -u ${attack.sourceUser} -t ${attack.targetUser} `
+						+` -f /Users/alexzugravu/tmp/hello_jack.wav -d 44 -r 16000`)
+					))
+					.pipe(fork(err => {
+						if(err instanceof Error){
+							return error(attack.attackId, err.message);
+						}
+						error(attack.attackId, "unknown", JSON.stringify(err));
+					})(res => {
+						log(attack.attackId, "ok", res.trim());
+					}))
 				}
 
 				if(round === attack.round + 1){
 					// unmute player
-					const unmuteCmd = `mumble-cli 127.0.0.1:${session.grpcPort} shadowmute -s 1 -t ${attack.targetUser} -u`;
-					const unmuteRes = execSync(unmuteCmd, { encoding: "utf8" });
-					log("attack_status", attack.attackId, unmuteCmd, unmuteRes.trim());
+					execF(`mumble-cli 127.0.0.1:${session.grpcPort}`
+						+` shadowmute -s 1 -t ${attack.targetUser} -u`)
+					.pipe(fork(err => {
+						if(err instanceof Error){
+							return error(attack.attackId, err.message);
+						}
+						return error(attack.attackId, "unknown", JSON.stringify(err));
+					})(res => {
+						log(attack.attackId, "ok", res.trim());
+					}))
 				}
 			})
 		);
