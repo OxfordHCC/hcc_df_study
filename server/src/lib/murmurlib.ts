@@ -1,8 +1,9 @@
 import { mkdirSync, rmdirSync } from 'fs';
+import { readdir } from 'fs/promises';
 import path from 'path';
-import { Either, Right, Left } from 'monet';
-import { map, chain, FutureInstance } from 'fluture';
-import { Session } from 'dfs-common';
+import { Either } from 'monet';
+import { attemptP, encaseP, map, chain, FutureInstance } from 'fluture';
+import { Session, RecFile } from 'dfs-common';
 
 import { e2f } from './util';
 import { Logger } from './log';
@@ -23,7 +24,7 @@ type Murmur = {
 }
 
 type ParamsWithRecDir = CreateMurmurParams & Pick<Murmur, "recDir" | "name">;
-function resolveParams(params: CreateMurmurParams): ParamsWithRecDir {
+export function resolveParams(params: CreateMurmurParams): ParamsWithRecDir {
 	const { grpcPort, murmurPort } = params;
 	const name = `g${grpcPort}_m${murmurPort}`;
 
@@ -70,6 +71,15 @@ function removeRecDir(
 		rmdirSync(recDir);
 	});
 }
+
+function isMams(filePath: string): boolean{
+	return path.parse(filePath).ext === "mams";
+}
+export function getRecMams(recDir: string): FutureInstance<Error, RecFile[]>{
+	return attemptP<Error, RecFile[]>(() => readdir(recDir))
+	.pipe(map(files => files.filter(isMams)));
+}
+
 
 function createContainer(
 	{ name, grpcPort, murmurPort, recDir }: ParamsWithRecDir

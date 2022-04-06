@@ -1,11 +1,13 @@
 import { Namespace } from "socket.io";
 import { Either, Left, Right } from 'monet';
-import { chain, fork } from 'fluture';
+import { chain, fork, map } from 'fluture';
 import { AdminClientNs, joinErrors } from 'dfs-common';
 import { createSession, getSessions } from '../lib/session';
 import { Logger } from '../lib/log';
 import { Game, getGames } from '../lib/game';
-import { e2f } from '../lib/util';
+import { e2f, find } from '../lib/util';
+import * as murmurlib from '../lib/murmurlib';
+
 
 const { log, error } = Logger("socket.io/admin");
 
@@ -86,12 +88,33 @@ export default function(admin: AdminNamespace) {
 					error("create_session", x.message);
 					return cb(x);
 				}
+				error("unknown error", JSON.stringify(x));
 				return cb(new UnknownError());
 			})(x => {
 				return cb(undefined, x);
 			}))
 		});
 
+		socket.on("get_recordings", (params, cb) => {
+			const { sessionId } = params;
+			return getSessions()
+			.pipe(map(find(x => x.sessionId === sessionId)))
+			.pipe(chain(e2f))
+			.pipe(map(murmurlib.resolveParams))
+			.pipe(map(({recDir}) => recDir))
+			.pipe(chain(murmurlib.getRecMams))
+			.pipe(fork(err => {
+				if(err instanceof Error){
+					error("get_recordings", err.message);
+					return cb(err);
+				}
+				error("get_recordings", JSON.stringify(err));
+				return cb(new UnknownError());
+			})(mams => {
+				return cb(undefined, mams);
+			}));
+		});
+		
 		socket.on("get_sessions", (cb) => {
 			getSessions()
 			.pipe(fork
