@@ -1,5 +1,6 @@
 import { Answer, GameData } from './game';
 import { Session } from './session';
+import { RecFile } from './rec';
 declare type AckCb<T> = (error?: Error, data?: T) => void;
 export declare namespace GameClientNs {
     interface ServerToClientEvents {
@@ -23,9 +24,11 @@ export declare namespace AdminClientNs {
         init: (states: GameData[]) => void;
     }
     type CreateSessionParams = Omit<Session, "murmurId" | "sessionId" | "gameId">;
+    type GetRecordingsParams = Pick<Session, "sessionId">;
     interface ClientToServerEvents {
         "create_session": (params: CreateSessionParams, cb: AckCb<Session>) => void;
         "get_sessions": (cb: AckCb<Session[]>) => void;
+        "get_recordings": (params: GetRecordingsParams, cb: AckCb<RecFile[]>) => void;
     }
     interface InterServerEvents {
     }

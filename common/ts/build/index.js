@@ -18,3 +18,4 @@ __exportStar(require("./util"), exports);
 __exportStar(require("./socketio"), exports);
 __exportStar(require("./round"), exports);
 __exportStar(require("./session"), exports);
+__exportStar(require("./rec"), exports);

@@ -4,3 +4,4 @@ export * from "./util";
 export * from './socketio';
 export * from './round';
 export * from './session';
+export * from './rec';
