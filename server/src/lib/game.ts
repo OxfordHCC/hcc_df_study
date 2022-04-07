@@ -182,7 +182,12 @@ export class Game extends Evented<keyof GameEvents> implements GameData{
 		const answerStatus = roundObj.onAnswer(answer);
 
 		if (answerStatus !== 0) {
-			this.gotoRound(round + 1);
+			// introduce delay between going to next round
+			// this minimizes the chances of latency causing the
+			// attack (which is now async) to trigger before 
+			setTimeout(() => {
+				this.gotoRound(round + 1);
+			}, 1000)
 		}
 		
 		return Right(answerStatus);
@@ -202,7 +207,8 @@ export class Game extends Evented<keyof GameEvents> implements GameData{
 		this.trigger("round", { round });
 
 		scheduleTimer(this.gameId, () => {
-			this.gotoRound(round + 1);
+			// on timeout, answer current round with undefined answer
+			this.answer({ round });
 		}, roundObj.msLength);
 
 		return Right(this);
