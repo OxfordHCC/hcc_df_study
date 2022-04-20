@@ -29,27 +29,30 @@ export function SessionScreen({ sessionId }: SessionScreenProps) {
 			if(unloaded){
 				return;
 			}
-			
-			setScreenState({
-				...screenState,
+
+			setScreenState(previous => ({
+				...previous,
 				loading: false,
 				session
-			});
+			}));
+			
+			console.log("set screen state in study meta");
 		}
-		
-		async function populateRecordings(){
-			console.log('aa');
+
+		async function populateRecordings() {
 			const recordings = await getSessionRecordings(sessionId);
-			console.log("recordings", recordings);
 
 			if(unloaded){
 				return;
 			}
-			
-			setScreenState({
-				...screenState,
+
+			setScreenState(previous => ({
+				...previous,
+				loading: false,
 				recordings
-			});
+			}));
+
+			console.log('set screen state in records');
 		}
 
 		populateRecordings();
@@ -68,6 +71,7 @@ export function SessionScreen({ sessionId }: SessionScreenProps) {
 		
 		deleteSession(session.sessionId);
 	}
+
 
 	if (loading) {
 		return <Loading />;
