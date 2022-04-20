@@ -73,7 +73,7 @@ function removeRecDir(
 }
 
 function isMams(filePath: string): boolean{
-	return path.parse(filePath).ext === "mams";
+	return path.parse(filePath).ext === ".mams";
 }
 export function getRecMams(recDir: string): FutureInstance<Error, RecFile[]>{
 	return attemptP<Error, RecFile[]>(() => readdir(recDir))
