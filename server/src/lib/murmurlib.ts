@@ -2,10 +2,11 @@ import { mkdirSync, rmdirSync } from 'fs';
 import { readdir } from 'fs/promises';
 import path from 'path';
 import { Either } from 'monet';
-import { attemptP, encaseP, map, chain, FutureInstance } from 'fluture';
+import { attemptP, map, chain, FutureInstance } from 'fluture';
 import { Session, RecFile } from 'dfs-common';
+import { Buffer } from 'buffer';
 
-import { e2f } from './util';
+import { e2f, readdirP, openfileP, readfileP } from './util';
 import { Logger } from './log';
 import * as docker from './dockerlib';
 
@@ -76,10 +77,20 @@ function isMams(filePath: string): boolean{
 	return path.parse(filePath).ext === ".mams";
 }
 export function getRecMams(recDir: string): FutureInstance<Error, RecFile[]>{
-	return attemptP<Error, RecFile[]>(() => readdir(recDir))
-	.pipe(map(files => files.filter(isMams)));
+	return readdirP(recDir)
+	.pipe(map(files => files.filter(isMams)))
+	.pipe(map(files => files.map(name => ({
+		name,
+		path: path.resolve(recDir, name)
+	}))));
 }
 
+export function readMam(recFile: RecFile, fromByte: number, len: number){
+	const filePath = recFile.path;
+	
+	return openfileP(filePath, "r")
+	.pipe(chain(readfileP(fromByte, len)));
+}
 
 function createContainer(
 	{ name, grpcPort, murmurPort, recDir }: ParamsWithRecDir
