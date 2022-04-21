@@ -7,6 +7,8 @@ import { initSessions } from './lib/session';
 
 const { log,error } = Logger("main");
 
+const WS_PORT = 8001;
+
 // enable fluture's debug moge
 debugMode(true);
 
@@ -18,8 +20,8 @@ debugMode(true);
 			}
 			return error("unknown error");
 		})(_sessions => {
-			io.listen(3000);
-			log("websockets-listening", "3000")
+			io.listen(WS_PORT);
+			log("websockets-listening", WS_PORT)
 		}))
 })();
 
