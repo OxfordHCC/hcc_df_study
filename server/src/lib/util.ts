@@ -1,9 +1,29 @@
-import { FutureInstance, Future } from 'fluture';
+import { FutureInstance, Future, attemptP } from 'fluture';
 import { Either, Right, Left, List } from 'monet';
 import { exec } from 'child_process';
+import { readdir, open, FileHandle } from 'fs/promises';
+
+export function readdirP(dir: string){
+	return attemptP<Error, string[]>(() => readdir(dir));
+}
+
+export function openfileP(
+	filePath: string, flags: string | number, mode?: string | number
+){
+	return attemptP(() => open(filePath, flags, mode));
+}
+
+export function readfileP(startBytes: number, length: number){
+	return function(fileHandle: FileHandle){
+		return attemptP(async () => {
+			const outBuf = Buffer.alloc(length);
+			return attemptP(() =>
+				fileHandle.read(outBuf, 0, length, startBytes));
+		});
+	}
+}
 
 // execFuture
-// TODO: Move to separate file (utils probably)
 // for now, only utf8 output is supported
 // this makes some things easier wrt to type checking (eg. string vs buffer)
 export function execF(command: string): FutureInstance<Error, string>{

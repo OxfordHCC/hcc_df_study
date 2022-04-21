@@ -115,18 +115,17 @@ export default function(admin: AdminNamespace) {
 			}));
 		});
 		
-		socket.on("get_sessions", (cb) => {
+		socket.on("get_sessions", (cb) => 
 			getSessions()
-			.pipe(fork
-				(err => {
-					if (err instanceof Error){
-						return cb(err);
-					}
-					
-					return cb(new UnknownError());
-				})
-				(x => cb(undefined, x)));
-		});
-		
+			.pipe(fork(err => {
+				if (err instanceof Error){
+					error("get_sessions", err.message);
+					return cb(err);
+				}
+				error("get_sessions", JSON.stringify(err));
+				return cb(new UnknownError());
+			})(x => cb(undefined, x))));
+
 	});
 }
+
