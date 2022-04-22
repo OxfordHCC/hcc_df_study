@@ -1,5 +1,12 @@
 version: "3.9"
 services:
+  game:
+    build:
+      context: ./game
+    image: dfs_game
+    container_name: dfs_game_1
+    ports:
+      - "8001:80"
   murmur:
     build:
       context: ./mumble
