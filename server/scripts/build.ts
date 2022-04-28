@@ -1,5 +1,7 @@
 import { build } from 'esbuild';
+import dotenv from 'dotenv';
 
+dotenv.config();
 function buildServer(){
 	return build({
 		bundle: true,
@@ -7,7 +9,10 @@ function buildServer(){
 		outdir: "./build",
 		platform: "node",
 		sourcemap: true,
-		external: ["sqlite3"]
+		external: ["sqlite3"],
+		define: {
+			["buildenv"]: JSON.stringify(process.env)
+		}
 	});
 }
 

@@ -1,18 +1,24 @@
 import { mkdirSync, rmdirSync } from 'fs';
-import { readdir } from 'fs/promises';
 import path from 'path';
 import { Either } from 'monet';
-import { attemptP, map, chain, FutureInstance } from 'fluture';
+import { map, chain, FutureInstance } from 'fluture';
 import { Session, RecFile } from 'dfs-common';
-import { Buffer } from 'buffer';
 
 import { e2f, readdirP, openfileP, readfileP } from './util';
 import { Logger } from './log';
+import { config } from '../config';
 import * as docker from './dockerlib';
+
 
 const { log } = Logger('murmurlib');
 
-const recDirRoot = path.resolve(__dirname, '../var/rec');
+const { DFS_REC_DIR } = config;
+
+if(DFS_REC_DIR === undefined){
+	throw new Error("Invalid/missing DFS_REC_DIR env variable.");
+}
+
+const recDirRoot = path.resolve(__dirname, DFS_REC_DIR);
 mkdirSync(recDirRoot, { recursive: true });
 
 
@@ -81,7 +87,7 @@ export function getRecMams(recDir: string): FutureInstance<Error, RecFile[]>{
 	.pipe(map(files => files.filter(isMams)))
 	.pipe(map(files => files.map(name => ({
 		name,
-		path: path.resolve(recDir, name)
+		path: path.resolve(recDir, name),		
 	}))));
 }
 

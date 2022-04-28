@@ -1,5 +1,6 @@
 import sqlite from 'sqlite3';
 import { parallel, Future, FutureInstance, reject, map, chain, node } from 'fluture';
+import { config } from '../config';
 
 type RowID = number;
 type WithDbFunctionParams = {
@@ -11,7 +12,8 @@ type WithDbFunctionParams = {
 
 type withDbFunction<T> = (params: WithDbFunctionParams) => FutureInstance<Error, T>;
 
-const dbFile = process.env.DFS_DB_FILE;
+
+const dbFile = config.DFS_DB_FILE;
 if(dbFile === undefined){
 	throw new Error("Missing DFS_DB_FILE env variable.");
 }

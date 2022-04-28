@@ -3,11 +3,17 @@ import { resolve, fork, Future, debugMode } from 'fluture';
 import { io } from "./socketio";
 import { Logger } from './lib/log';
 import { initSessions } from './lib/session';
+import { config } from './config';
 
+const { DFS_WS_PORT } = config;
+
+const wsPort = parseInt(DFS_WS_PORT || "");
+if (isNaN(wsPort)) {
+	throw new Error("Missing/invalid DFS_WS_PORT env variable...");
+}
 
 const { log,error } = Logger("main");
 
-const WS_PORT = 8001;
 
 // enable fluture's debug moge
 debugMode(true);
@@ -20,8 +26,8 @@ debugMode(true);
 			}
 			return error("unknown error");
 		})(_sessions => {
-			io.listen(WS_PORT);
-			log("websockets-listening", WS_PORT)
+			io.listen(wsPort);
+			log("websockets-listening", wsPort);
 		}))
 })();
 
