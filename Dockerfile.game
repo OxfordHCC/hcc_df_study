@@ -1,0 +1,12 @@
+FROM node:lts-slim as builder
+COPY ./common /common
+COPY ./game /game
+WORKDIR /game
+RUN npm install --silent
+RUN npm run build
+
+FROM nginx:stable-alpine
+COPY --from=builder /game/build/ /usr/share/nginx/html
+COPY ./game/etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

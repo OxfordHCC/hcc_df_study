@@ -1,6 +1,13 @@
 import { io } from "socket.io-client";
 import { Evented, GameEvents, Answer } from "dfs-common";
 
+const { DFS_WS_HOSTNAME, DFS_WS_PORT, DFS_USE_TLS } = process.env;
+const wsProtocol = DFS_USE_TLS? "wss" : "ws";
+
+if(!DFS_WS_HOSTNAME || !DFS_WS_PORT){
+	throw new Error("Missing env variables... ");
+}
+
 type ClientGameEvents = GameEvents & {
 	"connect": () => void
 	"disconnect": () => void
@@ -14,7 +21,7 @@ export class GameClient extends Evented<keyof ClientGameEvents>{
 	constructor({ playerId }: GameParams){
 		super();
 		this.playerId = playerId;
-		this.socket = io("ws://cambridge-station.serveminecraft.net:3000/client",{
+		this.socket = io(`${wsProtocol}://${DFS_WS_HOSTNAME}:${DFS_WS_PORT}/client`,{
 			autoConnect: false,
 			query:{
 				playerId: this.playerId
