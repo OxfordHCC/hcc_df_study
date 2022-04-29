@@ -1,6 +1,7 @@
 import React from 'react';
 import { RecFile } from 'dfs-common';
 
+import { RecordingLI } from './RecordingLI';
 
 type RecordingListProps = {
 	recordings: RecFile[]
@@ -9,7 +10,7 @@ type RecordingListProps = {
 export function RecordingList({ recordings }: RecordingListProps) {
 	return (
 		<ul>
-			{recordings.map(rec => <li>{rec}</li>)}
+			{ recordings.map(rec => <RecordingLI key={rec.name} recFile={rec}/>) }
 		</ul>
 	)
 }
