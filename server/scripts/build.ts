@@ -11,7 +11,7 @@ function buildServer(){
 		sourcemap: true,
 		external: ["sqlite3"],
 		define: {
-			["buildenv"]: JSON.stringify(process.env)
+			"buildenv": JSON.stringify(process.env)
 		}
 	});
 }
