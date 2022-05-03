@@ -24,9 +24,11 @@ export declare namespace AdminClientNs {
         init: (states: GameData[]) => void;
     }
     type CreateSessionParams = Omit<Session, "murmurId" | "sessionId" | "gameId">;
+    type RemoveSessionParams = Pick<Session, "sessionId">;
     type GetRecordingsParams = Pick<Session, "sessionId">;
     interface ClientToServerEvents {
         "create_session": (params: CreateSessionParams, cb: AckCb<Session>) => void;
+        "remove_session": (params: RemoveSessionParams, cb: AckCb<void>) => void;
         "get_sessions": (cb: AckCb<Session[]>) => void;
         "get_recordings": (params: GetRecordingsParams, cb: AckCb<RecFile[]>) => void;
     }

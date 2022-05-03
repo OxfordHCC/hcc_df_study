@@ -79,8 +79,8 @@ function removeRecDir(
 	});
 }
 
-export function getRecordings(){
-	throw new Error("Not implemeneted!");
+export function getRecordings(recDir: string){
+	return readdirP(recDir);
 }
 
 function createContainer(

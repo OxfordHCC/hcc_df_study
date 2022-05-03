@@ -2,7 +2,7 @@ import { Namespace } from "socket.io";
 import { Either, Left, Right } from 'monet';
 import { chain, fork, map } from 'fluture';
 import { AdminClientNs, joinErrors } from 'dfs-common';
-import { createSession, getSessions } from '../lib/session';
+import { createSession, removeSession, getSessions } from '../lib/session';
 import { Logger } from '../lib/log';
 import { Game, getGames } from '../lib/game';
 import { e2f, find } from '../lib/util';
@@ -92,17 +92,29 @@ export default function(admin: AdminNamespace) {
 			}));
 		});
 		
-		socket.on("get_sessions", (cb) => 
+		socket.on("get_sessions", (cb) =>
 			getSessions()
+				.pipe(fork(err => {
+					if (err instanceof Error) {
+						error("get_sessions", err.message);
+						return cb(err);
+					}
+					error("get_sessions", JSON.stringify(err));
+					return cb(new UnknownError());
+				})(x => cb(undefined, x))));
+
+		socket.on("remove_session", (params, cb) => {
+			const { sessionId } = params;
+			return removeSession(sessionId)
 			.pipe(fork(err => {
-				if (err instanceof Error){
-					error("get_sessions", err.message);
+				if (err instanceof Error) {
+					error("remove_session", err.message);
 					return cb(err);
 				}
-				error("get_sessions", JSON.stringify(err));
+				error("remove_session", JSON.stringify(err));
 				return cb(new UnknownError());
-			})(x => cb(undefined, x))));
-
+			})(x => cb()))
+		});
 	});
 }
 

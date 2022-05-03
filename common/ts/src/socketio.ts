@@ -32,12 +32,15 @@ export namespace AdminClientNs {
 	}
 
 	export type CreateSessionParams = Omit<Session,	"murmurId" | "sessionId" | "gameId">;
+	export type RemoveSessionParams = Pick<Session, "sessionId">;
 	export type GetRecordingsParams = Pick<Session, "sessionId">;
 
 	export interface ClientToServerEvents {
 		"create_session": (params: CreateSessionParams, cb: AckCb<Session>) => void
+		"remove_session": (params: RemoveSessionParams, cb: AckCb<void>) => void
 		"get_sessions": (cb: AckCb<Session[]>) => void
 		"get_recordings": (params: GetRecordingsParams, cb: AckCb<RecFile[]>) => void
+
 	}
 
 	export interface InterServerEvents {
