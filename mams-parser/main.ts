@@ -12,28 +12,29 @@ To play the output file:
 
 ffplay -f s16le -ar 48k -ac 1 <path_to_outputfile>
 
-You should be able to convert/wrap this with ffmpeg into a proper wav
-file.
+You should be able to wrap this with ffmpeg into a proper wav file
+using ffmpeg as well:
 
-TODO: 
+ffmpeg -f s16le -ar 48k -ac 1 -i file.pcm file.wav
 
-We need to find a way to overlay the "real" time with this
-recording, because right now any pause is simply skipped (silence is
-not recorded). The mumble recording files include a timestamp in the
+
+TODO:
+
+We need to find a way to overlay the "real" time with this recording,
+because right now any pause is simply skipped (silence is not
+recorded). The mumble recording files include a timestamp in the
 header (extracted below, but not used).
 
-A couple of ways we could do this is: 
-1. visual overlay somehow
-OR, even better:
-2. Introduce "pauses" in the pcm data. 
+A couple of ways we could do this is: 1. visual overlay somehow OR,
+even better: 2. Introduce "pauses" in the pcm data.
 
-But how do we know when to introduce these pauses?
-I think mumble audio packets have a "termination" bit in their headers.
-If these termination bits can accurately identify end of utterances,
-we could simply add "silence" (not sure how in pcm, but maybe 
-something like 0xFF * seconds * whatever bitrate we have), between 
-packets with terminating bits set and the next packet. The time can 
-be induced from the respective packets timestamps.
+But how do we know when to introduce these pauses?  I think mumble
+audio packets have a "termination" bit in their headers.  If these
+termination bits can accurately identify end of utterances, we could
+simply add "silence" (not sure how in pcm, but maybe something like
+0xFF * seconds * whatever bitrate we have), between packets with
+terminating bits set and the next packet. The time can be induced from
+the respective packets timestamps.
 
 
 */
