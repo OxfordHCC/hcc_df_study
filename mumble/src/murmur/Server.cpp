@@ -103,17 +103,19 @@ void Server::recordLoop(){
 		}
 
 		// get timestamp as char array.
+		char timestamp[8] = {0};
 		const auto nowPeriod = std::chrono::system_clock::now();
 		const auto duration = nowPeriod.time_since_epoch();
 		const auto durationMs = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-		
-		char timestamp[8] = {0};
 		memcpy(&timestamp, &durationMs, sizeof(durationMs));
-		const char newline = '\n';
-		
+
+		// get packet size as char array
+		char lenArr[4] = {0};
+		memcpy(&lenArr, &(msg.len), sizeof(msg.len));
+
 		fileMap[msg.user]->write(timestamp, sizeof(timestamp));
+		fileMap[msg.user]->write(lenArr, sizeof(msg.len));
 		fileMap[msg.user]->write(msg.data, msg.len);
-		fileMap[msg.user]->write(&newline, 1);
 			
 		// remove from queue;
 		recordingQueue.pop();
@@ -127,6 +129,8 @@ void Server::recordLoop(){
 
 	qWarning("exiting recording thread..");
 }
+
+
 
 Server::Server(int snum, QObject *p) : QThread(p) {
 	
