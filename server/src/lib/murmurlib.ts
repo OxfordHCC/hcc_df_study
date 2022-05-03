@@ -79,23 +79,8 @@ function removeRecDir(
 	});
 }
 
-function isMams(filePath: string): boolean{
-	return path.parse(filePath).ext === ".mams";
-}
-export function getRecMams(recDir: string): FutureInstance<Error, RecFile[]>{
-	return readdirP(recDir)
-	.pipe(map(files => files.filter(isMams)))
-	.pipe(map(files => files.map(name => ({
-		name,
-		path: path.resolve(recDir, name),		
-	}))));
-}
-
-export function readMam(recFile: RecFile, fromByte: number, len: number){
-	const filePath = recFile.path;
-	
-	return openfileP(filePath, "r")
-	.pipe(chain(readfileP(fromByte, len)));
+export function getRecordings(){
+	throw new Error("Not implemeneted!");
 }
 
 function createContainer(
@@ -132,7 +117,6 @@ function createContainer(
 			}
 		}
 	});
-
 	
 	return container.pipe(map(x => ({
 		id: x.Id,

@@ -3,18 +3,19 @@ import path from 'path';
 import { parallel, chain, map, reject, resolve, FutureInstance, fork } from 'fluture';
 import { GameData, Session, AdminClientNs } from 'dfs-common';
 import { find, filter, e2f } from './util';
-import { createMurmur, murmurFromSession, initMurmur } from './murmurlib';
+import { createMurmur, murmurFromSession, initMurmur, removeMurmur } from './murmurlib';
 import {
 	Game,
 	getGame,
 	createGame,
 	gameSchedules,
 	initGameRows,
-	getSessionGames
+	getSessionGames,
+	deleteSessionGames,
 } from './game';
 import { Logger } from './log';
 import { withDb } from './db';
-import { createAttack, getAttacks, scheduleAttack } from './attacklib';
+import { createAttack, getAttacks, scheduleAttack, deleteSessionAttacks } from './attacklib';
 
 const { log, error } = Logger("session");
 
@@ -108,8 +109,7 @@ function createGameAttack(session: Session, game: GameData){
 
 function createAttacks(session: Session, games: GameData[]) {
 	return parallel(1)(
-		games.map(
-			game => createGameAttack(session, game)));
+		games.map(game => createGameAttack(session, game)));
 }
 
 function createGames(session: Session): FutureInstance<Error, GameData[]> {
@@ -128,6 +128,29 @@ function createGamesAndAttacks(session: Session){
 	.pipe(map(_attacks => session));
 }
 
+const deleteSessionQuery = `
+DELETE FROM study_session
+WHERE session_id = $session_id
+`;
+
+function deleteSession(sessionId: Session['sessionId']){
+	return withDb(({run}) => {
+		return run(deleteSessionQuery, {
+			$session_id: sessionId
+		});
+	})
+	.pipe(map(_ => sessionId));
+}
+
+
+export function removeSession(sessionId: Session['sessionId']){
+	return deleteSession(sessionId)
+	.pipe(chain(deleteSessionGames))
+	.pipe(chain(deleteSessionAttacks))
+	.pipe(chain(getSessionById))
+	.pipe(map(murmurFromSession))
+	.pipe(chain(removeMurmur));
+}
 
 export function createSession(
 	{ blueParticipant, redParticipant, murmurPort, grpcPort }: AdminClientNs.CreateSessionParams

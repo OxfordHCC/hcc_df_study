@@ -1,7 +1,7 @@
 // scheduling and run voice injection attacks 
 
 import { FutureInstance, map,chain, parallel, fork } from 'fluture';
-
+import { Session } from 'dfs-common';
 import { Logger } from './log';
 import { getGame } from './game';
 import { getSessions } from './session';
@@ -121,4 +121,17 @@ export function initAttacks(): FutureInstance<Error, Attack[]> {
 	return getAttacks()
 	.pipe(map(attacks => attacks.map(scheduleAttack)))
 	.pipe(chain(parallel(1)));
+}
+
+const deleteSessionAttacksQuery = `
+DELETE * from attack
+WHERE session_id = $session_id
+`;
+export function deleteSessionAttacks(sessionId: Session['sessionId']){
+	return withDb(({run}) => {
+		return run(deleteSessionAttacksQuery, {
+			$session_id: sessionId
+		});
+	})
+	.pipe(map(_ => sessionId));
 }

@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { Session } from 'dfs-common';
 import { List, Either, Left, Right } from 'monet';
 import { parallel, FutureInstance, map, chain, fork } from 'fluture';
 import { aoe2ea, e2f } from './util';
@@ -318,8 +319,7 @@ function setMemGame(game: Game): Game{
 
 const deleteGameQuery = `
 DELETE FROM game
-WHERE game_id = $game_id;
-n`;
+WHERE game_id = $game_id`;
 export function removeGame(game: Game): FutureInstance<Error, Game> {
 	const { gameId } = game;
 
@@ -449,3 +449,12 @@ export function initGame(gameData: GameData): Either<Error, Game>{
 	.map(setMemGame);
 }
 
+export function deleteSessionGames(sessionId: Session['sessionId']){
+	return getSessionGames(sessionId)
+	.pipe(map(gameRows => gameRows.map(g => getGame(g.gameId))))
+	.pipe(map(x => aoe2ea(x))) // Array<Either> to Either<Array>
+	.pipe(chain(x => e2f(x)))  // either to future
+	.pipe(map(games => games.map(removeGame)))
+	.pipe(chain(parallel(1))) // combine futures
+	.pipe(map(_ => sessionId));
+}
