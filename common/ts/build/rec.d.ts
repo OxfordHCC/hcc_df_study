@@ -1,1 +1,4 @@
-export declare type RecFile = string;
+export declare type RecFile = {
+    name: string;
+    path: string;
+};

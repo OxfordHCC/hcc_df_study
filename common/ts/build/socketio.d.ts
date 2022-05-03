@@ -1,7 +1,7 @@
 import { Answer, GameData } from './game';
 import { Session } from './session';
 import { RecFile } from './rec';
-declare type AckCb<T> = (error?: Error, data?: T) => void;
+export declare type AckCb<T> = (error?: Error, data?: T) => void;
 export declare namespace GameClientNs {
     interface ServerToClientEvents {
         error: (msg: string) => void;
@@ -35,4 +35,3 @@ export declare namespace AdminClientNs {
     interface SocketData {
     }
 }
-export {};

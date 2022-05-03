@@ -1,2 +1,4 @@
-export type RecFile = string;
-
+export type RecFile = {
+	name: string;
+	path: string;
+}
