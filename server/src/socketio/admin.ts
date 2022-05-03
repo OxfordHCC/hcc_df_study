@@ -25,17 +25,6 @@ function validateCheckUndefined(entries: Array<[string, any]>){
 	.map(([key, _val]) => new Error(`${key} undefined`));
 }
 
-function validateRequired<T>(params: T): Either<Error,Required<T>>{
-	const errors = Object.entries(params)
-	.filter(([_key, val]) => val === undefined)
-	.map(([key, _val]) => `${key} undefined`);
-
-	if(errors.length > 0){
-		return Left(new Error(errors.join('\n')));
-	}
-	
-	return Right(params as Required<T>);
-}
 
 export function validateCreateSessionParams(
 	params: AdminClientNs.CreateSessionParams
@@ -50,18 +39,6 @@ export function validateCreateSessionParams(
 	
 	return Right(params);
 }
-
-function valiturnCreateSessionParams(
-	params: Partial<AdminClientNs.CreateSessionParams>
-): Either<Error, AdminClientNs.CreateSessionParams>{
-	const definedParams = validateRequired(params);
-	if(definedParams instanceof Error){
-		return definedParams;
-	}
-
-	return definedParams;
-}
-
 
 export default function(admin: AdminNamespace) {
 	admin.on("connection", (socket) => {
@@ -102,7 +79,7 @@ export default function(admin: AdminNamespace) {
 			.pipe(chain(e2f))
 			.pipe(map(murmurlib.resolveParams))
 			.pipe(map(({recDir}) => recDir))
-			.pipe(chain(murmurlib.getRecMams))
+			.pipe(chain(murmurlib.getRecordings))
 			.pipe(fork(err => {
 				if(err instanceof Error){
 					error("get_recordings", err.message);
@@ -110,8 +87,8 @@ export default function(admin: AdminNamespace) {
 				}
 				error("get_recordings", JSON.stringify(err));
 				return cb(new UnknownError());
-			})(mams => {
-				return cb(undefined, mams);
+			})(recordings => {
+				return cb(undefined, recordings);
 			}));
 		});
 		
