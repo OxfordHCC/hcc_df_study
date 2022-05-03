@@ -2,11 +2,14 @@ version: "3.9"
 services:
   game:
     build:
-      context: ./game
+      dockerfile: ./Dockerfile.game
+      context: .
     image: dfs_game
     container_name: dfs_game_1
     ports:
       - "8001:80"
+    volumes:
+      - ./common:/common:ro
   murmur:
     build:
       context: ./mumble
@@ -16,4 +19,3 @@ services:
       - "64738:64738/tcp"
       - "64738:64738/udp"
       - "50051:50051"
-    
