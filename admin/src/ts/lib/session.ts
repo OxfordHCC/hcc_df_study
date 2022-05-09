@@ -35,7 +35,14 @@ export function createSession(
 }
 
 export function deleteSession(sessionId: number){
-
+	return new Promise((resolve, reject) => {
+		socket.emit("remove_session", { sessionId }, (err) => {
+			if(err){
+				return reject(err);
+			}
+			return resolve(null);
+		});
+	});
 }
 
 export async function getSessionData(sessionId: number): Promise<Session | undefined> {
