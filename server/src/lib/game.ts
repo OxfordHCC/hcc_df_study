@@ -449,12 +449,14 @@ export function initGame(gameData: GameData): Either<Error, Game>{
 	.map(setMemGame);
 }
 
-export function deleteSessionGames(sessionId: Session['sessionId']){
+export function removeSessionGames(session: Session): FutureInstance<Error, Session>{
+	const { sessionId } = session;
+	
 	return getSessionGames(sessionId)
 	.pipe(map(gameRows => gameRows.map(g => getGame(g.gameId))))
 	.pipe(map(x => aoe2ea(x))) // Array<Either> to Either<Array>
 	.pipe(chain(x => e2f(x)))  // either to future
 	.pipe(map(games => games.map(removeGame)))
 	.pipe(chain(parallel(1))) // combine futures
-	.pipe(map(_ => sessionId));
+	.pipe(map(_ => session));
 }

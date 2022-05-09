@@ -150,6 +150,12 @@ export function removeMurmur(
 	.pipe(map(_void => murmur));
 }
 
+export function removeSessionMurmur(session: Session): FutureInstance<Error, Session>{
+	const murmur = murmurFromSession(session);
+	return removeMurmur(murmur)
+	.pipe(map(_ => session));
+}
+
 // session -> murmur
 export function murmurFromSession(session: Session): Murmur{
 	const recAndName = resolveParams(session);

@@ -124,14 +124,15 @@ export function initAttacks(): FutureInstance<Error, Attack[]> {
 }
 
 const deleteSessionAttacksQuery = `
-DELETE * from attack
+DELETE FROM attack
 WHERE session_id = $session_id
 `;
-export function deleteSessionAttacks(sessionId: Session['sessionId']){
+export function deleteSessionAttacks(session: Session): FutureInstance<Error, Session>{
+	const { sessionId } = session;
 	return withDb(({run}) => {
 		return run(deleteSessionAttacksQuery, {
 			$session_id: sessionId
 		});
 	})
-	.pipe(map(_ => sessionId));
+	.pipe(map(_ => session));
 }

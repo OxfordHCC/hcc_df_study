@@ -3,7 +3,7 @@ import path from 'path';
 import { parallel, chain, map, reject, resolve, FutureInstance, fork } from 'fluture';
 import { GameData, Session, AdminClientNs } from 'dfs-common';
 import { find, filter, e2f } from './util';
-import { createMurmur, murmurFromSession, initMurmur, removeMurmur } from './murmurlib';
+import { removeSessionMurmur, createMurmur, murmurFromSession, initMurmur, removeMurmur } from './murmurlib';
 import {
 	Game,
 	getGame,
@@ -11,7 +11,7 @@ import {
 	gameSchedules,
 	initGameRows,
 	getSessionGames,
-	deleteSessionGames,
+	removeSessionGames,
 } from './game';
 import { Logger } from './log';
 import { withDb } from './db';
@@ -133,23 +133,22 @@ DELETE FROM study_session
 WHERE session_id = $session_id
 `;
 
-function deleteSession(sessionId: Session['sessionId']){
+function deleteSession(session: Session): FutureInstance<Error, Session>{
+	const { sessionId } = session;
 	return withDb(({run}) => {
 		return run(deleteSessionQuery, {
 			$session_id: sessionId
 		});
 	})
-	.pipe(map(_ => sessionId));
+	.pipe(map(_ => session));
 }
 
-
 export function removeSession(sessionId: Session['sessionId']){
-	return deleteSession(sessionId)
-	.pipe(chain(deleteSessionGames))
+	return getSessionById(sessionId)
+	.pipe(chain(removeSessionGames))
 	.pipe(chain(deleteSessionAttacks))
-	.pipe(chain(getSessionById))
-	.pipe(map(murmurFromSession))
-	.pipe(chain(removeMurmur));
+	.pipe(chain(removeSessionMurmur))
+	.pipe(chain(deleteSession));
 }
 
 export function createSession(
@@ -175,7 +174,7 @@ function chainGames(session: Session){
 		return games.reduceRight((acc, curr) => {
 			curr.on('stop', () => {
 				// Q: How is this usually handled in FP languages?
-				// Follow-up Q: Can be refactor s.t. we don't have to fork here?
+				// Follow-up Q: Can we refactor s.t. we don't have to fork here?
 				fork((err) => {
 					error("set current game error", JSON.stringify(err))
 				})(() => {
