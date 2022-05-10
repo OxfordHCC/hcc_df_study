@@ -7,6 +7,7 @@ import { Session } from 'dfs-common';
 import { goto } from '../lib/router';
 import { SessionList } from './SessionList';
 import { getSessions } from '../lib/session';
+import { showError } from '../lib/globalerr';
 
 export function HomeScreen(){
 	const [sessions, setSessions] = useState<Session[]>([]);
@@ -19,6 +20,8 @@ export function HomeScreen(){
 
 			if (sessions instanceof Error) {
 				console.error(sessions);
+				showError(sessions);
+				
 				// TODO: write somewhere in a banner component
 				setLoading(false);
 				return;

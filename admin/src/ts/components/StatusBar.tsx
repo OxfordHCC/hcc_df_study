@@ -22,7 +22,7 @@ export function StatusBar() {
 			offError(onErrorCb);
 			clearTimeout(warnTimeout);
 		}
-	}, [])
+	}, []);
 
 	return <div>
 		<div>
