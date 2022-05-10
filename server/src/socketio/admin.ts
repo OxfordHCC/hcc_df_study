@@ -53,13 +53,12 @@ export default function(admin: AdminNamespace) {
 		});
 
 		socket.on("create_session", (params, cb) => {
-			e2f(validateCreateSessionParams(params)
-			.map(params => {
+			return e2f(validateCreateSessionParams(params))
+			.pipe(chain(params => {
 				const { blueParticipant, redParticipant } = params;
 				log("create_session", blueParticipant, redParticipant);
-				return createSession(params);
+				return createSession(params)
 			}))
-			.pipe(chain(x => x))
 			.pipe(fork(x => {
 				if(x instanceof Error){
 					error("create_session", x.message);

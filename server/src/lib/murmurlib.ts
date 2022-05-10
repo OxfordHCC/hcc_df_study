@@ -88,7 +88,7 @@ function createContainer(
 ): FutureInstance<Error, Murmur>{
 	log("create container", name);
 	
-	const container = docker.create(name, {
+	return docker.create(name, {
 		Image: "mumble_server",
 		ExposedPorts: {
 			"64738/tcp": {},
@@ -116,9 +116,8 @@ function createContainer(
 				}]
 			}
 		}
-	});
-	
-	return container.pipe(map(x => ({
+	})
+	.pipe(map(x => ({
 		id: x.Id,
 		name,
 		grpcPort,
