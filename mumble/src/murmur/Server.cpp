@@ -1183,7 +1183,7 @@ void Server::processMsg(ServerUser *u, const char *data, int len) {
 
 	// if muted, drop message
 	if(shadowmuteMap.find(strUserName) != shadowmuteMap.end()){
-		qWarning("shadowMute[%s] = %d", strUserName.c_str(), shadowmuteMap[strUserName]);
+		//qWarning("shadowMute[%s] = %d", strUserName.c_str(), shadowmuteMap[strUserName]);
 		if(shadowmuteMap[strUserName] == true){
 			qWarning("user is shadowmuted. Skipping...");
 			return;

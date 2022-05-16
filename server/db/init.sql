@@ -1,7 +1,6 @@
 DROP TABLE IF EXISTS study_session;
 CREATE TABLE study_session (
   session_id INTEGER PRIMARY KEY,
-  murmur_id TEXT UNIQUE,
   blue_participant TEXT UNIQUE,
   red_participant TEXT UNIQUE,
   grpc_port NUMBER UNIQUE,
@@ -29,4 +28,15 @@ CREATE TABLE attack(
   audio_path TEXT,
   FOREIGN KEY(session_id) REFERENCES study_session(session_id),
   FOREIGN KEY(game_id) REFERENCES game(game_id)
+);
+
+DROP TABLE IF EXISTS murmur;
+CREATE TABLE murmur(
+  murmur_id TEXT PRIMARY KEY,
+  container_id TEXT UNIQUE,
+  session_id INTEGER UNIQUE,
+  rec_dir TEXT UNIQUE,
+  grpc_port INTEGER UNIQUE,
+  murmur_port INTEGER UNIQUE,
+  FOREIGN KEY(session_id) REFERENCES study_session(session_id)
 );

@@ -6,10 +6,10 @@ import { createSession, removeSession, getSessions } from '../lib/session';
 import { Logger } from '../lib/log';
 import { Game, getGames } from '../lib/game';
 import { e2f, find } from '../lib/util';
-import * as murmurlib from '../lib/murmurlib';
+import { getRecordings, getMurmurBySessionId } from '../lib/murmurlib';
 
 
-const { log, error } = Logger("socket.io/admin");
+const { log } = Logger("socket.io/admin");
 
 type AdminNamespace = Namespace<AdminClientNs.ClientToServerEvents, AdminClientNs.ServerToClientEvents, AdminClientNs.InterServerEvents, AdminClientNs.SocketData>;
 
@@ -61,10 +61,8 @@ export default function(admin: AdminNamespace) {
 			}))
 			.pipe(fork(x => {
 				if(x instanceof Error){
-					error("create_session", x.message);
 					return cb(x);
 				}
-				error("unknown error", JSON.stringify(x));
 				return cb(new UnknownError());
 			})(x => {
 				return cb(undefined, x);
@@ -73,18 +71,12 @@ export default function(admin: AdminNamespace) {
 
 		socket.on("get_recordings", (params, cb) => {
 			const { sessionId } = params;
-			return getSessions()
-			.pipe(map(find(x => x.sessionId === sessionId)))
-			.pipe(chain(e2f))
-			.pipe(map(murmurlib.resolveParams))
-			.pipe(map(({recDir}) => recDir))
-			.pipe(chain(murmurlib.getRecordings))
+			return getMurmurBySessionId(sessionId)
+			.pipe(chain(getRecordings))
 			.pipe(fork(err => {
 				if(err instanceof Error){
-					error("get_recordings", err.message);
 					return cb(err);
 				}
-				error("get_recordings", JSON.stringify(err));
 				return cb(new UnknownError());
 			})(recordings => {
 				return cb(undefined, recordings);
@@ -95,22 +87,18 @@ export default function(admin: AdminNamespace) {
 			getSessions()
 				.pipe(fork(err => {
 					if (err instanceof Error) {
-						error("get_sessions", err.message);
 						return cb(err);
 					}
-					error("get_sessions", JSON.stringify(err));
 					return cb(new UnknownError());
 				})(x => cb(undefined, x))));
 
 		socket.on("remove_session", (params, cb) => {
 			const { sessionId } = params;
-			return removeSession(sessionId)
+			return removeSession({ sessionId })
 			.pipe(fork(err => {
 				if (err instanceof Error) {
-					error("remove_session", err.message);
 					return cb(err);
 				}
-				error("remove_session", JSON.stringify(err));
 				return cb(new UnknownError());
 			})(x => cb()))
 		});

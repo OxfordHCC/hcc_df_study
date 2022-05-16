@@ -1,16 +1,17 @@
 import { mkdirSync, rmdirSync } from 'fs';
 import path from 'path';
-import { Either } from 'monet';
-import { map, chain, FutureInstance } from 'fluture';
+import { Left, Right, Either } from 'monet';
+import { parallel, coalesce, mapRej, map, chain, FutureInstance, reject, resolve } from 'fluture';
 import { Session, RecFile } from 'dfs-common';
 
-import { e2f, readdirP, openfileP, readfileP } from './util';
+import { withDb } from './db';
+import { e2f, readdirP } from './util';
 import { Logger } from './log';
 import { config } from '../config';
 import * as docker from './dockerlib';
 
 
-const { log } = Logger('murmurlib');
+const { log, error } = Logger('murmurlib');
 
 const { DFS_REC_DIR } = config;
 
@@ -21,25 +22,22 @@ if(DFS_REC_DIR === undefined){
 const recDirRoot = path.resolve(__dirname, DFS_REC_DIR);
 mkdirSync(recDirRoot, { recursive: true });
 
-
 type Murmur = {
-	id: string,
-	name: string,
+	murmurId: string;
+	sessionId: number;
 	grpcPort: number;
 	murmurPort: number;
 	recDir: string;
 }
 
-type ParamsWithRecDir = CreateMurmurParams & Pick<Murmur, "recDir" | "name">;
-export function resolveParams(params: CreateMurmurParams): ParamsWithRecDir {
+function resolveMurmur(params: CreateMurmurParams): Murmur {
 	const { grpcPort, murmurPort } = params;
-	const name = `g${grpcPort}_m${murmurPort}`;
-
-	const recDir = path.resolve(recDirRoot, name);
+	const murmurId = `g${grpcPort}_m${murmurPort}`;
+	const recDir = path.resolve(recDirRoot, murmurId);
 
 	return {
 		...params,
-		name,
+		murmurId,
 		recDir
 	};
 }
@@ -52,8 +50,8 @@ function isNodeError(x: any): x is NodeJS.ErrnoException{
 }
 
 function createRecDir(
-	params: ParamsWithRecDir, ignoreExists: boolean = false
-): Either<NodeJS.ErrnoException, ParamsWithRecDir> {
+	params: Murmur, ignoreExists: boolean = false
+): Either<NodeJS.ErrnoException, Murmur> {
 	log("create rec dir", params.recDir, `ignoreEEXIST: ${ignoreExists}`);
 	
 	const { recDir } = params;
@@ -71,24 +69,35 @@ function createRecDir(
 }
 
 function removeRecDir(
-	params: ParamsWithRecDir
+	{ recDir } : Pick<Murmur, "recDir">
 ): Either<Error, void>{
-	const { recDir } = params;
-	return Either.fromTry(() => {
-		rmdirSync(recDir);
-	});
+	return Either.fromTry(() => rmdirSync(recDir));
 }
 
-export function getRecordings(recDir: string){
-	return readdirP(recDir);
+function namesToRecFiles(recDir: string, ){
+	return function(names: string[]): RecFile[]{
+		return names.map(name => ({
+			name,
+			path: path.join(recDir, name)
+		}));
+	}
 }
 
+type GetRecordingsParams = Pick<Murmur, "recDir">;
+export function getRecordings({ recDir }: GetRecordingsParams): FutureInstance<Error, RecFile[]>{
+	return readdirP(recDir)
+	.pipe(map(namesToRecFiles(recDir)));
+}
+
+
+type CreateContainerParams = Omit<Murmur, "containerId">;
 function createContainer(
-	{ name, grpcPort, murmurPort, recDir }: ParamsWithRecDir
+	params: CreateContainerParams
 ): FutureInstance<Error, Murmur>{
-	log("create container", name);
+	const { murmurId, grpcPort, murmurPort, recDir, sessionId } = params;
+	log("create container", murmurId);
 	
-	return docker.create(name, {
+	return docker.create(murmurId, {
 		Image: "mumble_server",
 		ExposedPorts: {
 			"64738/tcp": {},
@@ -118,58 +127,128 @@ function createContainer(
 		}
 	})
 	.pipe(map(x => ({
-		id: x.Id,
-		name,
+		containerId: x.Id,
+		murmurId,
 		grpcPort,
 		murmurPort,
-		recDir
+		recDir,
+		sessionId
 	})));
+}
+
+export class CreateMurmurError extends Error{
+	params: CreateMurmurParams;
+	constructor(params: CreateMurmurParams, msg: string){
+		super(msg);
+		this.params = params;
+		this.name = "CreateMurmurError";
+	}
 }
 
 type CreateMurmurParams = {
 	grpcPort: number;
 	murmurPort: number;
+	sessionId: Session['sessionId'];
 }
 export function createMurmur(
 	params: CreateMurmurParams
-): FutureInstance<Error, Murmur> {
-	const recAndNameParams = resolveParams(params);
-	log("create murmur", recAndNameParams.name);
-	
-	return e2f(createRecDir(recAndNameParams))
-	.pipe(chain(createContainer));
+): FutureInstance<CreateMurmurError, Murmur> {
+	const murmur = resolveMurmur(params);
+	log("create murmur", JSON.stringify(murmur));
+
+	return insertMurmur(murmur)
+	.pipe(chain(murmur => e2f(createRecDir(murmur))))
+	.pipe(chain(createContainer))
+	.pipe(mapRej(err => new CreateMurmurError(params, err.message)));
+}
+
+function removeContainer(murmur: Murmur){
+	return docker.stop(murmur.murmurId) //stop container
+	.pipe(chain(([murmurId]) => docker.rm(murmurId))) // rm container
 }
 
 export function removeMurmur(
 	murmur: Murmur
-): FutureInstance<Error, Murmur>{
-	return docker.stop(murmur.id)
-	.pipe(chain(([murmurId]) => docker.rm(murmurId)))
-	.pipe(chain(_x => e2f(removeRecDir(murmur))))
-	.pipe(map(_void => murmur));
+): FutureInstance<Error, Murmur> {
+	return parallel(1)(
+		[removeContainer(murmur), e2f(removeRecDir(murmur))]
+		.map(x => coalesce(Left)(Right)(x) ))
+	.pipe(chain(_ => deleteMurmur(murmur)))
+}
+
+function normalizeDbMurmur(db_murmur: any): Murmur{
+	return {
+		murmurId: db_murmur.murmur_id,
+		sessionId: db_murmur.session_id,
+		recDir: db_murmur.rec_dir,
+		grpcPort: db_murmur.grpc_port,
+		murmurPort: db_murmur.murmur_port
+	};
+}
+const selectSessionMurmurQuery = `
+SELECT * FROM murmur
+WHERE session_id = $session_id
+`;
+export function getMurmurBySessionId(sessionId: Session['sessionId']): FutureInstance<Error, Murmur> {
+	return withDb(({ all }) => all(selectSessionMurmurQuery, {
+		$session_id: sessionId
+	}))
+	.pipe(map(rows => rows.map(normalizeDbMurmur)))
+	.pipe(chain(murmurs => {
+		if(murmurs.length === 0){
+			return reject(new Error("Murmur not found by sessionId."));
+		}
+		return resolve(murmurs[0]);
+	}));
 }
 
 export function removeSessionMurmur(session: Session): FutureInstance<Error, Session>{
-	const murmur = murmurFromSession(session);
-	return removeMurmur(murmur)
-	.pipe(map(_ => session));
-}
-
-// session -> murmur
-export function murmurFromSession(session: Session): Murmur{
-	const recAndName = resolveParams(session);
-	return {
-		id: session.murmurId,
-		...recAndName,
-		...session
-	};
+	log("remove_session_murmur", session.sessionId);
+	// get murmur
+	// remove Murmur
+	const { sessionId } = session;
+	return getMurmurBySessionId(sessionId)
+	.pipe(chain(removeMurmur))
+	.pipe(map(_ => session))
+	.pipe(mapRej(err => {
+		error("remove_session_murmur", err.message);
+		return err;
+	}))
 }
 
 export function initMurmur(
 	murmur: Murmur
-): FutureInstance<Error, string> {
-	log("init murmur", murmur.name);
+): FutureInstance<Error, Murmur> {
+	log("init murmur", murmur.murmurId);
 	return e2f(createRecDir(murmur, true))
-	.pipe(chain(_ => docker.start(murmur.id)))
-	.pipe(map(_ => murmur.id));
+	.pipe(chain(_ => docker.start(murmur.murmurId)))
+	.pipe(map(_ => murmur));
 }
+
+const deleteMurmurQuery = `
+DELETE FROM murmur
+WHERE murmur_id = $murmur_id`;
+function deleteMurmur(murmur: Murmur): FutureInstance<Error, Murmur>{
+	log("delete_murmur", murmur.murmurId);
+	return withDb(({run}) => run(deleteMurmurQuery, {
+		$murmur_id: murmur.murmurId
+	}))
+	.pipe(map(_ => murmur));
+}
+
+const insertMurmurQuery = `
+INSERT INTO murmur
+(murmur_id, session_id, rec_dir, grpc_port, murmur_port)
+VALUES ($murmur_id, $session_id, $rec_dir, $grpc_port, $murmur_port)`;
+function insertMurmur(murmur: Murmur): FutureInstance<Error, Murmur>{
+	return withDb(({run}) => 
+		run(insertMurmurQuery, {
+			$murmur_id: murmur.murmurId,
+			$session_id: murmur.sessionId,
+			$rec_dir: murmur.recDir,
+			$grpc_port: murmur.grpcPort,
+			$murmur_port: murmur.murmurPort
+	}))
+	.pipe(map(_ => murmur));
+}
+

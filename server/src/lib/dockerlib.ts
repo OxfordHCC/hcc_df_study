@@ -2,7 +2,7 @@ import http from 'http';
 import { Future, parallel, map } from 'fluture';
 import { Logger } from './log';
 
-const { log } = Logger('dockerlib');
+const { log, error } = Logger('dockerlib');
 
 export class DockerError extends Error{
 	statusCode: number;
@@ -71,6 +71,7 @@ export function dockerReq<T>(
 		});
 
 		req.on("error", (e) => {
+			error("request_error", e.message);
 			reject(new DockerError(500, e.message));
 		});
 
@@ -93,7 +94,7 @@ function stopContainer(name: string){
 }
 
 export function stop(...containers: string[]){
-	return parallel(Infinity)(containers.map(stopContainer))
+	return parallel(1)(containers.map(stopContainer))
 }
 
 function rmContainer(name: string){

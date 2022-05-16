@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { Session } from 'dfs-common';
 import { List, Either, Left, Right } from 'monet';
-import { parallel, FutureInstance, map, chain, fork } from 'fluture';
+import { mapRej, resolve, parallel, FutureInstance, map, chain, fork, both } from 'fluture';
 import { aoe2ea, e2f } from './util';
 
 import {
@@ -12,6 +12,7 @@ import {
 	GameData,
 	ConcreteRoundData,
 } from 'dfs-common';
+import { createAttack } from './attacklib';
 import { withDb } from './db';
 import { createPlayer } from './player';
 import { Round, createRound } from './round';
@@ -21,7 +22,7 @@ const { log, error } = Logger("gamelib");
 
 const memGames:Game[] = [];
 
-type GameRow = {
+export type GameRow = {
 	gameId: string;
 	sessionId: number;
 	gameData: GameData;
@@ -42,7 +43,7 @@ export const gameSchedules: ConcreteRoundData[][] = [
 			name: "button",
 			solution: 1,
 			msLength: 10000,
-			options: [0, 1, 2, 3]
+			options: [0, 1, 2, 3],
 		},
 		{
 			name: "button",
@@ -60,7 +61,8 @@ export const gameSchedules: ConcreteRoundData[][] = [
 			name: "button",
 			solution: 2,
 			msLength: 10000,
-			options: [0, 1, 2, 3]
+			options: [0, 1, 2, 3],
+			attack: 0
 		},
 		{
 			name: "button",
@@ -92,7 +94,8 @@ export const gameSchedules: ConcreteRoundData[][] = [
 			name: "button",
 			solution: 2,
 			msLength: 10000,
-			options: [0, 1, 2, 3]
+			options: [0, 1, 2, 3],
+			attack: 0
 		},
 		{
 			name: "button",
@@ -338,17 +341,6 @@ export function getGames(): Game[] {
 	return memGames;
 }
 
-export function getPlayerGame(playerId: string): Either<Error, Game> {
-	const game = memGames.find(({ players})	=>
-		players.find(p => p.playerId === playerId) !== undefined
-	);
-
-	if(game === undefined){
-		return Left(new Error("No game found for player."));
-	}
-	
-	return Right(game);
-}
 
 export function getGame(gameId: string): Either<Error, Game> {
 	const game = memGames.find(g => g.gameId === gameId);
@@ -359,7 +351,7 @@ export function getGame(gameId: string): Either<Error, Game> {
 	return Right(game);
 }
 
-// insert game in table and create in-memory representation
+// insert game in db
 const insertGameQuery = `
 INSERT INTO game
 (game_id, game_data, is_current, session_id, game_order)
@@ -367,9 +359,10 @@ VALUES ($game_id, $game_data, $is_current, $session_id, $game_order);
 `;
 
 function insertGame(
-	{ gameId, gameData, sessionId, isCurrent, gameOrder }: GameRow
-): FutureInstance<Error, number>{
-	return withDb(({run}) => {
+	params: GameRow
+): FutureInstance<Error, GameRow>{
+	const { gameId, gameData, sessionId, isCurrent, gameOrder } = params;
+	return withDb(({ run }) => {
 		return run(insertGameQuery, {
 			$game_id: gameId,
 			$game_data: JSON.stringify(gameData),
@@ -378,29 +371,44 @@ function insertGame(
 			$game_order: gameOrder
 		})
 	})
+	.pipe(map(_ => params));
+}
+
+export function createGameAttacks(schedule: ConcreteRoundData[]) {
+	return function(gameRow: GameRow): FutureInstance<Error, GameRow> {
+		return parallel(1)(
+			schedule.map((roundData, roundIndex) => ({
+				...roundData,
+				roundIndex
+			}))
+			.filter(roundData => roundData.hasOwnProperty('attack'))
+			.map(roundData => createAttack({
+				gameRow,
+				attackSolution: roundData.attack,
+				roundIndex: roundData.roundIndex
+		})))
+		.pipe(map(_x => gameRow));
+	}
 }
 
 export function createGame(
 	blue: string, red: string, sessionId: number, gameOrder: number,
 	schedule: ConcreteRoundData[], isCurrent: boolean
-): FutureInstance<Error, Game> {
+): FutureInstance<Error, GameRow> {
 	log("createGame", sessionId, blue, red);
 	const gameId = crypto.randomUUID();
 	const players = [blue, red].map<Player>(createPlayer);
-	const game = List.fromArray(schedule.map(createRound))
-	.sequenceEither<Error, Round>()
-	.map(roundsL => roundsL.toArray())
-	.map(rounds => new Game({ gameId, players, rounds }));
 
-	return e2f(game)
+	return e2f(aoe2ea(schedule.map(createRound)))
+	.pipe(map(rounds => new Game({gameId, players, rounds})))
 	.pipe(chain(game => insertGame({
 		gameData: game.state(),
-		gameId: game.gameId,
+		gameId,
 		sessionId,
 		isCurrent,
 		gameOrder
 	})))
-	.pipe(chain(_gameId => e2f(game)));
+	.pipe(chain(createGameAttacks(schedule)));
 }
 
 function parseJSON<T>(arg: string): Either<Error, T>{
@@ -450,6 +458,7 @@ export function initGame(gameData: GameData): Either<Error, Game>{
 }
 
 export function removeSessionGames(session: Session): FutureInstance<Error, Session>{
+	log('remove_session_games', session.sessionId);
 	const { sessionId } = session;
 	
 	return getSessionGames(sessionId)
@@ -458,5 +467,9 @@ export function removeSessionGames(session: Session): FutureInstance<Error, Sess
 	.pipe(chain(x => e2f(x)))  // either to future
 	.pipe(map(games => games.map(removeGame)))
 	.pipe(chain(parallel(1))) // combine futures
-	.pipe(map(_ => session));
+	.pipe(map(_ => session))
+	.pipe(mapRej(err => {
+		error("remove_session_games", err.message);
+		return err;
+	}))
 }

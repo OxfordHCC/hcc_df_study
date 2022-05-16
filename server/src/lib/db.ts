@@ -1,6 +1,9 @@
 import sqlite from 'sqlite3';
 import { parallel, Future, FutureInstance, reject, map, chain, node } from 'fluture';
 import { config } from '../config';
+import { Logger } from './log';
+
+const { error, log } = Logger("db");
 
 type RowID = number;
 type WithDbFunctionParams = {
@@ -34,6 +37,7 @@ export function withDb<T>(fn: withDbFunction<T>): FutureInstance<Error, T> {
 		return Future<Error, void>(function(rej, res){
 			db.exec(query, function(err){
 				if(err !== null){
+					error("run", query)
 					return rej(err);
 				}
 				return res();
@@ -46,6 +50,7 @@ export function withDb<T>(fn: withDbFunction<T>): FutureInstance<Error, T> {
 		return Future<Error, any[]>(function(rej, res){
 			db.all(query, params, (err, rows) => {
 				if (err !== null) {
+					error("run", query, JSON.stringify(params))
 					return rej(err);
 				}
 				return res(rows);
@@ -59,6 +64,7 @@ export function withDb<T>(fn: withDbFunction<T>): FutureInstance<Error, T> {
 		return Future<Error, RowID>((rej, res) => {
 			db.run(query, params, function(err) {
 				if (err !== null) {
+					error("run", query, JSON.stringify(params))
 					return rej(err);
 				}
 				const { lastID } = this;

@@ -1,9 +1,25 @@
-import path from 'path';
+import {
+	coalesce,
+	chainRej,
+	mapRej,
+	parallel,
+	chain,
+	map,
+	reject,
+	resolve,
+	FutureInstance,
+	fork
+} from 'fluture';
+import { Session, AdminClientNs } from 'dfs-common';
+import { Left, Right } from 'monet';
 
-import { parallel, chain, map, reject, resolve, FutureInstance, fork } from 'fluture';
-import { GameData, Session, AdminClientNs } from 'dfs-common';
 import { find, filter, e2f } from './util';
-import { removeSessionMurmur, createMurmur, murmurFromSession, initMurmur, removeMurmur } from './murmurlib';
+import {
+	initMurmur,
+	createMurmur,
+	getMurmurBySessionId,
+	removeSessionMurmur
+} from './murmurlib';
 import {
 	Game,
 	getGame,
@@ -15,7 +31,11 @@ import {
 } from './game';
 import { Logger } from './log';
 import { withDb } from './db';
-import { createAttack, getAttacks, scheduleAttack, deleteSessionAttacks } from './attacklib';
+import {
+	getAttacks,
+	scheduleAttack,
+	deleteSessionAttacks
+} from './attacklib';
 
 const { log, error } = Logger("session");
 
@@ -35,18 +55,17 @@ export function getPlayerSession(playerId: string){
 
 const insertSessionSQL = `
 INSERT INTO study_session
-(murmur_id, blue_participant, red_participant, murmur_port, grpc_port) 
-VALUES ($murmur_id, $blue, $red, $murmur, $grpc);
+(blue_participant, red_participant, murmur_port, grpc_port) 
+VALUES ($blue, $red, $murmurPort, $grpcPort);
 `;
 type InsertSessionParam = Omit<Session, "sessionId">;
-function insertSession(session: InsertSessionParam) {
+function insertSession(session: InsertSessionParam): FutureInstance<Error, Session> {
 	return withDb(({ run }) =>
 		run(insertSessionSQL, {
-			$murmur_id: session.murmurId,
 			$blue: session.blueParticipant,
 			$red: session.redParticipant,
-			$murmur: session.murmurPort,
-			$grpc: session.grpcPort,
+			$murmurPort: session.murmurPort,
+			$grpcPort: session.grpcPort,
 		})
 	)
 	.pipe((map(sessionId => ({
@@ -60,7 +79,6 @@ function normalizeDbSession(db_session: any): Session {
 		sessionId: db_session.session_id,
 		blueParticipant: db_session.blue_participant,
 		redParticipant: db_session.red_participant,
-		murmurId: db_session.murmur_id,
 		murmurPort: db_session.murmur_port,
 		grpcPort: db_session.grpc_port,
 	};
@@ -84,49 +102,6 @@ export function getSessionById(
 	.pipe(chain(e2f));
 }
 
-function createGameAttack(session: Session, game: GameData){
-	const { sessionId } = session;
-	const { gameId } = game;
-	const [
-		sourceUser,
-		targetUser
-	] = game.players.map(p => p.playerId);
-
-	const audioPath = path.resolve(
-		__dirname,
-		"../../var/fakes/",
-		`${sourceUser}.wav`);
-
-	return createAttack({
-		gameId,
-		sessionId,
-		audioPath,
-		targetUser,
-		sourceUser,
-		round: 4,
-	});
-}
-
-function createAttacks(session: Session, games: GameData[]) {
-	return parallel(1)(
-		games.map(game => createGameAttack(session, game)));
-}
-
-function createGames(session: Session): FutureInstance<Error, GameData[]> {
-	const { blueParticipant, redParticipant, sessionId } = session;
-	
-	// create games
-	return parallel(1)([
-		createGame(blueParticipant, redParticipant, sessionId, 0, gameSchedules[0], true),
-		createGame(redParticipant, blueParticipant, sessionId, 1, gameSchedules[1], false)
-	]);
-}
-
-function createGamesAndAttacks(session: Session){
-	return createGames(session)
-	.pipe(chain(gamesData => createAttacks(session, gamesData)))
-	.pipe(map(_attacks => session));
-}
 
 const deleteSessionQuery = `
 DELETE FROM study_session
@@ -143,35 +118,69 @@ function deleteSession(session: Session): FutureInstance<Error, Session>{
 	.pipe(map(_ => session));
 }
 
-export function removeSession(sessionId: Session['sessionId']){
-	return getSessionById(sessionId)
-	.pipe(chain(removeSessionGames))
-	.pipe(chain(deleteSessionAttacks))
-	.pipe(chain(removeSessionMurmur))
-	.pipe(chain(deleteSession));
+class SessionError extends Error{
+	session: Session;
+	constructor(session: Session, message: string){
+		super(message);
+		this.session = session;
+		this.name = "SessionError";
+	}
+}
+
+function createSessionMurmur(session: Session): FutureInstance<SessionError, Session> {
+	const { grpcPort, murmurPort, sessionId } = session;
+	return createMurmur({grpcPort, murmurPort, sessionId})
+	.pipe(map(_ => session))
+	.pipe(mapRej(err => new SessionError(session, err.message)));
+}
+
+function createSessionGames(session: Session): FutureInstance<SessionError, Session>{
+	const { blueParticipant, redParticipant, sessionId } = session;
+	return parallel(1)([
+		createGame(blueParticipant, redParticipant, sessionId, 0, gameSchedules[0], true),
+		createGame(redParticipant, blueParticipant, sessionId, 1, gameSchedules[1], false)
+	])
+	.pipe(map(_games => session))
+	.pipe(mapRej(err => new SessionError(session, err.message)));
 }
 
 export function createSession(
-	{ blueParticipant, redParticipant, murmurPort, grpcPort }: AdminClientNs.CreateSessionParams
+	params: AdminClientNs.CreateSessionParams
 ): FutureInstance<Error, Session> {
-	log("create_session", blueParticipant, redParticipant, murmurPort, grpcPort);
-	return createMurmur({ murmurPort, grpcPort })
-	.pipe(map(murmur => ({
-		murmurId: murmur.id,
-		blueParticipant,
-		redParticipant,
-		murmurPort,
-		grpcPort
-	})))
-	.pipe(chain(insertSession))
-	.pipe(chain(createGamesAndAttacks))
-	.pipe(chain(initSession));
+	log("create_session", JSON.stringify(params));
+	return insertSession(params)
+	.pipe(chain(createSessionMurmur))
+	.pipe(chain(createSessionGames))
+	.pipe(chain(initSession))
+	.pipe(chainRej(err => {
+		error("create_session", err.message);
+		if(err instanceof SessionError){
+			return removeSession(err.session)
+			.pipe(chain(_ => reject(err)));
+		}
+		return reject(err);
+	}));
 }
 
-function chainGames(session: Session){
+export function removeSession({ sessionId }: Pick<Session,"sessionId">) {
+	log("remove_session", sessionId);
+	return getSessionById(sessionId)
+	.pipe(chain(session =>
+		parallel(1) ([
+			removeSessionGames(session),
+			deleteSessionAttacks(session),
+			removeSessionMurmur(session)]
+			.map(x => coalesce(Left)(Right)(x)))
+		.pipe(chain(_x => deleteSession(session)))));
+}
+
+function chainGames(session: Session) {
 	return (games: Game[]) => {
 		const { sessionId } = session;
-		return games.reduceRight((acc, curr) => {
+		if(games.length === 0){
+			return Left(new Error("No games to chain"));
+		}
+		const reduced = games.reduceRight((acc, curr) => {
 			curr.on('stop', () => {
 				// Q: How is this usually handled in FP languages?
 				// Follow-up Q: Can we refactor s.t. we don't have to fork here?
@@ -184,10 +193,12 @@ function chainGames(session: Session){
 
 			return curr;
 		});
+		return Right(reduced);
 	}
 }
 
-function initSession(session: Session): FutureInstance<Error, Session> {
+
+function initSession(session: Session): FutureInstance<SessionError, Session> {
 	const { sessionId } = session;
 	log("init session", sessionId);
 
@@ -201,21 +212,30 @@ function initSession(session: Session): FutureInstance<Error, Session> {
 		.pipe(map(a => a.map(scheduleAttack)))
 		.pipe(chain(parallel(1)));
 
-	const doMurmur = () => initMurmur(murmurFromSession(session));
-
-	const returnSession = () => session;
+	const doMurmur = () => getMurmurBySessionId(sessionId)
+	.pipe(chain(initMurmur));
 
 	return doGames() // init and chain games
-		.pipe(chain(doAttacks)) // schedule attacks
-		.pipe(chain(doMurmur)) // init murmur container
-		.pipe(map(returnSession)); // finally return session
+	.pipe(chain(doAttacks)) // schedule attacks
+	.pipe(chain(doMurmur)) // init murmur container
+	.pipe(chain(_ => {
+		log("init_session", sessionId);
+		return resolve(null);
+	}))
+	.pipe(mapRej(err => {
+		error("init_session", sessionId, err.message);
+		return new SessionError(session, err.message);
+	}))
+	.pipe(map(_ => session));
+	
 }
 
-export function initSessions(): FutureInstance<Error, Session[]> {
-	log("init sessions");
-
+export function initSessions() {
 	return getSessions()
-	.pipe(map(sessions => sessions.map(initSession)))
+	.pipe(map(sessions => sessions
+		.map(s => initSession(s))
+		.map(x => coalesce(Left)(Right)(x))
+	))
 	.pipe(chain(parallel(1)));
 }
 

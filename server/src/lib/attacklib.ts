@@ -1,9 +1,11 @@
 // scheduling and run voice injection attacks 
 
-import { FutureInstance, map,chain, parallel, fork } from 'fluture';
-import { Session } from 'dfs-common';
+import { mapRej, FutureInstance, map,chain, parallel, fork } from 'fluture';
+import path from 'path';
+import { Session, ConcreteRoundData } from 'dfs-common';
+
 import { Logger } from './log';
-import { getGame } from './game';
+import { GameRow, getGame } from './game';
 import { getSessions } from './session';
 import { withDb } from './db';
 import { execF, find, e2f } from './util';
@@ -20,12 +22,40 @@ type Attack = {
 	audioPath: string
 }
 
+
+type CreateAttackParams = {
+	gameRow: GameRow;
+	attackSolution: ConcreteRoundData['attack'] 
+	roundIndex: number
+	
+}
+export function createAttack({ gameRow, attackSolution, roundIndex }: CreateAttackParams){
+	const { gameId, players } = gameRow.gameData;
+	const { sessionId } = gameRow;
+	const [ sourceUser, targetUser ] = players.map(p => p.playerId);
+
+	const audioPath = path.resolve(
+		__dirname,
+		"../../var/fakes/",
+		sourceUser,
+		`${attackSolution}.wav`);
+
+	return insertAttack({
+		gameId,
+		sessionId,
+		audioPath,
+		targetUser,
+		sourceUser,
+		round: roundIndex
+	})
+}
+
 const insertAttackQuery = `
 INSERT INTO attack
 (game_id, session_id, round, source_user, target_user, audio_path)
 VALUES ($game_id, $session_id, $round, $source_user, $target_user, $audio_path)
 `
-export function createAttack(
+export function insertAttack(
 	attack: Omit<Attack, "attackId">
 ): FutureInstance<Error, Attack> {
 	log("create", JSON.stringify(attack));
@@ -65,7 +95,7 @@ export function scheduleAttack(attack: Attack): FutureInstance<Error, Attack> {
 					.pipe(chain(muteRes => 
 						execF(`mumble-cli 127.0.0.1:${session.grpcPort}`
 						+` send -s 1 -u ${attack.sourceUser} -t ${attack.targetUser} `
-						+` -f /Users/alexzugravu/tmp/hello_jack.wav -d 44 -r 16000`)
+						+` -f ${attack.audioPath} -d 44 -r 16000`)
 					))
 					.pipe(fork(err => {
 						if(err instanceof Error){
@@ -129,10 +159,15 @@ WHERE session_id = $session_id
 `;
 export function deleteSessionAttacks(session: Session): FutureInstance<Error, Session>{
 	const { sessionId } = session;
+	log("delete_session_attacks", session.sessionId);
 	return withDb(({run}) => {
 		return run(deleteSessionAttacksQuery, {
 			$session_id: sessionId
 		});
 	})
-	.pipe(map(_ => session));
+	.pipe(map(_ => session))
+	.pipe(mapRej(err => {
+		error("delete_session_attacks", err.message);
+		return err;
+	}));
 }

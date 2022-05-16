@@ -5,9 +5,9 @@ import { createSession } from '../lib/session';
 import { goto } from '../lib/router';
 
 export function CreateSessionScreen(){
-	const [blue,setBlue] = useState<string | undefined>(undefined);
-	const [red, setRed] = useState<string | undefined>(undefined);
-	const [error, setError] = useState<string | undefined>(undefined);
+	const [blue,setBlue] = useState<string>("");
+	const [red, setRed] = useState<string>("");
+	const [error, setError] = useState<string>("");
 	const [grpcPort, setGrpcPort] = useState<number | undefined>(undefined);
 	const [murmurPort, setMurmurPort] = useState<number | undefined>(undefined);
 	
@@ -24,11 +24,21 @@ export function CreateSessionScreen(){
 	}
 
 	const changeMurmurPort = function(evt: React.ChangeEvent<HTMLInputElement>){
-		setMurmurPort(parseInt(evt.target.value));
+		const val = parseInt(evt.target.value);
+		if(isNaN(val)){
+			setMurmurPort(undefined);
+			return;
+		}
+		setMurmurPort(val);
 	}
 
 	const changeGrpcPort = function(evt: React.ChangeEvent<HTMLInputElement>){
-		setGrpcPort(parseInt(evt.target.value));
+		const val = parseInt(evt.target.value);
+		if(isNaN(val)){
+			setGrpcPort(undefined);
+			return;
+		}
+		setGrpcPort(val);
 	}
 
 	const onCreateSession = async function() {
@@ -39,18 +49,17 @@ export function CreateSessionScreen(){
 			murmurPort
 		} as AdminClientNs.CreateSessionParams;
 
-		if (createSessionParams instanceof Error) {
-			setError(createSessionParams.message);
+		try{ 
+			 await createSession(createSessionParams);
+			goto("#home");
+		} catch (err) {
+			if(err instanceof Error){
+				setError(err.message);
+				return;
+			}
+			setError("Unknown error returned by createSession.");
 			return;
 		}
-
-		const createRes = await createSession(createSessionParams);
-		if(createRes instanceof Error){
-			setError(createRes.message);
-			return;
-		}
-		
-		goto("#home");
 	}
 
 	return <div>

@@ -28,6 +28,7 @@ export interface RoundData {
 	answer?: Solution
 	startTime?: number
 	endTime?: number
+	attack?: number
 }
 export function isRoundData(x: any): x is RoundData{
 	return isRoundName(x.name)

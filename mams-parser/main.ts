@@ -10,12 +10,12 @@ the input file and will contain the raw pcm data of the recording.
 
 To play the output file:
 
-ffplay -f s16le -ar 48k -ac 1 <path_to_outputfile>
+ffplay -f s16le -ar 44.1k -ac 1 <path_to_outputfile>
 
 You should be able to wrap this with ffmpeg into a proper wav file
 using ffmpeg as well:
 
-ffmpeg -f s16le -ar 48k -ac 1 -i file.pcm file.wav
+ffmpeg -f s16le -ar 44.1k -ac 1 -i file.pcm file.wav
 
 
 TODO:

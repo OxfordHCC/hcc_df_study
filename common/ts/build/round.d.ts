@@ -10,6 +10,7 @@ export interface RoundData {
     answer?: Solution;
     startTime?: number;
     endTime?: number;
+    attack?: number;
 }
 export declare function isRoundData(x: any): x is RoundData;
 export interface SingleRoundData extends RoundData {

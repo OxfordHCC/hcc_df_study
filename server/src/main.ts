@@ -23,13 +23,13 @@ debugMode(true);
 
 ;(() => {
 	initSessions()
-	.pipe(chain(startHTTPServer))
+	//.pipe(chain(startHTTPServer))
 	.pipe(fork(err => {
 		if (err instanceof Error) {
 			return error(err.message);
 		}
 		return error("unknown error");
-	})(_sessions => {
+	})(_ => {
 		io.listen(wsPort);
 		log("websockets-listening", wsPort);
 	}))
