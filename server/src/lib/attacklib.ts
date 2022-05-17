@@ -9,6 +9,15 @@ import { GameRow, getGame } from './game';
 import { getSessions } from './session';
 import { withDb } from './db';
 import { execF, find, e2f } from './util';
+import { config } from '../config';
+
+const { DFS_REC_DIR } = config;
+
+if(DFS_REC_DIR === undefined){
+	throw new Error("Missing DFS_REC_DIR env");
+}
+
+const recDir = path.resolve(process.cwd(), DFS_REC_DIR);
 
 const { log, error } = Logger('attacklib');
 
@@ -34,9 +43,10 @@ export function createAttack({ gameRow, attackSolution, roundIndex }: CreateAtta
 	const { sessionId } = gameRow;
 	const [ sourceUser, targetUser ] = players.map(p => p.playerId);
 
+	
+
 	const audioPath = path.resolve(
-		__dirname,
-		"../../var/fakes/",
+		recDir,
 		sourceUser,
 		`${attackSolution}.wav`);
 
