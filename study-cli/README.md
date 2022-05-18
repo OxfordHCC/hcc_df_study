@@ -4,12 +4,19 @@ This cli tool is used to issue commands to a murmur instance.
 
 It communicates using GRPC. To see the full GRPC spec of murmur, see the protobuf file in mumble/src/murmur/MurmurRPC.proto. Only a subset of the GRPC procedures are currently supported by the study-cli, as detailed below.
 
+## Building
+Make sure you have the following prerequisites installed and in your PATH:
+
+ - golang
+ - protoc
+ - go-grpc 
+
+Build the study-cli using `go build .` in the study-cli directory.
+
 ## Usage and commands
 
-In the `/study-cli` directory, either run the tool as `go run . <subcommand> [args...]`, or compile using `go build` and then run the resulting binary (e.g. `./study-cli <subcommand> [args...]`.
-
 ```sh
-> study-cli --help
+> mumble-cli --help
 Subcommands:
  send 
  users 
@@ -21,7 +28,7 @@ Subcommands:
 Send audio to user `t` as if coming from user `u`.
 
 ```sh
-> study-cli send --help
+> mumble-cli send --help
 Usage of send:
   -e, --big-endian            use big endianness when encoding
   -b, --bitrate uint32        bitrate (default 32000)
@@ -39,7 +46,7 @@ The delay parameter introduces artificial latency in the speech by waiting the s
 ### List of servers running ar remote address
 
 ```sh
-> study-cli servers
+> mumble-cli servers
 ```
 
 Return a list of servers running at a murmur instance, including their id, state and uptime.
@@ -47,7 +54,7 @@ Return a list of servers running at a murmur instance, including their id, state
 ### Users
 
 ```sh
-> study-cli users --help
+> mumble-cli users --help
 Usage: users <server-id>
 ```
 Returns the list of users connected to a particular server. The list contains their id and username
