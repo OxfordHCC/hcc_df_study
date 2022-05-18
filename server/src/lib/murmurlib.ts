@@ -1,4 +1,4 @@
-import { mkdirSync, rmdirSync } from 'fs';
+import { mkdirSync, rmdirSync, chmodSync } from 'fs';
 import path from 'path';
 import { Left, Right, Either } from 'monet';
 import { parallel, coalesce, mapRej, map, chain, FutureInstance, reject, resolve } from 'fluture';
@@ -58,6 +58,7 @@ function createRecDir(
 	return Either.fromTry(() => {
 		try{
 			mkdirSync(recDir);
+			chmodSync(recDir, "777");
 			return params;
 		}catch(err){
 			if(ignoreExists === true && isNodeError(err) && err.code === "EEXIST"){
