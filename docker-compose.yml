@@ -16,6 +16,6 @@ services:
     image: mumble_server
     container_name: mumble_server_1
     ports:
-      - "64738:64738/tcp"
-      - "64738:64738/udp"
-      - "50051:50051"
+      - "3001:64738/tcp"
+      - "3001:64738/udp"
+      - "5001:50051"

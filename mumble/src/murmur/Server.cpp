@@ -91,10 +91,10 @@ void Server::recordLoop(){
 		}
 
 		const AudioMsg msg = recordingQueue.front();
-		
 		try{
 			// get file stream from map
 			fileMap.at(msg.user);
+
 		}catch(std::out_of_range& e){
 			// create file
 			char fileName[50];
@@ -1070,9 +1070,9 @@ void Server::shadowmuteUser(ServerUser* u, bool state){
 void Server::sendMessage(ServerUser *u, const char *data, int len, QByteArray &cache, bool force) {
 	// log message
 	std::string strUserName = u->qsName.toStdString();
-	qDebug("=== sendMessage called. User: %s;len: %d", strUserName.c_str(), len);
- 	char *debugArr = QByteArray(data, len).toHex(' ').data();
-	qDebug("data: %s", debugArr);
+	// qDebug("=== sendMessage called. User: %s;len: %d", strUserName.c_str(), len);
+ 	// char *debugArr = QByteArray(data, len).toHex(' ').data();
+	// qDebug("data: %s", debugArr);
   
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
 	if ((u->aiUdpFlag.loadRelaxed() == 1 || force) && (u->sUdpSocket != INVALID_SOCKET)) {
@@ -1179,9 +1179,9 @@ void Server::processMsg(ServerUser *u, const char *data, int len) {
 	std::string strUserName = u->qsName.toStdString();
 
 	//log message
-	qDebug("=== processMsg called. User: %s;len: %d", strUserName.c_str(), len);
- 	char *debugArr = QByteArray(data, len).toHex(' ').data();
-	qDebug("data: %s", debugArr);
+	// qDebug("=== processMsg called. User: %s;len: %d", strUserName.c_str(), len);
+ 	// char *debugArr = QByteArray(data, len).toHex(' ').data();
+	// qDebug("data: %s", debugArr);
 
 
 	// write data to file
