@@ -11,10 +11,15 @@ root/
 ├─ admin/           - admin dashboard to monitor game progress
 ├─ game/            - bomb defusal game played by participants
 ├─ study-cli/       - tool used to issue audio injection commands to mumble
-├─ rsmbl-pipeline/  - pipeline for generating deepfake voices from audio samples of participants
-
+├─ server/          - study server
+├─ mams-parser/     - convert mumble recordings files to pcm
 ```
 
+
+# Prereqs
+
+- Docker is required to run the study server
+- Make sure the murmur server docker image is built by running `docker-compose build murmur`
 
 # Mumble
 
