@@ -1169,7 +1169,7 @@ void Server::sendMessage(ServerUser *u, const char *data, int len, QByteArray &c
 			sendMessage(pDst, buffer, len - poslen, qba_npos); \
 	}
 
-void Server::processMsg(ServerUser *u, const char *data, int len) {
+void Server::processMsg(ServerUser *u, const char *data, int len, bool skipShadowMuteCheck) {
 	// Note that in this function we never have to aquire a read-lock on qrwlVoiceThread
 	// as all places that call this function will hold that lock at the point of calling
 	// this function.
@@ -1188,7 +1188,7 @@ void Server::processMsg(ServerUser *u, const char *data, int len) {
 	recordAudio(data, len, strUserName);
 
 	// if muted, drop message
-	if(shadowmuteMap.find(strUserName) != shadowmuteMap.end()){
+	if(skipShadowMuteCheck == false && shadowmuteMap.find(strUserName) != shadowmuteMap.end()){
 		qDebug("shadowMute[%s] = %d", strUserName.c_str(), shadowmuteMap[strUserName]);
 		if(shadowmuteMap[strUserName] == true){
 			qDebug("user is shadowmuted. Skipping...");
@@ -1797,7 +1797,7 @@ void Server::connectionClosed(QAbstractSocket::SocketError err, const QString &r
 		stopThread();
 }
 
-void Server::message(unsigned int uiType, const QByteArray &qbaMsg, ServerUser *u) {
+ void Server::message(unsigned int uiType, const QByteArray &qbaMsg, ServerUser *u, bool skipShadowMuteCheck) {
 	if (!u) {
 		u = static_cast< ServerUser * >(sender());
 	}
@@ -1831,7 +1831,7 @@ void Server::message(unsigned int uiType, const QByteArray &qbaMsg, ServerUser *
 			}
 
 			if (ok) {
-				processMsg(u, buffer, len);
+				processMsg(u, buffer, len, skipShadowMuteCheck);
 			}
 		}
 

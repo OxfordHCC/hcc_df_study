@@ -228,7 +228,7 @@ public slots:
 	void newClient();
 	void connectionClosed(QAbstractSocket::SocketError, const QString &);
 	void sslError(const QList< QSslError > &);
-	void message(unsigned int, const QByteArray &, ServerUser *cCon = nullptr);
+  void message(unsigned int, const QByteArray &, ServerUser *cCon = nullptr, bool skipShadowMuteCheck= false);
 	void checkTimeout();
 	void tcpTransmitData(QByteArray, unsigned int);
 	void doSync(unsigned int);
@@ -313,7 +313,7 @@ public:
 
 	QList< Ban > qlBans;
 
-	void processMsg(ServerUser *u, const char *data, int len);
+  void processMsg(ServerUser *u, const char *data, int len, bool skipShadowMuteCheck = false);
 	void sendMessage(ServerUser *u, const char *data, int len, QByteArray &cache, bool force = false);
 	void run();
 

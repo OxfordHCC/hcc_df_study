@@ -1338,7 +1338,7 @@ void doSpoofAudio(std::string data, Server* server, ServerUser* user, int len, i
 
 		QByteArray qbaMsg = QByteArray(voice_packet, packetSize);
 
-		server->message(MessageHandler::UDPTunnel, qbaMsg, user);
+		server->message(MessageHandler::UDPTunnel, qbaMsg, user, true);
 		std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
 	}
 }
