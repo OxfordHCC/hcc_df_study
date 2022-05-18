@@ -1053,7 +1053,7 @@ void to_hex(const char *string, char *out, int len, int maxlen){
 
 void Server::shadowmuteUser(ServerUser* u, bool state){
 	std::string strUserName = u->qsName.toStdString();
-	qWarning("Called shadowmute: name: %s; state: %d", strUserName.c_str(), state );
+	qDebug("Called shadowmute: name: %s; state: %d", strUserName.c_str(), state );
 	shadowmuteMap[strUserName] = state;
 }
 
@@ -1069,10 +1069,10 @@ void Server::shadowmuteUser(ServerUser* u, bool state){
 
 void Server::sendMessage(ServerUser *u, const char *data, int len, QByteArray &cache, bool force) {
 	// log message
-	// std::string strUserName = u->qsName.toStdString();
-	// qWarning("=== sendMessage called. User: %s;len: %d", strUserName.c_str(), len);
- 	// char *debugArr = QByteArray(data, len).toHex(' ').data();
-	// qWarning("data: %s", debugArr);
+	std::string strUserName = u->qsName.toStdString();
+	qDebug("=== sendMessage called. User: %s;len: %d", strUserName.c_str(), len);
+ 	char *debugArr = QByteArray(data, len).toHex(' ').data();
+	qDebug("data: %s", debugArr);
   
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
 	if ((u->aiUdpFlag.loadRelaxed() == 1 || force) && (u->sUdpSocket != INVALID_SOCKET)) {
@@ -1178,14 +1178,20 @@ void Server::processMsg(ServerUser *u, const char *data, int len) {
 
 	std::string strUserName = u->qsName.toStdString();
 
+	//log message
+	qDebug("=== processMsg called. User: %s;len: %d", strUserName.c_str(), len);
+ 	char *debugArr = QByteArray(data, len).toHex(' ').data();
+	qDebug("data: %s", debugArr);
+
+
 	// write data to file
 	recordAudio(data, len, strUserName);
 
 	// if muted, drop message
 	if(shadowmuteMap.find(strUserName) != shadowmuteMap.end()){
-		//qWarning("shadowMute[%s] = %d", strUserName.c_str(), shadowmuteMap[strUserName]);
+		qDebug("shadowMute[%s] = %d", strUserName.c_str(), shadowmuteMap[strUserName]);
 		if(shadowmuteMap[strUserName] == true){
-			qWarning("user is shadowmuted. Skipping...");
+			qDebug("user is shadowmuted. Skipping...");
 			return;
 		}
 	}
@@ -1253,7 +1259,6 @@ void Server::processMsg(ServerUser *u, const char *data, int len) {
 	QSet< ServerUser * > listeningUsers;
 
 	if (target == 0x1f) { // Server loopback
-		qWarning("loopback");
 		buffer[0] = static_cast< char >(type | SpeechFlags::Normal);
 		sendMessage(u, buffer, len, qba);
 		return;

@@ -83,7 +83,7 @@ func main(){
 	commands["shadowmute"] = shadowmuteCmd; // shadowmute someone
 	commands["users"] = usersCmd; // get users 
 	commands["servers"] = serversCmd; // get servers
-	//commands["spoof"] = spoofCmd; // spoof audio/text message
+	commands["spoof"] = spoofCmd; // spoof audio/text message
 
 	if len(os.Args) < 4 {
 		fmt.Fprintln(os.Stderr, help(commands))

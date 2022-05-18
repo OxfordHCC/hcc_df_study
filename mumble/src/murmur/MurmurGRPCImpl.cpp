@@ -19,6 +19,7 @@
 #include "ServerUser.h"
 #include "Utils.h"
 #include "PacketDataStream.h"
+#include "Message.h"
 
 #include <chrono>
 #include <thread>
@@ -1240,7 +1241,8 @@ void MurmurRPCImpl::run() {
 
 
 void spoofAudioPackets(ServerUser* speakerUser, std::string data, int len, char* finalOutput,
-					   int* offsets, bool useBigEndian, int frame_size, int bitrate, int samplerate){
+					   int* offsets, bool useBigEndian, int frame_size, int bitrate,
+					   int samplerate, bool outgoing){
 	qDebug("spoofAudioPackets called");
 	
 	int packetsN = len/frame_size;
@@ -1259,7 +1261,6 @@ void spoofAudioPackets(ServerUser* speakerUser, std::string data, int len, char*
 		}
 
 		// copy char data to int16 array
-
 		int16_t dataIn[this_frame_size/2];
 		if(useBigEndian){
 			for (int j=0; j<this_frame_size/2; j++){
@@ -1283,11 +1284,15 @@ void spoofAudioPackets(ServerUser* speakerUser, std::string data, int len, char*
 		//type 100 (Opus codec frame) and target 0 (normal speech)
 		pds.append(0x80);
 
-		// set session id - varint
-		pds<<speakerSession;
 
-		// set sequence number - varint
-		pds<<i;
+		if(outgoing == false){
+			// set session id - varint
+			pds<<speakerSession;
+		}
+
+		// set sequence number - varint (I'm adding this as mutliple of 2, since that's what
+		// clients seem to do, but I'm not sure why...
+		pds<<i*2;
 			
 		//// OPUS
 		// opus header (length and termination bit) - varint
@@ -1313,14 +1318,14 @@ void spoofAudioPackets(ServerUser* speakerUser, std::string data, int len, char*
 }
 
 // spoof - send to multiple targets
-void spoofAudio(std::string data, Server* server, ServerUser* user, int len,
-				int sleepTime, bool useBigEndian, int frame_size, int bitrate, int samplerate){
+void doSpoofAudio(std::string data, Server* server, ServerUser* user, int len, int sleepTime,
+				  bool useBigEndian, int frame_size, int bitrate, int samplerate){
 	int packetsN = len/frame_size;
 	char finalOutput[len*2]; 
 	int offsets[packetsN+1];// store offsets of each packet
 
 	spoofAudioPackets(user, data, len, finalOutput, offsets, useBigEndian, frame_size,
-				   bitrate, samplerate);
+					  bitrate, samplerate, true);
 
 	// now send each packet
 	for(int i=0; i<= packetsN; i++){
@@ -1331,14 +1336,17 @@ void spoofAudio(std::string data, Server* server, ServerUser* user, int len,
 
 		memcpy(voice_packet, &finalOutput[left], packetSize);
 
-		server->processMsg(user, voice_packet, packetSize);
+		QByteArray qbaMsg = QByteArray(voice_packet, packetSize);
+
+		server->message(MessageHandler::UDPTunnel, qbaMsg, user);
 		std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
 	}
 }
 
 // send audio to a single target
-void doInjectAudio(std::string data, Server* server, ServerUser* user, ServerUser* target, int len,
-				   int sleepTime, bool useBigEndian, int frame_size, int bitrate, int samplerate){
+void doInjectAudio(std::string data, Server* server, ServerUser* user, ServerUser* target,
+				   int len, int sleepTime, bool useBigEndian, int frame_size, int bitrate,
+				   int samplerate){
 
 	qDebug("=== doInjectAudio called. len: %d", len);
 	int packetsN = len/frame_size;
@@ -1346,7 +1354,7 @@ void doInjectAudio(std::string data, Server* server, ServerUser* user, ServerUse
 	int offsets[packetsN+1];// store offsets of each packet
 
 	spoofAudioPackets(user, data, len, finalOutput, offsets, useBigEndian, frame_size,
-					  bitrate, samplerate);
+					  bitrate, samplerate, false);
 
 	// now send each packet
 	for(int i=0; i<= packetsN; i++){
@@ -1384,6 +1392,27 @@ namespace Wrapper {
 		qDebug("starting thread with doInjectAudio");
 		std::thread t(&doInjectAudio, data, server, user, target, len,
 					  sleepTime, bigEndian, framesize, bitrate, samplerate);
+		t.detach();
+		end();
+	}
+
+	void V1_SpoofAudio::impl(bool) {
+		qDebug("Spoof audio called");
+
+		auto server = MustServer(request);
+
+		ServerUser* user = MustUser(server, request);
+		std::string data = request.data();
+		int len = request.len();
+		int sleepTime = request.sleep();
+		bool bigEndian = request.bigendian();
+		int bitrate = request.bitrate();
+		int framesize = request.framesize();
+		int samplerate = request.samplerate();
+
+		std::thread t(&doSpoofAudio, data, server, user, len, sleepTime,
+					  bigEndian, framesize, bitrate, samplerate);
+
 		t.detach();
 		end();
 	}

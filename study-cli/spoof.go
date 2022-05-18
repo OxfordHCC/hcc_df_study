@@ -1,81 +1,66 @@
 package main
 
 import (
-	"errors"
 	"os"
 	"strings"
+	"encoding/hex"
 
 	flag "github.com/spf13/pflag"
 	MurmurRPC "hcc.ox.ac.uk/dfstudy/mumble-cli/grpc"
 )
 
 
-func spoofTextCmd(client MurmurRPC.V1Client, args []string)(error, string){
-	flagSet := flag.NewFlagSet("text", flag.ExitOnError);
+func spoofCmd(client MurmurRPC.V1Client, args []string)(error, string){
+	flagSet := flag.NewFlagSet("spoof", flag.ExitOnError);
 
+	bitrate := flagSet.Uint32P("bitrate", "b", 32000, "bitrate");
+	sampleRate := flagSet.Uint32P("sample-rate", "r", 48000, "sample rate");
+	frameSize := flagSet.Uint32P("frame-size", "p", 1920, "frame size");
+	userName := flagSet.StringP("user", "u", "", "from user name");
+	sleepTime := flagSet.Uint32P("packet-delay", "d", 0, "milliseconds to sleep between packets");
+	serverId := flagSet.Uint32P("server", "s", 0, "server id");
+	bigEndian := flagSet.BoolP("big-endian", "e", false, "use big endianness when encoding");
 	fileFlag := flagSet.BoolP("file", "f", false, "use file as input");
-	serverId := flagSet.Uint32P("server", "s", 0, "server");
-	actorId := flagSet.Uint32P("actor", "a", 0, "the user who sent the message.");
 
 	flagSet.Parse(args);
-	
+
 	err, server := getServerById(client, *serverId);
-	if err != nil {
-		return err, ""
-	}
-	
-	err, actor := getUserById(client, *actorId, server);
-	if err != nil {
-		return err, ""
-	}
-	
-	var text string;
-	if *fileFlag == true {
-		filePath := flagSet.Arg(1);
-		dat, err := os.ReadFile(filePath)
+	err, user := getUserByName(client, *userName, server);
 
-		if err != nil {
-			return err, ""
-		}
+	var dat []byte;
 
-		text = string(dat);
+	if (*fileFlag == true){
+		filePath := flagSet.Arg(0);
+		dat, err = os.ReadFile(filePath)
 	}else{
-		text = strings.Join(flagSet.Args(), " ");
+		hexArgs := flagSet.Args();
+		hexStr := strings.TrimSpace(strings.Join(hexArgs, ""));
+		dat, err = hex.DecodeString(hexStr);
 	}
 
-	murmurTextMsg := MurmurRPC.TextMessage{
-		Server: server,
-		Actor: actor,
-		Text: &text,
+	if err != nil {
+		panic(err)
 	}
-
-	ctx, cancel := getCtx()
-	defer cancel()
-
-	_, err = client.TextMessageSend(ctx, &murmurTextMsg)
 	
-	return err, ""
-}
+	datLen := uint32(len(dat));
 
-func spoofAudioCmd(client MurmurRPC.V1Client, args []string)(error, string){
-	return errors.New("audio spoofing command not implemented yet"), "";
-}
+	ctx, cancel := getCtx();
+	defer cancel();
 
-func spoofCmd(client MurmurRPC.V1Client, args []string)(error, string){
-	commands := make(commandTree);
-	commands["text"] = spoofTextCmd;
-	commands["audio"] = spoofAudioCmd;
-
-	if len(args) < 2 {
-		return errors.New(help(commands)), "";
+	message := MurmurRPC.SpoofAudioMessage{
+		User: user,
+		Server: server,
+		Data: dat,
+		Len: &datLen,
+		Sleep: sleepTime,
+		BigEndian: bigEndian,
+		Bitrate: bitrate,
+		Framesize: frameSize,
+		Samplerate: sampleRate,
 	}
 
-	cmd := args[0]
-	cmdFn, ok := commands[cmd]
+	client.SpoofAudio(ctx, &message)
 
-	if !ok{
-		return errors.New("show help"), ""
-	}
-
-	return cmdFn(client, args[1:]);
+	return nil, ""
 }
+

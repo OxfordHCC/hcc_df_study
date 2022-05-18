@@ -634,12 +634,30 @@ message AudioInjection{
 	optional uint32 samplerate = 10;
 }
 
+message SpoofAudioMessage{
+	optional Server server = 1;
+	optional User user = 2;
+	optional bytes data = 3;
+	optional uint32 len = 4;
+	optional uint32 sleep = 5;
+	optional bool bigEndian = 6;
+	optional uint32 bitrate = 7;
+	optional uint32 framesize = 8;
+	optional uint32 samplerate = 9;
+}
+
 service V1 {
 	// Deepfake study
+	
 	// send audio
 	rpc InjectAudio(AudioInjection) returns(Void);
+	
+	// spoof audio
+	rpc SpoofAudio(SpoofAudioMessage) returns(Void);
+	
 	// mute player
 	rpc Shadowmute(ShadowmuteMessage) returns(Void);
+	
 	
 	//
 	// Meta
