@@ -2,7 +2,8 @@ import { io } from "socket.io-client";
 import { Evented, GameEvents, Answer } from "dfs-common";
 
 const { DFS_WS_HOSTNAME, DFS_WS_PORT, DFS_USE_TLS } = process.env;
-const wsProtocol = DFS_USE_TLS? "wss" : "ws";
+const wsProtocol = DFS_USE_TLS === "1"? "wss" : "ws";
+
 
 if(!DFS_WS_HOSTNAME || !DFS_WS_PORT){
 	throw new Error("Missing env variables... ");
