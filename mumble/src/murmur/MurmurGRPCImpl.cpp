@@ -1318,7 +1318,7 @@ void spoofAudioPackets(ServerUser* speakerUser, std::string data, int len, char*
 }
 
 // spoof - send to multiple targets
-void doSpoofAudio(std::string data, Server* server, ServerUser* user, int len, int sleepTime,
+void doSpoofAudio(std::string data, Server* server, ServerUser* user, int len, int argSleepTime,
 				  bool useBigEndian, int frame_size, int bitrate, int samplerate){
 	int packetsN = len/frame_size;
 	char finalOutput[len*2]; 
@@ -1333,19 +1333,24 @@ void doSpoofAudio(std::string data, Server* server, ServerUser* user, int len, i
 		int right = offsets[i+1];
 		int packetSize = right - left;
 		char voice_packet[packetSize+10];
+		int impliedSleepTime = packetSize*8*1000000/bitrate; // microseconds
 
+		int sleepTime = impliedSleepTime;
+		if(argSleepTime > 0){
+			sleepTime = argSleepTime;
+		}
+		
 		memcpy(voice_packet, &finalOutput[left], packetSize);
-
+		
 		QByteArray qbaMsg = QByteArray(voice_packet, packetSize);
-
 		server->message(MessageHandler::UDPTunnel, qbaMsg, user, true);
-		std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
+		std::this_thread::sleep_for(std::chrono::microseconds(sleepTime));
 	}
 }
 
 // send audio to a single target
 void doInjectAudio(std::string data, Server* server, ServerUser* user, ServerUser* target,
-				   int len, int sleepTime, bool useBigEndian, int frame_size, int bitrate,
+				   int len, int argSleepTime, bool useBigEndian, int frame_size, int bitrate,
 				   int samplerate){
 
 	qDebug("=== doInjectAudio called. len: %d", len);
@@ -1362,6 +1367,12 @@ void doInjectAudio(std::string data, Server* server, ServerUser* user, ServerUse
 		int right = offsets[i+1];
 		int packetSize = right - left;
 		char voice_packet[packetSize+10];
+		int impliedSleepTime = packetSize*8*1000000/bitrate; // microseconds
+
+		int sleepTime = impliedSleepTime;
+		if(argSleepTime > 0){
+			sleepTime = argSleepTime;
+		}
 
 		memcpy(voice_packet, &finalOutput[left], packetSize);
 
