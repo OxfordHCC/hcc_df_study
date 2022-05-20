@@ -98,8 +98,8 @@ export function scheduleAttack(attack: Attack): FutureInstance<Error, Attack> {
 						+` shadowmute -s 1 -t ${attack.targetUser}`)
 					.pipe(chain(muteRes => 
 						execF(`mumble-cli 127.0.0.1:${session.grpcPort}`
-						+` send -s 1 -u ${attack.sourceUser} -t ${attack.targetUser} `
-						+` -f ${attack.audioPath} -d 44 -r 16000`)
+						+` spoof -s 1 -u ${attack.sourceUser}`
+						+` -f ${attack.audioPath} -r 16000`)
 					))
 					.pipe(fork(err => {
 						if(err instanceof Error){
