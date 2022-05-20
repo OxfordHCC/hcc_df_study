@@ -2,7 +2,7 @@
 	"compilerOptions": {
         "esModuleInterop": true,
 		"moduleResolution": "node",
-		"target": "es6",
+		"target": "es2021",
 		"strict": true,
 		"jsx": "react",
 		"noEmit": true
