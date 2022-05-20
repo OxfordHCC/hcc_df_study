@@ -15,7 +15,6 @@ type GameClientNamespace = Namespace<GameClientNs.ClientToServerEvents, GameClie
 
 export default function(client: GameClientNamespace){
 	client.on("connection", (socket: Socket) => {
-		log("connection", socket.id);
 		onConnect(socket)
 		.pipe(fork(emitError(socket))(() => {}));
 	});
@@ -35,8 +34,9 @@ function emitError(socket: Socket){
 }
 
 function onAnswer(socket: Socket, _io: Server) {
-	const { gameId } = socket.data;
+	const { gameId, playerId } = socket.data;
 	return function(answer: Answer) {
+		log("onAnswer", gameId, playerId, JSON.stringify(answer));
 		getGame(gameId)
 			.map(game => {
 				log("onAnswer", `game=${gameId}`, `answer=${JSON.stringify(answer)}`);
@@ -49,12 +49,13 @@ function onAnswer(socket: Socket, _io: Server) {
 function onPlayerReady(socket: Socket, _io: Server) {
 	const { gameId, playerId } = socket.data;
 	return function(readyFlag: boolean) {
+		log("onPlayerReady", playerId, gameId, JSON.stringify(readyFlag));
 		getGame(gameId)
-			.map(game => {
-				log("on_player_ready", `gameId=${gameId}`, `playerId=${playerId}`);
-				return game.playerReady(playerId, readyFlag);
-			})
-			.leftMap(emitError(socket));
+		.map(game => {
+			log("on_player_ready", `gameId=${gameId}`, `playerId=${playerId}`);
+			return game.playerReady(playerId, readyFlag);
+		})
+		.leftMap(emitError(socket));
 	}
 }
 
@@ -85,6 +86,7 @@ function saveSocketData(socket: Socket){
 
 function onConnect(socket: Socket): FutureInstance<Error, void> {
 	function onPlayerConnect(playerId: string): FutureInstance<Error, void>{
+		log("onPlayerConnect", playerId);
 		return getPlayerSession(playerId)
 		.pipe(chain(session => getCurrentGame(session.sessionId)))
 		.pipe(map(game => {

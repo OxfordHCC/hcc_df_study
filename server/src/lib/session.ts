@@ -24,11 +24,11 @@ import {
 	Game,
 	getGame,
 	createGame,
-	gameSchedules,
 	initGameRows,
 	getSessionGames,
 	removeSessionGames,
 } from './game';
+import { gameSchedules } from '../const/gameSchedules';
 import { Logger } from './log';
 import { withDb } from './db';
 import {

@@ -1,10 +1,10 @@
 import crypto from 'crypto';
-import { Session } from 'dfs-common';
 import { List, Either, Left, Right } from 'monet';
-import { mapRej, resolve, parallel, FutureInstance, map, chain, fork, both } from 'fluture';
+import { mapRej, parallel, FutureInstance, map, chain, fork } from 'fluture';
 import { aoe2ea, e2f } from './util';
 
 import {
+	Session,
 	Evented,
 	GameEvents,
 	Player,
@@ -37,74 +37,6 @@ export function initGameRows(gRows: GameRow[]) {
 		.map(initGame))
 }
 
-export const gameSchedules: ConcreteRoundData[][] = [
-	[
-		{
-			name: "button",
-			solution: 1,
-			msLength: 10000,
-			options: [0, 1, 2, 3],
-		},
-		{
-			name: "button",
-			solution: 2,
-			msLength: 10000,
-			options: [0, 1, 2, 3]
-		},
-		{
-			name: "button",
-			solution: 2,
-			msLength: 10000,
-			options: [0, 1, 2, 3]
-		},
-		{
-			name: "button",
-			solution: 2,
-			msLength: 10000,
-			options: [0, 1, 2, 3],
-			attack: 0
-		},
-		{
-			name: "button",
-			solution: 2,
-			msLength: 10000,
-			options: [0, 1, 2, 3]
-		}
-	],
-	[
-		{
-			name: "button",
-			solution: 1,
-			msLength: 10000,
-			options: [0, 1, 2, 3]
-		},
-		{
-			name: "button",
-			solution: 2,
-			msLength: 10000,
-			options: [0, 1, 2, 3]
-		},
-		{
-			name: "button",
-			solution: 2,
-			msLength: 10000,
-			options: [0, 1, 2, 3]
-		},
-		{
-			name: "button",
-			solution: 2,
-			msLength: 10000,
-			options: [0, 1, 2, 3],
-			attack: 0
-		},
-		{
-			name: "button",
-			solution: 2,
-			msLength: 10000,
-			options: [0, 1, 2, 3]
-		}
-	]
-];
 
 const gameTimers: {
 	[index: string]: NodeJS.Timeout
@@ -147,7 +79,7 @@ export class Game extends Evented<keyof GameEvents> implements GameData{
 		
 		this.on("state", () => fork((err) => {
 			error("error saving game", JSON.stringify(err));
-		}) ((x) => {
+		}) (() => {
 			log("saved game", JSON.stringify(this));
 		})(saveGame(this)));
 
@@ -458,9 +390,9 @@ export function initGame(gameData: GameData): Either<Error, Game>{
 }
 
 export function removeSessionGames(session: Session): FutureInstance<Error, Session>{
-	log('remove_session_games', session.sessionId);
 	const { sessionId } = session;
-	
+	log('remove_session_games', sessionId);
+
 	return getSessionGames(sessionId)
 	.pipe(map(gameRows => gameRows.map(g => getGame(g.gameId))))
 	.pipe(map(x => aoe2ea(x))) // Array<Either> to Either<Array>
