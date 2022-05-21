@@ -23,6 +23,7 @@
 		"express-basic-auth": "^1.2.1",
 		"fluture": "^14.0.0",
 		"monet": "^0.9.3",
+		"pm2": "^5.2.0",
 		"socket.io": "^4.4.1",
 		"sqlite3": "git@github.com:mapbox/node-sqlite3.git"
 	}
