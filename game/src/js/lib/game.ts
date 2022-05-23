@@ -1,7 +1,10 @@
 import { io } from "socket.io-client";
 import { Evented, GameEvents, Answer } from "dfs-common";
 
-const { DFS_WS_HOSTNAME, DFS_WS_PORT, DFS_USE_TLS } = process.env;
+// Note: DFS_WS_PATH is passed to the socket.io client constructor
+// below and needs to match the value passed on the server side
+
+const { DFS_WS_HOSTNAME, DFS_WS_PORT, DFS_WS_PATH, DFS_USE_TLS } = process.env;
 const wsProtocol = DFS_USE_TLS === "1"? "wss" : "ws";
 
 
@@ -22,7 +25,8 @@ export class GameClient extends Evented<keyof ClientGameEvents>{
 	constructor({ playerId }: GameParams){
 		super();
 		this.playerId = playerId;
-		this.socket = io(`${wsProtocol}://${DFS_WS_HOSTNAME}:${DFS_WS_PORT}/client`,{
+		this.socket = io(`${wsProtocol}://${DFS_WS_HOSTNAME}:${DFS_WS_PORT}/client`, {
+			path: DFS_WS_PATH,
 			autoConnect: false,
 			query:{
 				playerId: this.playerId

@@ -17,9 +17,15 @@ export const buildConfig = {
 	},
 }
 
+const { DFS_WS_HOSTNAME, BASE_HREF } = process.env;
+if(DFS_WS_HOSTNAME === undefined || BASE_HREF === undefined){
+	throw "Missing build env variables.";
+}
+
 build(buildConfig).then(() => copyStatic())
 .then(() => replaceInStaticFile(resolve(BUILD_DIR, 'index.html'), {
-	$BASE_HREF: process.env["BASE_HREF"] || './'
+	$BASE_HREF: BASE_HREF,
+	$DFS_WS_HOSTNAME: DFS_WS_HOSTNAME
 }))
 .catch(err => {
 	throw err;
