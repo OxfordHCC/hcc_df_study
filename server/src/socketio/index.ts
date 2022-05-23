@@ -1,8 +1,12 @@
 import { Server, Namespace } from "socket.io";
 import client from "./client";
 import admin from "./admin";
+import { config } from '../config';
+
+const { DFS_WS_PATH } = config;
 
 export const io = new Server({
+	path: DFS_WS_PATH,
 	cors: {
 		origin: "*"
 	}
