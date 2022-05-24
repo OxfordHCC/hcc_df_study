@@ -21,7 +21,7 @@ services:
     image: dfs_game
     container_name: dfs_game_1
     ports:
-      - "8001:80"
+      - "4002:80"
     volumes:
       - ./common:/common:ro
   murmur:
