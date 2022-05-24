@@ -1,5 +1,19 @@
 version: "3.9"
 services:
+  admin:
+    build:
+      dockerfile: ./Dockerfile.admin
+      context: .
+    image: dfs_admin
+    ports:
+      - "8003:80"
+  calibration_app:
+    build:
+      dockerfile: ./Dockerfile.calibration_app
+      context: .
+    image: dfs_calibration_app
+    ports:
+      - "8002:80"
   game:
     build:
       dockerfile: ./Dockerfile.game
