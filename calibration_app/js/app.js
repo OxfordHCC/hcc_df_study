@@ -118,7 +118,7 @@ function createDownloadLink(blob,encoding) {
 	var li = document.createElement('li');
 	var link = document.createElement('a');
 	const isoDate = new Date().toISOString();
-	const fileName = `${SAoIP_Recording}-${isoDate}.${encoding}`
+	const fileName = `SAoIP_Recording-${isoDate}.${encoding}`
 	
 	//add controls to the <audio> element
 	au.controls = true;
