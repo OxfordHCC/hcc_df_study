@@ -51,6 +51,11 @@ const equations: Equation[] = [
 		answer: "62"
 	},
 	{
+		label: "21 + 71",
+		options: ["92", "104", "94", "102"],
+		answer: "92"
+	},
+	{
 		label: "11 - 5",
 		options: ["5", "6", "7", "8"],
 		answer: "6"
