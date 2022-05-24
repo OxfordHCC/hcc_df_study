@@ -54,8 +54,24 @@ a:visited {
 
 #controls {
   display: flex;
-  margin-top: 2rem;
+  margin: 1vh 0;
+  max-width: 28em;
+  width: 50vw;
 }
+
+#control-bar{
+	position: fixed;
+	bottom: 0;
+	right: 0;
+	left: 0;
+	border-top: 1px solid black;
+	background-color: white;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
 button {
   flex-grow: 1;
   height: 2.5rem;
@@ -104,3 +120,13 @@ li {
   margin-top: 0.5rem;
   font-size: 80%;
 }
+
+#instructions-container{
+	background-color: rgb(224, 224, 224);
+	padding: 15px;
+}
+
+#recordings-list{
+	width: 90vw;
+}
+

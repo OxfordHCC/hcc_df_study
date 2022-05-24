@@ -2,14 +2,15 @@
 <html>
 <head>
 	<meta charset="UTF-8">
-	<base href="./saoip-study-calibration/"/>
+	<base href="./"/>
 	<title>SAoIP Voice Calibration</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" type="text/css" href="./style.css">
 </head>
 <body>
   <h1>SAoIP Voice Calibration</h1>
-  <div>
+  <div id="instructions-container">
+	<h2>Instructions</h2>
     <p>
       In this phase we are going to have you record your voice as you read a
       collection of sentences. We will then have you upload the recording to a
@@ -83,14 +84,13 @@
 	  <li>It took him a while to realize that everything he decided not to change he was actually choosing. </li>
 	</ul>
   </div>
-  <div style="max-width: 28em;">
+  <div id="control-bar">
 	<div id="controls">
 	  <button id="recordButton">Record</button>
 	  <button id="stopButton" disabled>Stop</button>
 	</div>
-	
-	<pre>Recordings</pre>
-	<ol id="recordingsList"></ol>
+
+	<ol id="recordings-list"></ol>
   </div>
 
   <!-- inserting these scripts at the end to be able to use all the elements in the DOM -->
