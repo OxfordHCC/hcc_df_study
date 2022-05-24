@@ -3,13 +3,15 @@ import { AdminClientNs } from 'dfs-common';
 import { config } from './config';
 import { showError } from './globalerr';
 
-const { DFS_WS_PORT, DFS_WS_HOST } = config;
+const { DFS_WS_PORT, DFS_WS_HOST, DFS_WS_PATH } = config;
 
 if(DFS_WS_PORT === undefined || DFS_WS_HOST === undefined){
 	throw new Error("Invalid/missing env variables");
 }
 
-export const socket: Socket<AdminClientNs.ServerToClientEvents, AdminClientNs.ClientToServerEvents> = io(`ws://${DFS_WS_HOST}:${DFS_WS_PORT}/admin`);
+export const socket: Socket<AdminClientNs.ServerToClientEvents, AdminClientNs.ClientToServerEvents> = io(`ws://${DFS_WS_HOST}:${DFS_WS_PORT}/admin`,{
+	path: DFS_WS_PATH
+});
 
 
 export class ConnectionError extends Error{
