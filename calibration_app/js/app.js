@@ -117,15 +117,18 @@ function createDownloadLink(blob,encoding) {
 	var au = document.createElement('audio');
 	var li = document.createElement('li');
 	var link = document.createElement('a');
-
+	const isoDate = new Date().toISOString();
+	const fileName = `${SAoIP_Recording}-${isoDate}.${encoding}`
+	
 	//add controls to the <audio> element
 	au.controls = true;
 	au.src = url;
 
 	//link the a element to the blob
 	link.href = url;
-	link.download = new Date().toISOString() + '.'+encoding;
-	link.innerHTML = link.download;
+	
+	link.download = fileName;
+	link.innerHTML = `Download: ${link.download}`;
 
 	//add the new audio and a elements to the li element
 	li.appendChild(au);
