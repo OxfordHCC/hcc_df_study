@@ -26,13 +26,6 @@ export type EquationInstructionsProps = {
 export function EqInstructions({ equation, roundData }: EquationInstructionsProps) {
 	const buttonSolutions: [string, number][] =	equation.options.map((opt, i) => ([opt, i]));
 
-	const a = buttonSolutions.find(([label, val]) => equation.answer === label);
-	const b = buttonSolutions.find(([label, val]) => val === roundData.solution);
-
-	const temp = a![1];
-	a![1] = b![1];
-	b![1] = temp;
-	
 	return (
 		<div >
 			<div>
