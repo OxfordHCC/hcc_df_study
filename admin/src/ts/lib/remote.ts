@@ -9,7 +9,7 @@ if(DFS_WS_PORT === undefined || DFS_WS_HOST === undefined){
 	throw new Error("Invalid/missing env variables");
 }
 
-export const socket: Socket<AdminClientNs.ServerToClientEvents, AdminClientNs.ClientToServerEvents> = io(`ws://${DFS_WS_HOST}:${DFS_WS_PORT}/admin`,{
+export const socket: Socket<AdminClientNs.ServerToClientEvents, AdminClientNs.ClientToServerEvents> = io(`wss://${DFS_WS_HOST}:${DFS_WS_PORT}/admin`,{
 	path: DFS_WS_PATH
 });
 
