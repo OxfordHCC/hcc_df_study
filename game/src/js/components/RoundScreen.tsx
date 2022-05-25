@@ -78,7 +78,7 @@ export function RoundScreen({ gameData, playerId, onAnswer }: RoundScreenParams)
 }
 
 const BarSquare = styled.div`
-	background: url("./textures/GRAY1.PNG");
+	background: url("./textures/GRAY1.png");
 	background-size: cover;
 	background-repeat: no-repeat;
 	display: flex;
@@ -125,7 +125,7 @@ const TableFace = styled.div`
 `;
 
 const TopTableFace = styled(TableFace)`
-  background: url("./textures/CRATE1.PNG");
+  background: url("./textures/CRATE1.png");
   background-size: cover;
   transform: rotateX(30deg) translateY(180px);
 `;
