@@ -62,7 +62,7 @@ const equations: Equation[] = [
 	},
 	{
 		label: "6 * 7",
-		options: ["30", "36", "35"],
+		options: ["42", "36", "35"],
 		answer: "42"
 	},
 	{
