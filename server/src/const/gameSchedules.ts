@@ -86,7 +86,6 @@ export const gameSchedules: ConcreteRoundData[][] = [
 			solution: 2,
 			msLength: 10000,
 			options: [0, 1, 2],
-			attack: 0
 		},
 		{
 			name: "button",
