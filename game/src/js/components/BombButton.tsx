@@ -11,13 +11,14 @@ const colorMap = [
 type BombButtonProps = {
 	onPress: (value: number) => void
 	option: number
+	className: string
 }
-export function BombButton({ onPress, option }: BombButtonProps) {
+export function BombButton({ onPress, option, className }: BombButtonProps) {
 	const colorBlind = false;
 	const color = colorMap[option];
 	
 	return (
-		<Button color={color} onClick={() => onPress(option)}>
+		<Button color={color} onClick={() => onPress(option)} className={className}>
 			{ colorBlind && option || "" }
 		</Button>
 	);

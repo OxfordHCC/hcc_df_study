@@ -1,7 +1,10 @@
 import React from 'react';
+import styled from 'styled-components';
 import { RoundData } from 'dfs-common';
 import { Equation } from '../lib/equations';
 import { BombButton } from './BombButton';
+import { Spacer } from './Spacer';
+
 
 type ButtonSolutionProps = {
 	label: string;
@@ -9,10 +12,10 @@ type ButtonSolutionProps = {
 }
 function ButtonSolution({value, label}: ButtonSolutionProps){
 	return (
-		<div>
+		<ButtonSolutionDiv>
 			<span>{label}</span>
-			<BombButton onPress={() => {}} option={value}/>
-		</div>
+			<OptionColor onPress={() => {}} option={value}/>
+		</ButtonSolutionDiv>
 	);
 }
 
@@ -21,8 +24,7 @@ export type EquationInstructionsProps = {
 	roundData: RoundData
 }
 export function EqInstructions({ equation, roundData }: EquationInstructionsProps) {
-	const buttonSolutions: [string, number][] = equation.options.map(
-		(opt, i) => ([opt, i]));
+	const buttonSolutions: [string, number][] =	equation.options.map((opt, i) => ([opt, i]));
 
 	const a = buttonSolutions.find(([label, val]) => equation.answer === label);
 	const b = buttonSolutions.find(([label, val]) => val === roundData.solution);
@@ -36,11 +38,31 @@ export function EqInstructions({ equation, roundData }: EquationInstructionsProp
 			<div>
 				{equation.label}
 			</div>
-			{
-				buttonSolutions.map(
-					([label, value]) => <ButtonSolution key={value} label={label} value={value}/>
-				)
-			}
+			<Spacer height="50px" />
+			<OptionsContainer>
+				{
+					buttonSolutions.map(
+						([label, value]) => <ButtonSolution key={value} label={label} value={value}/>
+					)
+				}
+			</OptionsContainer>
 		</div >
 	)
 }
+
+const OptionColor = styled(BombButton)`
+    border: 1px solid;
+	border-radius: 20px;
+    margin-left: 10px;
+`;
+
+const OptionsContainer = styled.div`
+display: flex;
+	justify-content: space-between;
+`;
+
+const ButtonSolutionDiv = styled.div`
+	display: flex;
+	align-items: center;
+	margin: 0 30px;
+`;
