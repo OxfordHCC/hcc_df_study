@@ -6,6 +6,10 @@ export type Equation = {
 	options: string[];
 	answer: string;
 };
+
+// !! IMPORTANT: Make sure the number of equations in this array is
+// greater than or equal to the number of rounds in the game. The
+// number of rounds in a game is determined on the server.
 const equations: Equation[] = [
 	{
 		label: "What is the capital city of England?",
