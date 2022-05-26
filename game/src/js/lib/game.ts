@@ -43,7 +43,6 @@ export class GameClient extends Evented<keyof ClientGameEvents>{
 			this.trigger("disconnect");
 		});
 		this.socket.on("state", (state) => {
-			console.log(state);
 			this.trigger("state", state);
 		});
 	}
