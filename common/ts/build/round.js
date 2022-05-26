@@ -4,7 +4,8 @@ exports.isRoundData = void 0;
 function isRoundName(x) {
     return x === "button"
         || x === "wire"
-        || x === "keypad";
+        || x === "keypad"
+        || x === "tutorial-button";
 }
 function isSolution(x) {
     return typeof x === "number"

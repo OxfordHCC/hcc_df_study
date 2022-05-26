@@ -1,5 +1,5 @@
 import { Answer } from './game';
-export declare type SingleRoundName = "button" | "wire" | "pseudoKeypad";
+export declare type SingleRoundName = "button" | "wire" | "tutorial-button";
 export declare type SequenceRoundName = "keypad";
 export declare type RoundName = SingleRoundName | SequenceRoundName;
 export declare type Solution = number | number[];

@@ -1,6 +1,6 @@
 import { Answer } from './game';
 
-export type SingleRoundName = "button" | "wire" | "pseudoKeypad";
+export type SingleRoundName = "button" | "wire" | "tutorial-button";
 export type SequenceRoundName = "keypad";
 export type RoundName =
 	| SingleRoundName
@@ -9,7 +9,8 @@ export type RoundName =
 function isRoundName(x: any): x is RoundName{
 	return x === "button"
 		|| x === "wire"
-		|| x === "keypad";
+		|| x === "keypad"
+		|| x === "tutorial-button";
 }
 
 export type Solution =
