@@ -10,14 +10,14 @@ root/
 ├─ common/          - common libraries and resources
 ├─ admin/           - admin dashboard to monitor game progress
 ├─ game/            - bomb defusal game played by participants
-├─ study-cli/       - tool used to issue audio injection commands to mumble
+├─ mumble-cli/       - tool used to issue audio injection commands to mumble
 ├─ server/          - study server
+├─ calibration_app/ - web-based audio recording tool + list of sentences
 ├─ mams-parser/     - convert mumble recordings files to pcm
 ```
 
 
 # Prereqs
-
 - Docker is required to run the study server
 - Make sure the murmur server docker image is built by running `docker-compose build murmur`
 
@@ -25,7 +25,7 @@ root/
 
 ## Murmur (mumble server)
 
-You can either follow instructions in the mumble documentation or, with docker and docker-compose installed, you can just run `docker-compose up --build` in the root directory (the one containing the docker-compose.yml file). 
+You can either follow instructions in the mumble documentation or, with docker and docker-compose installed, you can just run `docker-compose up --build murmur` in the root directory (the one containing the docker-compose.yml file). 
 
 ## Mumble client
 ### Prebuilt binary

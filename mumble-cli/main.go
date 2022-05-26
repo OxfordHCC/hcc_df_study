@@ -78,17 +78,12 @@ func help(commands commandTree) string{
 
 func main(){
 	commands := make(commandTree);
-	//	commands["shell"] = shellCmd;
 	commands["send"] = sendCmd; // send audio to someone
 	commands["shadowmute"] = shadowmuteCmd; // shadowmute someone
 	commands["users"] = usersCmd; // get users 
 	commands["servers"] = serversCmd; // get servers
 	commands["spoof"] = spoofCmd; // spoof audio/text message
-
-	if len(os.Args) < 4 {
-		fmt.Fprintln(os.Stderr, help(commands))
-		return
-	}
+	
 
 	dialAddr := os.Args[1];
 	cmd := os.Args[2];
