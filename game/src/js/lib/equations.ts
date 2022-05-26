@@ -42,7 +42,7 @@ const equations: Equation[] = [
 	},
 	{
 		label: "What do caterpillars turn into?",
-		options: ["Chickens", "Butterflies", "Elephants"],
+		options: ["Moths", "Butterflies", "Snails"],
 		answer: "Butterflies"
 	},
 	{
@@ -82,17 +82,17 @@ const equations: Equation[] = [
 	},
 	{
 		label: "What do bees make?",
-		options: ["Honey", "Pasta", "Soup"],
+		options: ["Honey", "Wax", "Silk"],
 		answer: "Honey"
 	},
 	{
 		label: "Which is the fastest land animal?",
-		options: ["Snail", "Salmon", "Cheetah"],
+		options: ["Snail", "Elephant", "Cheetah"],
 		answer: "Cheetah"
 	},
 	{
 		label: "Who built the pyramids?",
-		options: ["The Egyptians", "The Avengers", "Microsoft"],
+		options: ["The Egyptians", "The Syrians", "The English"],
 		answer: "The Egyptians"
 	},
 	{
