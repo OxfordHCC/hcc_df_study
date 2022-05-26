@@ -2,7 +2,7 @@
 <html>
   <head>
 	<meta charset="UTF-8">
-	<base href="./saoip-study-calibration/"/>
+	<!-- <base href="./saoip-study-calibration/"/> -->
 	<title>SAoIP Voice Calibration</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" type="text/css" href="./style.css">
@@ -45,7 +45,8 @@
 		  <li><b>Make your main recording</b> - Hit Record once again. Read all the sentences one after another without a pause.  One you are done, hit Stop, and listen to the result.  If it sounds clear, click the wav file link under the audio player that popped up. This will save the file to your computer.  Upload this file to the folder provided to you in the e-mail we sent.</li>
 		</ol>
 	  </div>
-	  <div>
+	  <div id="sentences">
+		<b>Please read the following sentences using your normal voice, one after another without a break:</b>
 		<ul>
 		  <li>Enough money was available for him to begin his business. </li>
 		  <li>Do you have a table in front of the fireplace? </li>
@@ -85,15 +86,16 @@
 		  <li>It took him a while to realize that everything he decided not to change he was actually choosing. </li>
 		</ul>
 	  </div>
-	  <div id="recordings-container">
-		<h2>Your Recordings</h2>
-		<ol id="recordingsList"></ol>
-	  </div>
 	</div>
 	<div id="control-bar">
 	  <div id="controls">
 		<button id="recordButton">Record</button>
 		<button id="stopButton" disabled>Stop</button>
+	  </div>
+	  <div id="recordings-container">
+		<!-- <h2>Your Recordings</h2> -->
+		<div>Listen to and download your recordings from here: </div>
+		<ol id="recordingsList"></ol>
 	  </div>
 	</div>
 	<!-- inserting these scripts at the end to be able to use all the elements in the DOM -->

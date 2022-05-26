@@ -8,6 +8,7 @@ body {
   overflow-wrap: break-word;
   color:black;
   margin:2em;
+  padding:10px;
 }
 
 h1 {
@@ -118,7 +119,10 @@ li {
 
 #instructions-container{
 	background-color: rgb(224, 224, 224);
-	padding: 15px;
+	padding: 10px 15px;
+}
+#sentences {
+	padding: 10px 15px;
 }
 
 #recordingsList{
@@ -133,5 +137,6 @@ li {
 
 #recordings-container{
 	background-color: rgb(224, 224, 224);
-	margin: 10px 0;
+	/* margin: 10px 0; */
+  padding:10px;
 }

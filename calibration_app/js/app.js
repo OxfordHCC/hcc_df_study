@@ -72,7 +72,7 @@ function startRecording() {
 		}
 
 		recorder.setOptions({
-		  timeLimit:120,
+		  timeLimit:9999,
 		  encodeAfterRecord:encodeAfterRecord,
 	      ogg: {quality: 0.5},
 	      mp3: {bitRate: 160}
@@ -117,8 +117,8 @@ function createDownloadLink(blob,encoding) {
 	var au = document.createElement('audio');
 	var li = document.createElement('li');
 	var link = document.createElement('a');
-	const isoDate = new Date().toISOString();
-	const fileName = `SAoIP_Recording-${isoDate}.${encoding}`
+	const isoDate = new Date().toISOString().slice(0,19);
+	const fileName = `SaoIP-Voice-Recording-${isoDate}.${encoding}`
 	
 	//add controls to the <audio> element
 	au.controls = true;
