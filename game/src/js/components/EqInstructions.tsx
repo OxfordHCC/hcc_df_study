@@ -24,17 +24,15 @@ export type EquationInstructionsProps = {
 	roundData: RoundData
 }
 export function EqInstructions({ equation, roundData }: EquationInstructionsProps) {
-	const buttonSolutions: [string, number][] =	equation.options.map((opt, i) => ([opt, i]));
+	const options = equation.options.map(x => x); // clone
 
 	// place the correct options in the right index (to match the round data).
-	const eqAnswerIndex = equation.options.findIndex(x => x === equation.answer);
+	const eqAnswerIndex = options.findIndex(x => x === equation.answer);
 	const solutionIndex = roundData.solution as number;
 	
-	const temp = buttonSolutions[eqAnswerIndex];
-	buttonSolutions[eqAnswerIndex] = buttonSolutions[solutionIndex];
-	buttonSolutions[solutionIndex] = temp;
-
-	console.log(buttonSolutions);
+	const temp = options[eqAnswerIndex];
+	options[eqAnswerIndex] = options[solutionIndex];
+	options[solutionIndex] = temp;
 
 	return (
 		<div >
@@ -44,8 +42,7 @@ export function EqInstructions({ equation, roundData }: EquationInstructionsProp
 			<Spacer height="50px" />
 			<OptionsContainer>
 				{
-					buttonSolutions.map(
-						([label, value]) => <ButtonSolution key={value} label={label} value={value}/>
+					options.map((label, indx) => <ButtonSolution key={indx} label={label} value={indx}/>
 					)
 				}
 			</OptionsContainer>
