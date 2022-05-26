@@ -1,4 +1,4 @@
-# Study-cli
+# Mumble-cli
 
 This cli tool is used to issue commands to a murmur instance.
 
