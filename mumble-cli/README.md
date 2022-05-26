@@ -21,6 +21,7 @@ Subcommands:
  send 
  users 
  servers
+ shadowmute
 ```
 
 ### Send audio to user
@@ -28,7 +29,7 @@ Subcommands:
 Send audio to user `t` as if coming from user `u`.
 
 ```sh
-> mumble-cli send --help
+> mumble-cli <host>:<port> send --help
 Usage of send:
   -e, --big-endian            use big endianness when encoding
   -b, --bitrate uint32        bitrate (default 32000)
@@ -43,10 +44,18 @@ Usage of send:
 
 The delay parameter introduces artificial latency in the speech by waiting the specified amount between sneding packets to the target user. This value may need tweaking depending on the charactersitics of the input wave file. For a 48khz sample rate wav, a 20ms delay seems to be ok.
 
+### Spoof audio
+
+TODO add description
+
+### Shadowmute
+
+TODO add description
+
 ### List of servers running ar remote address
 
 ```sh
-> mumble-cli servers
+> mumble-cli <host>:<port> servers
 ```
 
 Return a list of servers running at a murmur instance, including their id, state and uptime.
@@ -54,14 +63,14 @@ Return a list of servers running at a murmur instance, including their id, state
 ### Users
 
 ```sh
-> mumble-cli users --help
+> mumble-cli <host>:<port>users --help
 Usage: users <server-id>
 ```
 Returns the list of users connected to a particular server. The list contains their id and username
+
+
 
 ## Planned commands
 ### Shell
 Interactive grpc session between study-cli user and the murmur server. Could be useful if you want to re-use the grpc connection between commands.
 
-### Spoof
-Similar to `send`, but instead of sending audio to a single user, the audio is sent to the whole room.
