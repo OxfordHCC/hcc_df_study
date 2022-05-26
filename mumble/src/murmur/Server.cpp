@@ -1053,7 +1053,7 @@ void to_hex(const char *string, char *out, int len, int maxlen){
 
 void Server::shadowmuteUser(ServerUser* u, bool state){
 	std::string strUserName = u->qsName.toStdString();
-	qDebug("Called shadowmute: name: %s; state: %d", strUserName.c_str(), state );
+	qDebug("Called shadowmute: name: %s; state: %d", strUserName.c_str(), state);
 	shadowmuteMap[strUserName] = state;
 }
 
@@ -1189,9 +1189,7 @@ void Server::processMsg(ServerUser *u, const char *data, int len, bool skipShado
 
 	// if muted, drop message
 	if(skipShadowMuteCheck == false && shadowmuteMap.find(strUserName) != shadowmuteMap.end()){
-		qDebug("shadowMute[%s] = %d", strUserName.c_str(), shadowmuteMap[strUserName]);
 		if(shadowmuteMap[strUserName] == true){
-			qDebug("user is shadowmuted. Skipping...");
 			return;
 		}
 	}

@@ -46,7 +46,6 @@ export const debugSchedules: ConcreteRoundData[][] = [
 			solution: 1,
 			msLength: 60000,
 			options: [0, 1, 2],
-			attack: 2
 		}
 	],
 	[
@@ -94,7 +93,6 @@ export const debugSchedules: ConcreteRoundData[][] = [
 			solution: 1,
 			msLength: 60000,
 			options: [0, 1, 2],
-			attack: 2
 		}
 	]
 ];
