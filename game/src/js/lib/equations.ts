@@ -6,19 +6,19 @@ export type Equation = {
 };
 const equations: Equation[] = [
 	{
-		label: "The Kray Twins notoriously murdered a rival gang associate in which pub in Whitechapel?",
-		options: ["The Blind Beggar", "The White Hart", "Good Samaritan"],
-		answer: "The Blind Beggar"
+		label: "What is the capital city of England?",
+		options: ["London", "Shenzhen", "Venice"],
+		answer: "London"
 	},
 	{
-		label: "A rock festival was held in 1970 with over 600,000 attendands on which island?",
-		options: ["Isle of Man", "Isle of Wight", "Jersey"],
-		answer: "Isle of Wight"
+		label: "How many weeks in a year?",
+		options: ["52", "100", "1000"],
+		answer: "52"
 	},
 	{
-		label: "Which Henry Lyte's Christian hymn is sung prior to kick-off at every FA Cup Final, a tradition since 1927?",
-		options: ["Vindaloo", "God Save the Queen", "Abide with me"],
-		answer: "Abide with me"
+		label: "How many legs does a Octopus have?",
+		options: ["12", "24", "8"],
+		answer: "8"
 	},
 	{
 		label: "7 * 16",
@@ -26,14 +26,14 @@ const equations: Equation[] = [
 		answer: "112"
 	},
 	{
-		label: "Who is the only person to have won BAFTAs for programmes in each of black and white, colour, HD, and 3D?",
-		options: ["David Attenborough", "Benedict Cumberbatch", "Idris Elba"],
-		answer: "David Attenborough"
+		label: "If you freeze water, what do you get?",
+		options: ["Lava", "Emeralds", "Ice"],
+		answer: "Ice"
 	},
 	{
-		label: "How many feet in 1 mile?",
-		options: ["5280", "1000", "100"],
-		answer: "5280"
+		label: "How many meters in 1 kilomile?",
+		options: ["5280", "1000", "10"],
+		answer: "1000"
 	},
 	{
 		label: "4 * 7",
@@ -41,9 +41,9 @@ const equations: Equation[] = [
 		answer: "28"
 	},
 	{
-		label: "If you were driving in Denmark and saw a sign saying “Fartkontrol”, what is it telling you of?",
-		options: ["Speed camera", "Border check", "Highway rest area"],
-		answer: "Speed camera"
+		label: "What do caterpillars turn into?",
+		options: ["Moths", "Butterflies", "Snails"],
+		answer: "Butterflies"
 	},
 	{
 		label: "8 + 54",
@@ -76,39 +76,39 @@ const equations: Equation[] = [
 		answer: "13"
 	},
 	{
-		label: "The Undertaker threw mankind off hеll in a cell, and plummeted sixteen feet through an announcer's table set in which year?",
-		options: ["1998", "1991", "1993"],
-		answer: "1998"
+		label: "What colour are London buses?",
+		options: ["Red", "Black", "White"],
+		answer: "Red"
 	},
 	{
-		label: "Which Middle Eastern city is also the name of a type of artichoke?",
-		options: ["Jerusalem", "Shiraz", "Woking"],
-		answer: "Jerusalem"
+		label: "What do bees make?",
+		options: ["Honey", "Wax", "Silk"],
+		answer: "Honey"
 	},
 	{
-		label: "What is Kimi Raikkonen's nickname?",
-		options: ["The Honey Badger", "Finman", "Iceman"],
-		answer: "Iceman"
+		label: "Which is the fastest land animal?",
+		options: ["Snail", "Elephant", "Cheetah"],
+		answer: "Cheetah"
 	},
 	{
-		label: "How many world cups did Kimmi Raikkonen win in Formula 1?",
-		options: ["1", "2", "0"],
-		answer: "1"
+		label: "Who built the pyramids?",
+		options: ["The Egyptians", "The Syrians", "The English"],
+		answer: "The Egyptians"
 	},
 	{
-		label: "Who won the last championship for Ferrari in Formula 1?",
-		options: ["Kimi Raikkonen", "Michael Schumacher", "Sebastian Vettel"],
-		answer: "Kimi Raikkonen"
+		label: "How many sides does a triangle have?",
+		options: ["6", "12", "3"],
+		answer: "3"
 	},
 	{
-		label: "Which brand of soup featured in one of Andy Warhol’s most famous pop art pieces? ",
-		options: ["Campbell", "Heinz", "Chef Boyardee"],
-		answer: "Campbell"
+		label: "What is the largest mammal in the world?",
+		options: ["Human", "Whale", "Shark"],
+		answer: "Whale"
 	},
 	{
-		label: "Kimi Raikkonen is the only F1 driver to have won races in the V8, V10 and ? eras. ",
-		options: ["V20", "Inline 4", "V6"],
-		answer: "V6"
+		label: "In which capital city of Europe would you find the Eiffel Tower?",
+		options: ["London", "New York", "Paris"],
+		answer: "Paris"
 	},
 ];
 
