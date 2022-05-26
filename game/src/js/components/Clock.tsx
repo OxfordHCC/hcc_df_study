@@ -17,8 +17,7 @@ function formatClockString(width: number, msLeft: number){
 }
 
 export function Clock({ onUpdate, start = 0, length }: ClockParams) {
-	const width = useMemo(() =>
-		(Math.floor((length / 1000) / 10)), []);
+	const width = useMemo(() =>	Math.log(Math.floor(length / 1000),10), []);
 	const [display, setDisplay] = useState<string>(
 		formatClockString(width, length));
 	const end = useMemo(() => start + length, [start, length]);
