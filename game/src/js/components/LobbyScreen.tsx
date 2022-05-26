@@ -69,6 +69,5 @@ export function GameLobby({ playerId, gameData, onReadyChange }: GameLobbyParams
 }
 
 
-const InstructionsDiv = styled.div`
-	
+const InstructionsContainer = styled.div`
 `;
