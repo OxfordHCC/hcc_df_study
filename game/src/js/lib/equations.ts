@@ -1,3 +1,5 @@
+import { RoundData } from 'dfs-common';
+
 
 export type Equation = {
 	label: string;
@@ -11,6 +13,11 @@ const equations: Equation[] = [
 		answer: "London"
 	},
 	{
+		label: "8 + 54 = ?",
+		options: ["62", "66", "72"],
+		answer: "62"
+	},
+	{
 		label: "How many weeks in a year?",
 		options: ["52", "100", "1000"],
 		answer: "52"
@@ -19,11 +26,6 @@ const equations: Equation[] = [
 		label: "How many legs does a Octopus have?",
 		options: ["12", "24", "8"],
 		answer: "8"
-	},
-	{
-		label: "7 * 16",
-		options: ["102", "112", "122"],
-		answer: "112"
 	},
 	{
 		label: "If you freeze water, what do you get?",
@@ -36,7 +38,7 @@ const equations: Equation[] = [
 		answer: "1000"
 	},
 	{
-		label: "4 * 7",
+		label: "4 * 7 = ?",
 		options: ["28", "24", "32"],
 		answer: "28"
 	},
@@ -46,27 +48,22 @@ const equations: Equation[] = [
 		answer: "Butterflies"
 	},
 	{
-		label: "8 + 54",
-		options: ["62", "66", "72"],
-		answer: "62"
-	},
-	{
-		label: "21 + 71",
+		label: "21 + 71 = ?",
 		options: ["92", "104", "94"],
 		answer: "92"
 	},
 	{
-		label: "11 - 5",
+		label: "11 - 5 = ?",
 		options: ["5", "6", "7"],
 		answer: "6"
 	},
 	{
-		label: "6 * 7",
+		label: "6 * 7 = ?",
 		options: ["42", "36", "35"],
 		answer: "42"
 	},
 	{
-		label: "25 - 7",
+		label: "25 - 7 = ?",
 		options: ["16", "17", "18"],
 		answer: "18"
 	},
@@ -112,23 +109,53 @@ const equations: Equation[] = [
 	},
 ];
 
-const seen: Equation[] = [];
+const tutorialEquations: Equation[] = [
+	{
+		label: "2 * 3",
+		options: ["12", "6", "4"],
+		answer: "6"
+	},
+	{
+		label: "Who would win in a fight?",
+		options: ["Ada Lovelace", "Alan Turing", "Elon Musk"],
+		answer: "Ada Lovelace"
+	},
+	{
+		label: "Who was the 23rd president of the United States?",
+		options: ["Benjamin Harrison", "Grover Cleveland", "William McKinley"],
+		answer: "Benjamin Harrison"
+	},
+	{
+		label: "Who was the 23rd president of the United States?",
+		options: ["Benjamin Harrison", "Grover Cleveland", "William McKinley"],
+		answer: "Benjamin Harrison"
+	},
+	{
+		label: "What kind of creature is Shrek?",
+		options: ["Ogre", "Cat", "Donkey"],
+		answer: "Ogre"
+	},
+	{
+		label: "Mario and ?",
+		options: ["Luigi", "Letizia", "Lorenzo"],
+		answer: "Luigi"
+	}
+];
 
-function getRandomInt(min: number, max:number): number {
+function getRandomInt(min: number, max: number): number {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function pickRandom<T>(arr: T[]): T {
-	return arr[getRandomInt(0, arr.length-1)];
+function randomItem(arr: Equation[]): Equation{
+	return arr[ getRandomInt(0, arr.length) % arr.length ];
 }
 
-export function chooseRandomEq(){
-	const unseen = equations.filter((x) => {
-		return seen.find(y => y.label === x.label) === undefined;
-	});
-	const x = pickRandom(unseen);
-	seen.push(x);
-	return x;
+export function getEquation(round: number, roundData: RoundData){
+	if(roundData.name === "tutorial-button"){
+		return randomItem(tutorialEquations);
+	}
+	
+	return equations[round];
 }

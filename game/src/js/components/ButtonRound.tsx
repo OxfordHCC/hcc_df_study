@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { Spacer } from './Spacer';
 import { Center } from './Center';
 import { BombButton } from './BombButton';
-import { chooseRandomEq } from '../lib/equations';
+import { getEquation } from '../lib/equations';
 import { EqInstructions } from './EqInstructions';
 
 
@@ -16,7 +16,7 @@ export type ButtonRoundParams = {
 }
 export function ButtonRound({ round, roundData, onAnswer, isBlue }: ButtonRoundParams): JSX.Element {
 	const onButtonPress = (value: number) => onAnswer({ round, value });
-	const equation = useMemo(() => chooseRandomEq(), [round]);
+	const equation = useMemo(() => getEquation(round, roundData), [round]);
 
 	return (
 		<Center>
@@ -40,7 +40,6 @@ export function ButtonRound({ round, roundData, onAnswer, isBlue }: ButtonRoundP
 						}
 					</RedContainer>
 				}
-
 			</Container >
 		</Center>
 	);
@@ -51,13 +50,13 @@ const BlueContainer = styled.div`
 	font-size: 1.5em;
 `;
 
-const Container = styled.div<{isBlue: boolean}>`
+const Container = styled.div<{ isBlue: boolean }>`
 border-bottom: 0.8vw solid;
 border-left: 0.8vw solid rgb(122,33,33);
 border-right: 0.8vw solid rgb(122,33,33);
 border-top: 0.2vw solid brown;
-width: ${props => props.isBlue? "80vw" : "40vw"};
-background: ${props => props.isBlue? "beige": 'url("./textures/BROWNHUG.png")'};
+width: ${props => props.isBlue ? "80vw" : "40vw"};
+background: ${props => props.isBlue ? "beige" : 'url("./textures/BROWNHUG.png")'};
 padding: 50px;
 `;
 
