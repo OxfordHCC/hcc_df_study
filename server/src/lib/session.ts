@@ -30,6 +30,7 @@ import {
 } from './game';
 import { gameSchedules } from '../const/gameSchedules';
 import { tutorialSchedules } from '../const/tutorialSchedules';
+import { debugSchedules } from '../const/debugSchedules';
 import { Logger } from './log';
 import { withDb } from './db';
 import {
@@ -138,10 +139,12 @@ function createSessionMurmur(session: Session): FutureInstance<SessionError, Ses
 function createSessionGames(session: Session): FutureInstance<SessionError, Session>{
 	const { blueParticipant, redParticipant, sessionId } = session;
 	return parallel(1)([
-		createGame(blueParticipant, redParticipant, sessionId, 0, tutorialSchedules[0], true),
-		createGame(blueParticipant, redParticipant, sessionId, 0, tutorialSchedules[1], false),
-		createGame(blueParticipant, redParticipant, sessionId, 2, gameSchedules[0], false),
-		createGame(redParticipant, blueParticipant, sessionId, 3, gameSchedules[1], false)
+		createGame(blueParticipant, redParticipant, sessionId, 0, debugSchedules[0], true),
+		createGame(redParticipant, blueParticipant, sessionId, 1, debugSchedules[1], false),
+		createGame(blueParticipant, redParticipant, sessionId, 2, tutorialSchedules[0], false),
+		createGame(redParticipant, blueParticipant, sessionId, 3, tutorialSchedules[1], false),
+		createGame(blueParticipant, redParticipant, sessionId, 4, gameSchedules[0], false),
+		createGame(redParticipant, blueParticipant, sessionId, 5, gameSchedules[1], false)
 	])
 	.pipe(map(_games => session))
 	.pipe(mapRej(err => new SessionError(session, err.message)));
