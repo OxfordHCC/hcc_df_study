@@ -2,6 +2,7 @@
 <html>
   <head>
 	<meta charset="UTF-8">
+	<!-- comment this out for production -->
 	<base href="./saoip-study-calibration/"/>
 	<title>SAoIP Voice Calibration</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,12 +22,14 @@
 		  To get started, do the following:
 		</p>
 		<ol>
+			<li><b>Use Chrome</b>--Please use Chrome to access this website if you can. This will make sure
+				the recording app works as intended.	  </li>	
 		  <li><b>Find a quiet environment</b> - Try to find a quiet place that you can speak
 			at your normal voice, such as your room.  Try to eliminate background noise if you can,
 			and avoid places without wind. For instance, try closing the window.
 		  </li>
 		  <li>
-			<p><b>Set up your headset/microphone</b> - Please plug in and turn on your gaming
+			<p><b>Set up your headset/microphone</b>--Please plug in and turn on your gaming
 			  headset or microphone and test it out on your computer to make sure the volume
 			  levels are good. <b>Check that your headset/microphone is set to your preferred system input</b>.
 			</p>
@@ -34,19 +37,23 @@
 			  as bluetooth headsets tend to record audio in lower quality which can confuse the system.
 			</p>
 		  </li>
-		  <li><b>Use Chrome</b> - Open this website in a Chrome browser if you can. This will make sure
-			the recording app works as intended.
+		  <li><b>Make a test recording</b>--Hit the red Record button below.	Chrome will ask you for permission to use your microphone.
+			Click on "Allow" on the popup box. <br>
+			<img class="popup" style="width:300px; border:1px solid #222;" src="img/hcc-use-microphone.png"><br>
+			Speak one or two sentences, stop the recording and listen to the recorded result.  
+			Adjust your microphone so that your voice is clear.
 		  </li>
-		  <li><b>Make a test recording</b> - Hit the red Record button below.
-			Chrome will ask you for permission to use your microphone.
-			Click on "Allow" on the popup box.
-			Speak one or two sentences, stop the recording and listen to the recorded result.  Adjust your microphone so that your voice is clear.
+		  <li>
+			  <b>Check your audio device</b>--If your audio sounded muffled, the wrong audio device might be selected.
+			  Click the little microphone icon in the right side of your URL bar. Then, select the Manage devices setting,
+			  then make sure your preferred microphone is selected.
+			  <img class="popup" src="img/select-device.png" style="width:90%; border:1px solid #222;" >			  
 		  </li>
 		  <li><b>Make your main recording</b> - Hit Record once again. Read all the sentences one after another without a pause.  One you are done, hit Stop, and listen to the result.  If it sounds clear, click the wav file link under the audio player that popped up. This will save the file to your computer.  Upload this file to the folder provided to you in the e-mail we sent.</li>
 		</ol>
 	  </div>
 	  <div id="sentences">
-		<b>Please read the following sentences using your normal voice, one after another without a break:</b>
+		<div>Hit <b>Record</b> below, then read the following sentences using your normal voice, one after another without a break:</div>
 		<ul>
 		  <li>Enough money was available for him to begin his business. </li>
 		  <li>Do you have a table in front of the fireplace? </li>
@@ -86,6 +93,10 @@
 		  <li>It took him a while to realize that everything he decided not to change he was actually choosing. </li>
 		</ul>
 	  </div>
+	  <div>
+		Now, hit <b>Stop</b> below! Listen to your recording. Does it sound clear and loud? If not, please adjust
+		your audio levels and try again.
+	  </div>
 	</div>
 	<div id="control-bar">
 	  <div id="controls">
@@ -101,6 +112,5 @@
 	<!-- inserting these scripts at the end to be able to use all the elements in the DOM -->
 	<script src="./js/WebAudioRecorder.min.js"></script>
 	<script src="./js/app.js"></script>
-
   </body>
 </html>
