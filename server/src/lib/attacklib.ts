@@ -95,7 +95,7 @@ export function scheduleAttack(attack: Attack): FutureInstance<Error, Attack> {
 
 					// mute player
 					execF(`mumble-cli 127.0.0.1:${session.grpcPort}`
-						+` shadowmute -s 1 -t ${attack.targetUser}`)
+						+` shadowmute -s 1 -t ${attack.sourceUser}`)
 					.pipe(chain(muteRes => 
 						execF(`mumble-cli 127.0.0.1:${session.grpcPort}`
 						+` spoof -s 1 -u ${attack.sourceUser}`
@@ -114,7 +114,7 @@ export function scheduleAttack(attack: Attack): FutureInstance<Error, Attack> {
 				if(round === attack.round + 1){
 					// unmute player
 					execF(`mumble-cli 127.0.0.1:${session.grpcPort}`
-						+` shadowmute -s 1 -t ${attack.targetUser} -u`)
+						+` shadowmute -s 1 -t ${attack.sourceUser} -u`)
 					.pipe(fork(err => {
 						if(err instanceof Error){
 							return error(attack.attackId, err.message);
