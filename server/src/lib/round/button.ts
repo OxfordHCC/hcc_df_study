@@ -4,12 +4,12 @@ import { isSingleRoundData, SingleRound } from './single';
 
 export class ButtonRound extends SingleRound implements ButtonRoundData {
 	name: "button" = "button"
-	constructor(solution: number, msLength: number = 5000) {
+	constructor(solution: number, options: number[], msLength: number = 5000) {
 		super({
 			name: "button",
 			solution,
-			options: [ 0, 1, 2, 3 ],
-			msLength: msLength,
+			options,
+			msLength
 		});
 	}
 }
@@ -18,7 +18,7 @@ export function createButtonRound(data: any): Either<Error, ButtonRound>{
 	if(!isButtonRoundData(data)){
 		return Left(new Error("Invalid round data."));
 	}
-	return Right(new ButtonRound(data.solution, data.msLength));
+	return Right(new ButtonRound(data.solution, data.options, data.msLength));
 }
 
 function isButtonRoundData(x: any): x is ButtonRoundData{
