@@ -1,0 +1,2 @@
+file 'silence.wav'
+file '../input/2.wav'
