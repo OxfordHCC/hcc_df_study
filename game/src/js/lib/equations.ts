@@ -130,11 +130,6 @@ const tutorialEquations: Equation[] = [
 		answer: "Benjamin Harrison"
 	},
 	{
-		label: "Who was the 23rd president of the United States?",
-		options: ["Benjamin Harrison", "Grover Cleveland", "William McKinley"],
-		answer: "Benjamin Harrison"
-	},
-	{
 		label: "What kind of creature is Shrek?",
 		options: ["Ogre", "Cat", "Donkey"],
 		answer: "Ogre"
