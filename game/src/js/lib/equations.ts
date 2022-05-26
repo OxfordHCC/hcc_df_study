@@ -88,7 +88,7 @@ const equations: Equation[] = [
 	{
 		label: "What is Kimi Raikkonen's nickname?",
 		options: ["The Honey Badger", "Finman", "Iceman"],
-		answer: "Ice man"
+		answer: "Iceman"
 	},
 	{
 		label: "How many world cups did Kimmi Raikkonen win in Formula 1?",
@@ -108,7 +108,7 @@ const equations: Equation[] = [
 	{
 		label: "Kimi Raikkonen is the only F1 driver to have won races in the V8, V10 and ? eras. ",
 		options: ["V20", "Inline 4", "V6"],
-		answer: "Campbell"
+		answer: "V6"
 	},
 ];
 
