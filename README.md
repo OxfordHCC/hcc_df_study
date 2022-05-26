@@ -10,7 +10,7 @@ root/
 ├─ common/          - common libraries and resources
 ├─ admin/           - admin dashboard to monitor game progress
 ├─ game/            - bomb defusal game played by participants
-├─ study-cli/       - tool used to issue audio injection commands to mumble
+├─ mumble-cli/       - tool used to issue audio injection commands to mumble
 ├─ server/          - study server
 ├─ mams-parser/     - convert mumble recordings files to pcm
 ```

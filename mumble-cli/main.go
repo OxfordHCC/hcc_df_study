@@ -85,10 +85,7 @@ func main(){
 	commands["servers"] = serversCmd; // get servers
 	commands["spoof"] = spoofCmd; // spoof audio/text message
 
-	if len(os.Args) < 4 {
-		fmt.Fprintln(os.Stderr, help(commands))
-		return
-	}
+	fmt.Println("foobar")
 
 	dialAddr := os.Args[1];
 	cmd := os.Args[2];
