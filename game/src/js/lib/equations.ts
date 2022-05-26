@@ -80,6 +80,36 @@ const equations: Equation[] = [
 		options: ["1998", "1991", "1993"],
 		answer: "1998"
 	},
+	{
+		label: "Which Middle Eastern city is also the name of a type of artichoke?",
+		options: ["Jerusalem", "Shiraz", "Woking"],
+		answer: "Jerusalem"
+	},
+	{
+		label: "What is Kimi Raikkonen's nickname?",
+		options: ["The Honey Badger", "Finman", "Iceman"],
+		answer: "Ice man"
+	},
+	{
+		label: "How many world cups did Kimmi Raikkonen win in Formula 1?",
+		options: ["1", "2", "0"],
+		answer: "1"
+	},
+	{
+		label: "Who won the last championship for Ferrari in Formula 1?",
+		options: ["Kimi Raikkonen", "Michael Schumacher", "Sebastian Vettel"],
+		answer: "Kimi Raikkonen"
+	},
+	{
+		label: "Which brand of soup featured in one of Andy Warhol’s most famous pop art pieces? ",
+		options: ["Campbell", "Heinz", "Chef Boyardee"],
+		answer: "Campbell"
+	},
+	{
+		label: "Kimi Raikkonen is the only F1 driver to have won races in the V8, V10 and ? eras. ",
+		options: ["V20", "Inline 4", "V6"],
+		answer: "Campbell"
+	},
 ];
 
 const seen: Equation[] = [];
