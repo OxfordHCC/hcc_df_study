@@ -42,13 +42,21 @@ export function Round({ isBlue, roundData, round, onAnswer, onClockUpdate }: Rou
 		<RoundContainer>
 			<ClockContainer>
 				<Clock
-				onUpdate={onClockUpdate}
+					onUpdate={onClockUpdate}
 					start={roundData.startTime}
 					length={roundData.msLength} />
 			</ClockContainer>
 			<RoundContentContainer out={doSlideOut}>
 				<Switch<RoundName> on={name}>
 					<Case when="button">
+						<ButtonRound
+							isBlue={isBlue}
+							round={round}
+							roundData={roundData as ButtonRoundData}
+							onAnswer={onAnswerWrap}
+						/>
+					</Case>
+					<Case when="tutorial-button">
 						<ButtonRound
 							isBlue={isBlue}
 							round={round}
