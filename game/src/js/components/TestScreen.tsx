@@ -53,6 +53,14 @@ const sampleGameData: SampleGame = {
 
 const components: Declaration = [
 	{
+		fn: GameLobby,
+		props: {
+			playerId: "blue",
+			gameData: sampleGameData,
+			onReadyChange: () => {}
+		}
+	},
+	{
 		fn: RoundScreen,
 		props: {
 			gameData: sampleGameData,
@@ -70,14 +78,6 @@ const components: Declaration = [
 				...sampleGameData.rounds[0],
 				name: "button"
 			}
-		}
-	},
-	{
-		fn: GameLobby,
-		props: {
-			playerId: "foobar",
-			gameData: sampleGameData,
-			onReadyChange: () => {}
 		}
 	},
 
@@ -124,6 +124,7 @@ const SelectorContainer = styled.div`
 	position: absolute;
 	right: 0;
 	bottom: 0;
+	z-index: 1;
 `;
 
 const ShowSelectorButton = styled.button``;

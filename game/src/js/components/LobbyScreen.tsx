@@ -2,8 +2,9 @@ import React from 'react';
 import styled from 'styled-components';
 import { GameData } from 'dfs-common';
 import { LobbyPlayerLI } from './LobbyPlayerLI';
-import { Screen } from './Screen';
+import { StoneScreen } from './StoneScreen';
 import { Center } from './Center';
+import { Spacer } from './Spacer';
 
 
 export type GameLobbyParams = {
@@ -12,20 +13,15 @@ export type GameLobbyParams = {
 	onReadyChange: (flag: boolean) => void;
 }
 
-
 function RedLobbyInstructions(){
 	return <div>
-		You are <span>RED</span>!
 		Your task is to listen to your team-mates instructions and press the correct button. There are multiple rounds, you need to do this for each round.
 	</div>
 }
 
 function BlueLobbyInstructions(){
 	return <div>
-		<div>You are <span>BLUE</span>!</div>
-		<div>
-			Your task is to find the correct color and communicate it to your team-mate. There will be multiple rounds, you need to do this for each round.
-		</div>
+		Your task is to find the correct color and communicate it to your team-mate. There will be multiple rounds, you need to do this for each round.
 	</div>
 }
 
@@ -51,23 +47,52 @@ export function GameLobby({ playerId, gameData, onReadyChange }: GameLobbyParams
 	});
 	
 	return (
-		<Screen>
-			<Center style={{flexDirection: "column"}}>
-				<InstructionsContainer>
-					{
-						(isBlue)
-						? <BlueLobbyInstructions/>
-						: <RedLobbyInstructions/>
-					}
-					<div>When you're ready, please press the READY button.</div>
-				</InstructionsContainer>
-				{listItems}
-				<button onClick={toggleReady}>{(player.ready === true) ? "Unready" : "Ready"}</button>
+		<StoneScreen>
+			<Center style={{ flexDirection: "column" }}>
+				<Container>
+					<div><h1>You are <span>RED</span>!</h1></div>
+					<InstructionsContainer>
+						{
+							(isBlue)
+								? <BlueLobbyInstructions />
+								: <RedLobbyInstructions />
+						}
+						<Spacer height="5vh"/>
+						<div>When you're ready, please press the READY button.</div>
+					</InstructionsContainer>
+					<div>
+						<PlayerContainer>
+							{listItems}
+						</PlayerContainer>
+						<button onClick={toggleReady}>
+							{
+								(player.ready === true) ? "Unready" : "Ready"
+							}
+						</button>
+					</div>
+				</Container>
 			</Center>
-		</Screen>
+		</StoneScreen>
 	);
 }
 
+const PlayerContainer = styled.div`
+	margin: 20px auto;
+`;
 
 const InstructionsContainer = styled.div`
+	text-align: initial;
+	margin: 0 10vw;
+`;
+
+const Container = styled.div`
+	text-align: center;
+    width: 70vw;
+    height: 70vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    background: beige;
+    border: 5px solid goldenrod;
 `;
