@@ -54,5 +54,9 @@ export interface ButtonRoundData extends SingleRoundData {
 	name: "button"
 }
 
+export interface TutorialRoundData extends SingleRoundData {
+	name: "tutorial-button"
+}
+
 // These are the only ones that are not abstract
-export type ConcreteRoundData = ButtonRoundData;
+export type ConcreteRoundData = ButtonRoundData | TutorialRoundData;

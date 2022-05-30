@@ -24,4 +24,7 @@ export declare type ButtonRoundAnswer = SingleRoundAnswer;
 export interface ButtonRoundData extends SingleRoundData {
     name: "button";
 }
-export declare type ConcreteRoundData = ButtonRoundData;
+export interface TutorialRoundData extends SingleRoundData {
+    name: "tutorial-button";
+}
+export declare type ConcreteRoundData = ButtonRoundData | TutorialRoundData;
