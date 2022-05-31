@@ -10,15 +10,15 @@ const colorMap = [
 type BombButtonProps = {
 	onPress: (value: number) => void
 	option: number
-	className: string
+	className?: string
 }
+
 export function BombButton({ onPress, option, className }: BombButtonProps) {
-	const colorBlind = false;
 	const color = colorMap[option];
 	
 	return (
 		<Button color={color} onClick={() => onPress(option)} className={className}>
-			{ colorBlind && option || "" }
+			{ color.toUpperCase() }
 		</Button>
 	);
 
@@ -30,11 +30,14 @@ type ButtonProps = {
 
 const borderSize = "0.4vw"; // padding / 10 => 5% of width;
 const Button = styled.button<ButtonProps>`
+margin: 0 10px;
+flex: 1;
+color: white;
 border: none;
-padding: 4vw;
+padding: 0.3em 0.1em;
 font-size: 4vw;
 background-color: ${p => p.color};
-border-bottom: ${borderSize} solid;
+border-bottom: ${borderSize} solid black;
 border-left: ${borderSize} solid dark${p => p.color};
 border-right: ${borderSize} solid dark${p => p.color};
 border-top: ${borderSize} solid ${p => p.color};

@@ -55,7 +55,7 @@ border-bottom: 0.8vw solid;
 border-left: 0.8vw solid rgb(122,33,33);
 border-right: 0.8vw solid rgb(122,33,33);
 border-top: 0.2vw solid brown;
-width: ${props => props.isBlue ? "80vw" : "40vw"};
+width: ${props => props.isBlue ? "80vw" : "60vw"};
 background: ${props => props.isBlue ? "beige" : 'url("./textures/BROWNHUG.png")'};
 padding: 50px;
 `;

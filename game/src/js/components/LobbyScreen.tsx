@@ -15,13 +15,13 @@ export type GameLobbyParams = {
 
 function RedLobbyInstructions(){
 	return <div>
-		Your task is to listen to your team-mates instructions and press the correct button. There are multiple rounds, you need to do this for each round.
+		Your task is to <strong>listen</strong> to your team-mates instructions <strong>and press the correct button</strong>. There are multiple rounds, you need to do this for each round.
 	</div>
 }
 
 function BlueLobbyInstructions(){
 	return <div>
-		Your task is to find the correct color and communicate it to your team-mate. There will be multiple rounds, you need to do this for each round.
+		Your task is to <strong>find the correct color</strong> and communicate it to your team-mate. There will be multiple rounds, you need to do this for each round.
 	</div>
 }
 
@@ -50,7 +50,13 @@ export function GameLobby({ playerId, gameData, onReadyChange }: GameLobbyParams
 		<StoneScreen>
 			<Center style={{ flexDirection: "column" }}>
 				<Container>
-					<div><h1>You are <span>RED</span>!</h1></div>
+					<div>
+						<h1>You are {
+							(isBlue)
+							? <ColorSpan color="blue">BLUE</ColorSpan>
+							: <ColorSpan color="red">RED</ColorSpan>
+						}!</h1>
+					</div>
 					<InstructionsContainer>
 						{
 							(isBlue)
@@ -58,7 +64,7 @@ export function GameLobby({ playerId, gameData, onReadyChange }: GameLobbyParams
 								: <RedLobbyInstructions />
 						}
 						<Spacer height="5vh"/>
-						<div>When you're ready, please press the READY button.</div>
+						<div>When you're ready, please press the <Button disabled>READY</Button> button.</div>
 					</InstructionsContainer>
 					<div>
 						<PlayerContainer>
@@ -96,3 +102,11 @@ const Container = styled.div`
     background: beige;
     border: 5px solid goldenrod;
 `;
+
+const ColorSpan = styled.span`
+	color: ${props => props.color};
+	border: 3px solid ${props => props.color};
+	padding: 0.1em;
+`
+// plain button for now...
+const Button = styled.button``;

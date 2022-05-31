@@ -37,13 +37,13 @@ const sampleGameData: SampleGame = {
 	gameId: "foo",
 	rounds: [
 		{
-			options: [1,2,3],
+			options: [0,1,2],
 			name: "button",
 			msLength: 5000,
 			solution: 1
 		},
 		{
-			options: [1, 2, 3],
+			options: [0,1,2],
 			name: "button",
 			msLength: 5000,
 			solution: 1

@@ -51,18 +51,19 @@ export function EqInstructions({ equation, roundData }: EquationInstructionsProp
 }
 
 const OptionColor = styled(BombButton)`
-    border: 1px solid;
-	border-radius: 20px;
-    margin-left: 10px;
+border: none;
+color: white;
+&:active {
+boder: none;
+}
 `;
 
 const OptionsContainer = styled.div`
-display: flex;
+	display: flex;
 	justify-content: space-between;
 `;
 
 const ButtonSolutionDiv = styled.div`
 	display: flex;
 	align-items: center;
-	margin: 0 30px;
 `;

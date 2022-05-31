@@ -111,11 +111,11 @@ const Background = styled.div`
 	overflow: hidden;
 `;
 const Table = styled.div`
-	width: 60vw;
+	width: 80vw;
 	height: 40vh;
 	transform-style: preserve-3d;
 	position: absolute;
-	left: 20vw;
+	left: 10vw;
 	top:50%;
 	perspective: 500px;
 `;
