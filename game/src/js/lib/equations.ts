@@ -127,7 +127,7 @@ const tutorialEquations: Equation[] = [
 	{
 		label: "Which of these is a former president of the United States?",
 		options: ["Donald Trump", "Elon Musk", "Kanye West"],
-		answer: "Benjamin Harrison"
+		answer: "Donald Trump"
 	},
 	{
 		label: "What kind of creature is Shrek?",
