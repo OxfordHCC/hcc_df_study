@@ -139,8 +139,9 @@ function createSessionMurmur(session: Session): FutureInstance<SessionError, Ses
 function createSessionGames(session: Session): FutureInstance<SessionError, Session>{
 	const { blueParticipant, redParticipant, sessionId } = session;
 	return parallel(1)([
-		createGame(blueParticipant, redParticipant, sessionId, 0, debugSchedules[0], true),
-		createGame(redParticipant, blueParticipant, sessionId, 1, debugSchedules[1], false),
+		// Commented out debugging rounds - left sessionId as is, incase it breaks anything
+		//createGame(blueParticipant, redParticipant, sessionId, 0, debugSchedules[0], true),
+		//createGame(redParticipant, blueParticipant, sessionId, 1, debugSchedules[1], false),
 		createGame(blueParticipant, redParticipant, sessionId, 2, tutorialSchedules[0], false),
 		createGame(redParticipant, blueParticipant, sessionId, 3, tutorialSchedules[1], false),
 		createGame(blueParticipant, redParticipant, sessionId, 4, gameSchedules[0], false),

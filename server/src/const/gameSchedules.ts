@@ -68,6 +68,7 @@ export const gameSchedules: ConcreteRoundData[][] = [
 			solution: 1,
 			msLength: 10000,
 			options: [0, 1, 2],
+			attack: 2
 		},
 		{
 			name: "button",
@@ -104,6 +105,7 @@ export const gameSchedules: ConcreteRoundData[][] = [
 			solution: 2,
 			msLength: 10000,
 			options: [0, 1, 2],
+			attack: 1
 		},
 		{
 			name: "button",
@@ -148,7 +150,7 @@ export const gameSchedules: ConcreteRoundData[][] = [
 			solution: 0,
 			msLength: 10000,
 			options: [0, 1, 2],
-			attack: 0
+			attack: 2
 		},
 		{
 			name: "button",
@@ -191,25 +193,26 @@ export const gameSchedules: ConcreteRoundData[][] = [
 			solution: 1,
 			msLength: 10000,
 			options: [0, 1, 2],
-		},
-		{
-			name: "button",
-			solution: 2,
-			msLength: 10000,
-			options: [0, 1, 2],
-		},
-		{
-			name: "button",
-			solution: 2,
-			msLength: 10000,
-			options: [0, 1, 2],
-		},
-		{
-			name: "button",
-			solution: 2,
-			msLength: 10000,
-			options: [0, 1, 2],
 			attack: 0
+		},
+		{
+			name: "button",
+			solution: 2,
+			msLength: 10000,
+			options: [0, 1, 2],
+		},
+		{
+			name: "button",
+			solution: 2,
+			msLength: 10000,
+			options: [0, 1, 2],
+		},
+		{
+			name: "button",
+			solution: 2,
+			msLength: 10000,
+			options: [0, 1, 2],
+			attack: 1
 		},
 		{
 			name: "button",

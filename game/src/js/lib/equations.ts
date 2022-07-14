@@ -23,22 +23,22 @@ const equations: Equation[] = [
 	},
 	{
 		label: "How many weeks in a year?",
-		options: ["52", "100", "1000"],
+		options: ["52", "100", "45"],
 		answer: "52"
 	},
 	{
 		label: "How many legs does a Octopus have?",
-		options: ["12", "24", "8"],
+		options: ["7", "10", "8"],
 		answer: "8"
 	},
 	{
-		label: "If you freeze water, what do you get?",
-		options: ["Lava", "Emeralds", "Ice"],
-		answer: "Ice"
+		label: "Which of these is a famous landmark in London?",
+		options: ["Berlin Wall", "Eiffel Tower", "Big Ben"],
+		answer: "Big Ben"
 	},
 	{
-		label: "How many meters in 1 kilomile?",
-		options: ["5280", "1000", "10"],
+		label: "How many meters in 1 kilometer?",
+		options: ["100", "1000", "10"],
 		answer: "1000"
 	},
 	{
@@ -47,9 +47,9 @@ const equations: Equation[] = [
 		answer: "28"
 	},
 	{
-		label: "What do caterpillars turn into?",
-		options: ["Moths", "Butterflies", "Snails"],
-		answer: "Butterflies"
+		label: "Which of these is a Pokemon?",
+		options: ["Giant African Snail", "Pikachu", "Stegosaurus"],
+		answer: "Pikachu"
 	},
 	{
 		label: "21 + 71 = ?",
@@ -83,33 +83,33 @@ const equations: Equation[] = [
 	},
 	{
 		label: "What do bees make?",
-		options: ["Honey", "Wax", "Silk"],
+		options: ["Honey", "Cotton", "Silk"],
 		answer: "Honey"
 	},
 	{
 		label: "Which is the fastest land animal?",
-		options: ["Snail", "Elephant", "Cheetah"],
+		options: ["Hare", "Whippet", "Cheetah"],
 		answer: "Cheetah"
 	},
 	{
-		label: "Who built the pyramids?",
-		options: ["The Egyptians", "The Syrians", "The English"],
-		answer: "The Egyptians"
+		label: "Who built the pyramids of Giza?",
+		options: ["Egyptians", "Romans", "Huns"],
+		answer: "Egyptians"
 	},
 	{
-		label: "How many sides does a triangle have?",
-		options: ["6", "12", "3"],
-		answer: "3"
+		label: "Which country has the largest land mass?",
+		options: ["Russia", "France", "Spain"],
+		answer: "Russia"
 	},
 	{
 		label: "What is the largest mammal in the world?",
-		options: ["Human", "Whale", "Shark"],
-		answer: "Whale"
+		options: ["Hippopotamus", "Blue Whale", "Polar Bear"],
+		answer: "Blue Whale"
 	},
 	{
-		label: "In which capital city of Europe would you find the Eiffel Tower?",
-		options: ["London", "New York", "Paris"],
-		answer: "Paris"
+		label: "In which European City would you find Buckingham Palace?",
+		options: ["London", "Prague", "Rome"],
+		answer: "London"
 	},
 ];
 
@@ -120,13 +120,13 @@ const tutorialEquations: Equation[] = [
 		answer: "6"
 	},
 	{
-		label: "Who would win in a fight?",
-		options: ["Ada Lovelace", "Alan Turing", "Elon Musk"],
-		answer: "Ada Lovelace"
+		label: "Which of these is the oldest University in the world?",
+		options: ["University of Bologna", "University of Oxford", "University of Cambridge"],
+		answer: "University of Bologna"
 	},
 	{
-		label: "Who was the 23rd president of the United States?",
-		options: ["Benjamin Harrison", "Grover Cleveland", "William McKinley"],
+		label: "Which of these is a former president of the United States?",
+		options: ["Donald Trump", "Elon Musk", "Kanye West"],
 		answer: "Benjamin Harrison"
 	},
 	{
@@ -135,7 +135,7 @@ const tutorialEquations: Equation[] = [
 		answer: "Ogre"
 	},
 	{
-		label: "Mario and ?",
+		label: "In the popular Super Mario video game series, what is the name of Mario's brother?",
 		options: ["Luigi", "Letizia", "Lorenzo"],
 		answer: "Luigi"
 	}
