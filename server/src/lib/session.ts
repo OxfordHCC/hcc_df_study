@@ -142,10 +142,10 @@ function createSessionGames(session: Session): FutureInstance<SessionError, Sess
 		// Commented out debugging rounds - left sessionId as is, incase it breaks anything
 		//createGame(blueParticipant, redParticipant, sessionId, 0, debugSchedules[0], true),
 		//createGame(redParticipant, blueParticipant, sessionId, 1, debugSchedules[1], false),
-		createGame(blueParticipant, redParticipant, sessionId, 2, tutorialSchedules[0], false),
-		createGame(redParticipant, blueParticipant, sessionId, 3, tutorialSchedules[1], false),
-		createGame(blueParticipant, redParticipant, sessionId, 4, gameSchedules[0], false),
-		createGame(redParticipant, blueParticipant, sessionId, 5, gameSchedules[1], false)
+		createGame(blueParticipant, redParticipant, sessionId, 0, tutorialSchedules[0], false),
+		createGame(redParticipant, blueParticipant, sessionId, 1, tutorialSchedules[1], false),
+		createGame(blueParticipant, redParticipant, sessionId, 2, gameSchedules[0], false),
+		createGame(redParticipant, blueParticipant, sessionId, 3, gameSchedules[1], false)
 	])
 	.pipe(map(_games => session))
 	.pipe(mapRej(err => new SessionError(session, err.message)));
