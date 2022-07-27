@@ -62,3 +62,7 @@ As indicated in the murmur grpc documentation, each grpc procedure has a "siblin
 We define a max length for the packet we want to send, split the data in chunks of this size then encode each chunk, append the necessary headers and call the server function that sends messages to users (```void Server::sendMessage(ServerUser *u, const char *data, int len, QByteArray &cache, bool force)``` in mumble/src/murmur/Server.cpp).
 
 Since this audio is not "organic", we need to introduce artificial latency by sleeping the thread (this is actually in the Sleep parameter of the AudioInjection message). Despite the GRPC server running on a separate thread, the implementation functions run on the main thread. From testing, this causes the server to miss some pings from clients, making them disconnect. Therefore, we need to do the splitting, encoding, packaging and sleeping on a separate thread.
+
+# Acknowledgements
+
+This project is funded through [https://petras-iot.org/project/red-teaming-the-connected-world-retcon/ RETCON], Red Teaming the Connected Internet of Things, part of the PETRAS Centre for Excellence, by the [https://www.ukri.org/councils/epsrc/ EPSRC].
