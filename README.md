@@ -65,4 +65,4 @@ Since this audio is not "organic", we need to introduce artificial latency by sl
 
 # Acknowledgements
 
-This project is funded through [https://petras-iot.org/project/red-teaming-the-connected-world-retcon/ RETCON], Red Teaming the Connected Internet of Things, part of the PETRAS Centre for Excellence, by the [https://www.ukri.org/councils/epsrc/ EPSRC].
+This project is funded through [RETCON, Red Teaming the Connected Internet of Things](https://petras-iot.org/project/red-teaming-the-connected-world-retcon), part of the [PETRAS Centre for Excellence](https://petras-iot.org/), by the [EPSRC](https://www.ukri.org/councils/epsrc/).
