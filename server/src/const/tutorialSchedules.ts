@@ -41,4 +41,4 @@ export const tutorialSchedules: ConcreteRoundData[][] = [
 			options: [0, 1, 2]
 		}
 	]
-]
+];
