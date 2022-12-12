@@ -64,7 +64,7 @@ export function GameLobby({ playerId, gameData, onReadyChange }: GameLobbyParams
 								: <RedLobbyInstructions />
 						}
 						<Spacer height="5vh"/>
-						<div>For detailed instructions on the game, please click the following <a style="colour:blue;" href="https://docs.google.com/document/d/1gZoliNJS8Oj21dPFiekFg0aboQnWKLgN/edit?usp=sharing&ouid=112740454555108283105&rtpof=true&sd=true"><u>link</u></a>.</div>
+						<div>For detailed instructions on the game, please click the following <a href="https://docs.google.com/document/d/1gZoliNJS8Oj21dPFiekFg0aboQnWKLgN/edit?usp=sharing&ouid=112740454555108283105&rtpof=true&sd=true"><u>link</u></a>.</div>
 						<Spacer height="5vh"/>
 						<div>When you're ready, please press the <Button disabled>READY</Button> button.</div>
 					</InstructionsContainer>
